@@ -1,0 +1,56 @@
+name: Deploy — GitHub Pages
+# Actif en Phase 1 quand src/ existe.
+# Prérequis dans les settings GitHub du repo :
+#   Settings → Pages → Source → GitHub Actions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+
+  build:
+    name: Build
+    if: hashFiles('src/package.json') != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+      - run: npm ci
+        working-directory: src
+      - run: npm run build
+        working-directory: src
+        env:
+          # Vite a besoin de la base URL pour GitHub Pages : /pongbros/
+          # À adapter si le repo n'est pas "pongbros"
+          BASE_URL: /pongbros/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: src/dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

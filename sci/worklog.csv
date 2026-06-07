@@ -1,0 +1,14 @@
+# sci/worklog.csv — journal de suivi SCI (volet A : réalisation)
+# Méthode : docs/sci.md. Chaque ligne = une session de travail.
+# type_donnee : mesure | estimation
+# duree_h : à compléter/ajuster par l'auteur (A_COMPLETER si inconnu)
+# tokens : total cumulé estimé ou mesuré (in+out, relecture comprise)
+# co2e_g : fourchette basse-haute en grammes CO2e (facteurs : sci/factors.yaml)
+# Les sessions Claude Code dans le dossier du repo ne se loguent PAS ici :
+# elles sont comptées automatiquement (export hebdo npx ccusage@latest
+# daily --json > sci/ai-usage/AAAA-Wss.json). Ici : claude.ai, temps humain,
+# CI, rédaction, mesures matérielles.
+date,phase,activite,outil,duree_h,tokens,co2e_g_min,co2e_g_max,type_donnee,commentaire
+2026-06-07,conception,"Design complet : concept, faisabilite, game design, plan, docs (PROJECT.md, decisions.md, sci.md, linkedin.md)",claude.ai,A_COMPLETER,400000,5,75,estimation,"Recette sci.md : ~10 tours ; 25-30k tokens texte x5 (relecture cumulative) + 15-30k/tour (systeme+outils+~10 recherches web) = 300-450k brut ; fourchette x0.5/x2 -> 150k-900k, central 400k. Energie 15-150 Wh (~40-60 appels x 0.3-3 Wh), mix datacenter 400-500 gCO2e/kWh."
+2026-06-07,conception,"Energie poste de travail pendant les sessions claude.ai",laptop,A_COMPLETER,,2,30,estimation,"duree_h x 20-40 W x mix local (France ~50 gCO2e/kWh : prendre fourchette basse). A recalculer quand duree_h connue ; wattmetre a partir de la phase 0."
+2026-06-07,phase0,"Creation du repo pongbros + premiere session Claude Code",claude-code,A_COMPLETER,,,,mesure,"Tokens comptes automatiquement (logs ~/.claude/projects/...pongbros, lecture via ccusage, retroactif). Ne pas dupliquer ici."
