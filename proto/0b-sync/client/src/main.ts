@@ -9,6 +9,7 @@ interface MsgRoomJoined  { type: 'room-joined' }
 interface MsgPeerConnected { type: 'peer-connected' }
 interface MsgPeerDisconnected { type: 'peer-disconnected' }
 interface MsgError { type: 'error'; message: string }
+interface MsgSyncDone { type: 'sync-done'; medianRTT: number; medianOffset: number }
 
 type ServerMessage =
   | MsgRoomCreated
@@ -16,6 +17,7 @@ type ServerMessage =
   | MsgPeerConnected
   | MsgPeerDisconnected
   | MsgError
+  | MsgSyncDone
   | SyncEngineMessage
 
 // ---------------------------------------------------------------------------
@@ -143,6 +145,9 @@ function onWsMessage(event: MessageEvent): void {
     case 'error':
       handleServerError(msg)
       break
+    case 'sync-done':
+      handleSyncDone(msg)
+      break
     case 'sync-ping':
     case 'sync-pong':
       syncEngine?.handleMessage(msg)
@@ -180,6 +185,12 @@ function handlePeerConnected(): void {
   // Host: peer (guest) just connected — start NTP
   showMeasureState()
   initSyncEngine(true)
+}
+
+function handleSyncDone(msg: MsgSyncDone): void {
+  if (role !== 'guest') return
+  showMeasureState()
+  showVerdict(msg.medianRTT, msg.medianOffset)
 }
 
 function handlePeerDisconnected(): void {
@@ -244,7 +255,7 @@ function showMeasureState(): void {
   show(stateMeasure)
   hide(summaryEl)
   ntpTbody.innerHTML = ''
-  setText(measureProgress, 'Itération 0 / 10')
+  setText(measureProgress, role === 'guest' ? 'Synchronisation en cours...' : 'Itération 0 / 10')
 }
 
 function initSyncEngine(isHost: boolean): void {
@@ -283,25 +294,26 @@ function onSyncResult(result: SyncResult): void {
   ntpTbody.appendChild(tr)
 }
 
-function onSyncComplete(engine: SyncEngine): void {
-  const mRtt    = engine.medianRTT
-  const mOffset = engine.medianOffset
+function showVerdict(mRtt: number, mOffset: number): void {
   const absOffset = Math.abs(mOffset)
-
   setText(statRtt, mRtt.toFixed(1))
   setText(statOffset, mOffset.toFixed(2))
-
   const pass = absOffset < 20
-
   verdictEl.className = pass ? 'pass' : 'fail'
   setText(
     verdictEl,
     pass
-      ? `PASS — offset median ${mOffset.toFixed(2)} ms (< 20 ms)`
-      : `FAIL — offset median ${mOffset.toFixed(2)} ms (> 20 ms)`
+      ? `PASS — offset médian ${mOffset.toFixed(2)} ms (< 20 ms)`
+      : `FAIL — offset médian ${mOffset.toFixed(2)} ms (> 20 ms)`
   )
-
   show(summaryEl)
+}
+
+function onSyncComplete(engine: SyncEngine): void {
+  const mRtt = engine.medianRTT
+  const mOffset = engine.medianOffset
+  showVerdict(mRtt, mOffset)
+  send({ type: 'sync-done', medianRTT: mRtt, medianOffset: mOffset })
 }
 
 // ---------------------------------------------------------------------------
