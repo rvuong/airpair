@@ -50,6 +50,7 @@ let syncEngine: SyncEngine | null = null
 const statePairing  = getEl('state-pairing')
 const stateMeasure  = getEl('state-measure')
 
+const panelLanding    = getEl('panel-landing')
 const panelHost       = getEl('panel-host')
 const panelJoin       = getEl('panel-join')
 const panelConnecting = getEl('panel-connecting')
@@ -60,6 +61,8 @@ const pairingStatus   = getEl('pairing-status')
 
 const roomCodeInput = getEl<HTMLInputElement>('room-code-input')
 const joinError     = getEl('join-error')
+const btnCreate     = getEl<HTMLButtonElement>('btn-create')
+const btnShowJoin   = getEl<HTMLButtonElement>('btn-show-join')
 const btnJoin       = getEl<HTMLButtonElement>('btn-join')
 
 const connError     = getEl('conn-error')
@@ -107,21 +110,11 @@ function onWsOpen(): void {
   hide(panelConnecting)
   hide(connError)
 
-  // Check URL for a room code — if present, we are Client B
-  const params = new URLSearchParams(window.location.search)
-  const codeParam = params.get('room')
-
-  if (codeParam && codeParam.length === 4) {
-    // Guest: pre-fill and auto-join
-    role = 'guest'
-    roomCodeInput.value = codeParam.toUpperCase()
-    showJoinPanel()
-    // Auto-submit if code comes from URL
-    joinRoom(codeParam.toUpperCase())
-  } else {
-    // Host: create a room
-    role = 'host'
+  if (role === 'host') {
     send({ type: 'create-room' })
+  } else {
+    // Guest: send the code already stored before connecting
+    send({ type: 'join', roomId })
   }
 }
 
@@ -221,6 +214,7 @@ function showHostPanel(code: string): void {
 }
 
 function showJoinPanel(): void {
+  hide(panelLanding)
   hide(panelHost)
   show(panelJoin)
   hide(panelConnecting)
@@ -234,8 +228,11 @@ function joinRoom(code: string): void {
   }
   setText(joinError, '')
   btnJoin.disabled = true
+  role = 'guest'
   roomId = normalized
-  send({ type: 'join', roomId: normalized })
+  hide(panelJoin)
+  show(panelConnecting)
+  connect()
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +317,18 @@ function showConnError(msg: string): void {
 // Event listeners
 // ---------------------------------------------------------------------------
 
+btnCreate.addEventListener('click', () => {
+  role = 'host'
+  hide(panelLanding)
+  show(panelConnecting)
+  connect()
+})
+
+btnShowJoin.addEventListener('click', () => {
+  showJoinPanel()
+  roomCodeInput.focus()
+})
+
 btnJoin.addEventListener('click', () => {
   joinRoom(roomCodeInput.value)
 })
@@ -353,8 +362,4 @@ document.addEventListener('touchmove', (e: TouchEvent) => {
   e.preventDefault()
 }, { passive: false })
 
-// ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
-
-connect()
+// Connexion déclenchée explicitement par btnCreate ou btnJoin — pas au chargement.
