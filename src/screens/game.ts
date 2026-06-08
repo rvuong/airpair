@@ -494,6 +494,19 @@ export function renderGame(
       ctx.fill()
     }
 
+    // Approach indicator — growing dot at top when ball is heading toward me
+    if (pendingHit !== null && state.ballArrivalTime !== null) {
+      const remaining = Math.max(0, state.ballArrivalTime - Date.now())
+      const progress = Math.min(1, 1 - remaining / DEAD_ZONE_MS)
+      const ix = (1 - pendingHit.nx) * W
+      const ir = BALL_R * (0.2 + 0.8 * progress)
+      const alpha = 0.15 + 0.85 * progress
+      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
+      ctx.beginPath()
+      ctx.arc(ix, BALL_R, ir, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
     // Phase overlays
     const phase: Phase = state.phase
 
