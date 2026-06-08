@@ -132,6 +132,10 @@ signalisation seule).
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
 (expiration QR, comparaison IP), éventuelle migration AWS.
+Thèmes graphiques occasionnels (voir D19).
+
+### Phase 4+ — Idées post-complétion (à valider si go Phase 3)
+- **Thèmes graphiques** (D19) : Roland Garros, Wimbledon, etc.
 
 ## Organisation du repo
 
