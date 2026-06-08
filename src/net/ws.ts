@@ -1,3 +1,9 @@
+// ---- Game message types (relayed via WS) ----
+
+export type GameMsg =
+  | { type: 'hit'; t_exit: number; nx: number; nvx: number; nvy: number }
+  | { type: 'miss'; scorer: 'A' | 'B' }
+
 // ---- Message types (server → client) ----
 
 export interface MsgCreated {
