@@ -25,12 +25,25 @@ export interface MsgError {
   message: string
 }
 
+export interface MsgServerPong {
+  type: 'server_pong'
+  t1: number
+  t2: number
+}
+
+export interface MsgCountdown {
+  type: 'countdown'
+  t_start: number
+}
+
 export type ServerMessage =
   | MsgCreated
   | MsgJoined
   | MsgPeerJoined
   | MsgRelay
   | MsgError
+  | MsgServerPong
+  | MsgCountdown
 
 // ---- Message types (client → server) ----
 
@@ -48,7 +61,16 @@ interface CmdRelay {
   payload: unknown
 }
 
-type ClientCommand = CmdCreate | CmdJoin | CmdRelay
+interface CmdServerPing {
+  type: 'server_ping'
+  t1: number
+}
+
+interface CmdStartCountdown {
+  type: 'start_countdown'
+}
+
+type ClientCommand = CmdCreate | CmdJoin | CmdRelay | CmdServerPing | CmdStartCountdown
 
 // ---- RoomClient ----
 
@@ -65,6 +87,8 @@ export class RoomClient {
   onRelay: ((payload: unknown) => void) | null = null
   onError: ((message: string) => void) | null = null
   onClose: (() => void) | null = null
+  onServerPong: ((t1: number, t2: number) => void) | null = null
+  onCountdown: ((tStart: number) => void) | null = null
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -94,6 +118,14 @@ export class RoomClient {
 
   relay(payload: unknown): void {
     this.send({ type: 'relay', payload })
+  }
+
+  serverPing(t1: number): void {
+    this.send({ type: 'server_ping', t1 })
+  }
+
+  startCountdown(): void {
+    this.send({ type: 'start_countdown' })
   }
 
   disconnect(): void {
@@ -131,6 +163,12 @@ export class RoomClient {
         break
       case 'error':
         this.onError?.(msg.message)
+        break
+      case 'server_pong':
+        this.onServerPong?.(msg.t1, msg.t2)
+        break
+      case 'countdown':
+        this.onCountdown?.(msg.t_start)
         break
       default: {
         const _exhaustive: never = msg

@@ -1,15 +1,19 @@
 import { RoomClient } from '../net/ws'
 import { drawQR } from '../qr/generate'
+import { measureServerOffset } from '../net/sync'
+import { renderCountdown } from './countdown'
 
 /**
  * Renders the host (player A) screen into `container`.
  * Connects to the WebSocket server, requests a room, displays QR + code.
  * Calls `onBack` when the user taps the back button.
+ * Calls `onReady` after the countdown completes.
  * Returns a `destroy` function for cleanup.
  */
 export function renderHost(
   container: HTMLElement,
-  onBack: () => void
+  onBack: () => void,
+  onReady: () => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -64,13 +68,48 @@ export function renderHost(
     }
   }
 
-  client.onPeerJoined = () => {
+  client.onPeerJoined = async () => {
     if (destroyed) return
+
     const waitEl = container.querySelector<HTMLElement>('#host-wait')
     if (waitEl) {
-      waitEl.textContent = 'Joueur B connecté ! ✓'
+      waitEl.textContent = 'Joueur B connecté ✓'
       waitEl.className = 'status-msg success'
     }
+
+    const screenEl = container.querySelector<HTMLElement>('.screen')
+    if (!screenEl) return
+
+    // Add network sync status
+    const syncEl = document.createElement('p')
+    syncEl.id = 'sync-status'
+    syncEl.className = 'status-msg'
+    syncEl.textContent = 'Mesure du réseau…'
+    screenEl.appendChild(syncEl)
+
+    const serverOffset = await measureServerOffset(client)
+
+    if (destroyed) return
+
+    syncEl.textContent = 'Réseau OK ✓'
+    syncEl.className = 'status-msg success'
+
+    // Add launch button
+    const btnLaunch = document.createElement('button')
+    btnLaunch.className = 'btn btn-primary'
+    btnLaunch.id = 'btn-launch'
+    btnLaunch.textContent = 'Lancer ▶'
+    screenEl.appendChild(btnLaunch)
+
+    client.onCountdown = (tStart: number) => {
+      destroyed = true
+      renderCountdown(container, tStart, serverOffset, onReady)
+    }
+
+    btnLaunch.addEventListener('click', () => {
+      btnLaunch.disabled = true
+      client.startCountdown()
+    })
   }
 
   client.onError = (message: string) => {

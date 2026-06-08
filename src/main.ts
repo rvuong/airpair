@@ -1,6 +1,7 @@
 import { renderLanding } from './screens/landing.ts'
 import { renderHost } from './screens/host.ts'
 import { renderJoin } from './screens/join.ts'
+import { renderGame } from './screens/game.ts'
 
 // ---------------------------------------------------------------------------
 // iOS Safari: prevent scroll/bounce on all touchmove events
@@ -26,7 +27,7 @@ const app: HTMLElement = getAppElement()
 type Destroy = () => void
 let currentDestroy: Destroy | null = null
 
-function navigate(screen: 'landing' | 'host' | 'join'): void {
+function navigate(screen: 'landing' | 'host' | 'join' | 'game'): void {
   currentDestroy?.()
   currentDestroy = null
 
@@ -38,11 +39,15 @@ function navigate(screen: 'landing' | 'host' | 'join'): void {
       break
 
     case 'host':
-      currentDestroy = renderHost(app, () => navigate('landing'))
+      currentDestroy = renderHost(app, () => navigate('landing'), () => navigate('game'))
       break
 
     case 'join':
-      currentDestroy = renderJoin(app, () => navigate('landing'))
+      currentDestroy = renderJoin(app, () => navigate('landing'), () => navigate('game'))
+      break
+
+    case 'game':
+      currentDestroy = renderGame(app, () => navigate('landing'))
       break
   }
 }

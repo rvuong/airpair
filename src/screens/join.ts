@@ -1,5 +1,7 @@
 import { RoomClient } from '../net/ws.ts'
 import { startScan } from '../qr/scan.ts'
+import { measureServerOffset } from '../net/sync.ts'
+import { renderCountdown } from './countdown.ts'
 
 type Tab = 'scanner' | 'code'
 
@@ -11,7 +13,8 @@ type Tab = 'scanner' | 'code'
  */
 export function renderJoin(
   container: HTMLElement,
-  onBack: () => void
+  onBack: () => void,
+  onReady: () => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -154,12 +157,33 @@ export function renderJoin(
       })
   }
 
-  client.onJoined = () => {
+  client.onJoined = async () => {
     if (destroyed) return
     stopCamera()
     showSuccess()
     setScanStatus('')
     setCodeError('')
+
+    const screenEl = container.querySelector<HTMLElement>('.screen')
+    if (!screenEl) return
+
+    // Add sync status
+    const syncEl = document.createElement('p')
+    syncEl.id = 'sync-status'
+    syncEl.className = 'status-msg'
+    syncEl.textContent = 'Synchronisation…'
+    screenEl.appendChild(syncEl)
+
+    const serverOffset = await measureServerOffset(client)
+
+    if (destroyed) return
+
+    syncEl.textContent = 'En attente du lancement…'
+
+    client.onCountdown = (tStart: number) => {
+      destroyed = true
+      renderCountdown(container, tStart, serverOffset, onReady)
+    }
   }
 
   client.onError = (message: string) => {
