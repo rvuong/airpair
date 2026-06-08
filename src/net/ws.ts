@@ -53,7 +53,8 @@ type ClientCommand = CmdCreate | CmdJoin | CmdRelay
 // ---- RoomClient ----
 
 const WS_URL: string =
-  (import.meta.env['VITE_WS_URL'] as string | undefined) ?? 'ws://localhost:3000'
+  (import.meta.env['VITE_WS_URL'] as string | undefined) ??
+  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`
 
 export class RoomClient {
   private socket: WebSocket | null = null
