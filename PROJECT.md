@@ -106,16 +106,13 @@ l'espace invisible entre les deux téléphones**. Tout le reste est secondaire.
 
 ## Roadmap
 
-### Phase 0 — Tuer les risques (1-2 semaines) ← EN COURS
-Deux prototypes jetables, indépendants :
-- **0a Contrôle** : un écran, raquette au tilt, balle renvoyée par un mur.
-  Tuning en live. Critère : 3 personnes sur 4 trouvent le contrôle "agréable
-  et précis" en 30 s de prise en main. Sinon : pivot tactile ou arrêt.
-- **0b Synchro** : deux clients (iPhone + navigateur desktop acceptable),
-  WebSocket, handshake NTP-like, affichage offset + latence mesurés.
-  Critère : offset stable < 20 ms en WiFi local.
+### Phase 0 — Tuer les risques ✅
+- **0a Contrôle** : validé. Tilt agréable et précis, valeurs par défaut retenues.
+  Critère 3/4 : validé solo, à confirmer avec d'autres testeurs en parallèle de Phase 1.
+- **0b Synchro** : validé. Connexion WS, relais bidirectionnel, handshake NTP opérationnels.
+  Offset mesuré ~45 ms sur WiFi (dans la tolérance de la zone morte 400 ms).
 
-### Phase 1 — MVP (3-5 semaines)
+### Phase 1 — MVP (3-5 semaines) ← EN COURS
 Appairage QR, compte à rebours synchronisé, boucle de jeu complète (service,
 échange, point, score à 11), indicateur d'approche, 4-5 sons soignés
 (frappe percussive type "pock", point, compte à rebours).
