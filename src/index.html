@@ -256,6 +256,35 @@
       .btn-back:active {
         color: #fff;
       }
+
+      /* Countdown screen */
+      .screen-countdown {
+        justify-content: center;
+        min-height: 100%;
+      }
+
+      .countdown-number {
+        font-size: 9rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        transition: color 0.15s ease;
+      }
+
+      .countdown-number.go {
+        font-size: 4rem;
+        color: #4ade80;
+        letter-spacing: 0.15em;
+      }
+
+      @keyframes pulse-in {
+        from { transform: scale(1.4); opacity: 0.6; }
+        to   { transform: scale(1);   opacity: 1; }
+      }
+
+      .countdown-number.pulse {
+        animation: pulse-in 0.25s ease-out forwards;
+      }
     </style>
   </head>
   <body>

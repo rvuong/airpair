@@ -10,6 +10,9 @@ interface Message {
   role?: string;
   payload?: unknown;
   message?: string;
+  t1?: number;
+  t2?: number;
+  t_start?: number;
 }
 
 interface Room {
@@ -60,6 +63,23 @@ function handleJoin(ws: WebSocket, roomId: string): void {
   send(ws, { type: "joined", role: "B" });
   send(room.a, { type: "peer_joined" });
   console.log(`[JOIN] Client joined room ${roomId}`);
+}
+
+function handleServerPing(ws: WebSocket, t1: number): void {
+  send(ws, { type: "server_pong", t1, t2: Date.now() });
+}
+
+function handleStartCountdown(ws: WebSocket): void {
+  const clientInfo = clientToRoom.get(ws);
+  if (!clientInfo || clientInfo.role !== "A") return;
+
+  const room = rooms.get(clientInfo.roomId);
+  if (!room) return;
+
+  const tStart = Date.now() + 3500;
+  send(room.a, { type: "countdown", t_start: tStart });
+  if (room.b) send(room.b, { type: "countdown", t_start: tStart });
+  console.log(`[COUNTDOWN] Room ${clientInfo.roomId} starts at ${tStart}`);
 }
 
 function handleRelay(ws: WebSocket, payload: unknown): void {
@@ -116,6 +136,12 @@ wss.on("connection", (ws: WebSocket) => {
         break;
       case "relay":
         if (msg.payload !== undefined) handleRelay(ws, msg.payload);
+        break;
+      case "server_ping":
+        if (msg.t1 !== undefined) handleServerPing(ws, msg.t1);
+        break;
+      case "start_countdown":
+        handleStartCountdown(ws);
         break;
       default:
         send(ws, { type: "error", message: "unknown_type" });
