@@ -38,7 +38,7 @@ leçon transférable au-delà du projet. Matière première : `docs/decisions.md
 | 7 | Moins montrer pour mieux jouer : pourquoi j'ai refusé d'afficher la balle adverse | D06, D07, D08 | Le retrait d'information comme outil de design (tension, regard) |
 | 8 | Mesurer le CO₂ d'un side project : mise en place du SCI (ISO 21031) | D17 | Une méthode de mesure proportionnée, comparaison relative > chiffre absolu |
 | 9 | Combien "coûte" l'IA de mon projet ? Tokens, fourchettes et honnêteté | Volet A SCI, ccusage | Mesurer son usage IA ; assumer l'incertitude en fourchette |
-| 10 | MVP : la première vraie partie (et tout ce qui a cassé) | Phase 1 | Le chemin entre "ça marche en démo" et "ça marche chez les autres" |
+| 10 | MVP : la première vraie partie (et tout ce qui a cassé) | Phase 1 ✅ — **prêt à rédiger** | Le chemin entre "ça marche en démo" et "ça marche chez les autres" |
 | 11 | Go ou no-go : "est-ce qu'ils redemandent une revanche ?" | Fin phase 1 | Choisir un critère de décision honnête AVANT de voir les résultats |
 | 12 | Ce que les playtests ont détruit dans mes certitudes | Phase 2 | Tuning par l'observation ; les joueurs ne font jamais ce qu'on prévoit |
 | 13 | Bilan carbone v1 : le poste dominant n'est pas celui que vous croyez | Baseline SCI | L'embodied des terminaux domine → supporter les vieux appareils |

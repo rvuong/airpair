@@ -295,9 +295,27 @@ vieillit mal et mélange décisions actées et supersédées. Specs détaillées
 
 ---
 
+## D19 — Revanche et alternance du premier service ✅
+
+**Contexte.** En fin de partie, l'expérience naturelle du ping-pong est de
+rejouer immédiatement. Sans bouton revanche, les joueurs doivent recharger
+la page et re-appairer — friction qui tue l'envie spontanée de rematch.
+
+**Décision.** Bouton "Revanche" en fin de partie. Le premier service change
+de joueur à chaque partie : si A a servi en premier, B sert en premier à la
+revanche — équité perçue sans règle à expliquer.
+
+**Pourquoi.** L'alternance est implicite (comme au tennis de table) ; le
+joueur qui vient de perdre a "la balle" psychologiquement. La mise en œuvre
+est triviale (bit `firstServer` qui flip). L'absence de relance facile était
+le principal frein au critère go/no-go "redemander une revanche".
+
+---
+
 ## Questions ouvertes (à trancher par prototype/playtest)
 
-1. Le tilt est-il fun ? (proto 0a — pari central, critère go/pivot/stop)
+1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
+   en playtests phase 1 avec plusieurs joueurs.
 2. Valeurs de tuning : zone morte du tilt, amplitude, exposant, lissage,
    durée de traversée de la zone morte, vitesses de balle, taille de raquette.
 3. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).

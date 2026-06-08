@@ -1,9 +1,10 @@
 # Pong Bros — contexte projet
 
-**Phase actuelle : 0 (prototypes jetables)**
-Proto 0a : tilt/contrôle, 1 téléphone, `proto/0a-tilt/`
-Proto 0b : synchro réseau, 2 clients, `proto/0b-sync/`
-Go/no-go projet = résultat 0a (3/4 personnes trouvent le tilt agréable en 30 s).
+**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/pongbros/**
+En attente de playtests. Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
+Phase 1 livré : appairage QR · boucle de jeu (score à 11) · sons · indicateur d'approche · revanche · deploy GitHub Pages
+
+Phase 0 ✅ : `proto/0a-tilt/` (tilt) · `proto/0b-sync/` (synchro réseau)
 
 ## Stack
 Client : Vite + TypeScript, Canvas 2D, PWA

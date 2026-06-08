@@ -112,14 +112,15 @@ l'espace invisible entre les deux téléphones**. Tout le reste est secondaire.
 - **0b Synchro** : validé. Connexion WS, relais bidirectionnel, handshake NTP opérationnels.
   Offset mesuré ~45 ms sur WiFi (dans la tolérance de la zone morte 400 ms).
 
-### Phase 1 — MVP (3-5 semaines) ← EN COURS
+### Phase 1 — MVP ✅ (livré le 8 juin 2026)
 Appairage QR, compte à rebours synchronisé, boucle de jeu complète (service,
-échange, point, score à 11), indicateur d'approche, 4-5 sons soignés
-(frappe percussive type "pock", point, compte à rebours).
-Fin de phase : sessions avec des inconnus → **go/no-go** sur le critère
-"les joueurs redemandent-ils spontanément une revanche ?".
+échange, score à 11), sons soignés (frappe, rebond, point, compte à rebours,
+victoire/défaite), indicateur d'approche, bouton revanche avec alternance du
+premier serveur, déploiement GitHub Pages.
+→ **En attente de playtests.** Critère go/no-go phase 2 :
+"les joueurs redemandent-ils spontanément une revanche ?"
 
-### Phase 2 — Sensation (2-3 semaines, si go)
+### Phase 2 — Sensation (2-3 semaines, si go) ← À VENIR
 Playtests 5-10 paires. Tuning : vitesse de balle, taille de raquette, durée de
 zone morte, gain du tilt. Toggles à trancher : replay atténué du son de frappe
 adverse. Si latence du relais gênante : WebRTC DataChannel P2P (serveur =
