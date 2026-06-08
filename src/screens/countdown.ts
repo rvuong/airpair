@@ -7,6 +7,8 @@
  * @param onDone       - Called ~800 ms after "GO !" is displayed.
  * @returns destroy    - Cancels the rAF loop and empties the container.
  */
+import { playCountdownTick, playCountdownGo } from '../game/audio'
+
 export function renderCountdown(
   container: HTMLElement,
   tStartServer: number,
@@ -41,6 +43,7 @@ export function renderCountdown(
         void displayEl.offsetWidth
         displayEl.textContent = String(digit)
         displayEl.classList.add('pulse')
+        playCountdownTick()
       }
       rafId = requestAnimationFrame(tick)
     } else {
@@ -51,6 +54,7 @@ export function renderCountdown(
         void displayEl.offsetWidth
         displayEl.textContent = 'GO !'
         displayEl.classList.add('go', 'pulse')
+        playCountdownGo()
       }
 
       if (!doneTriggered) {

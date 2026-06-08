@@ -1,5 +1,6 @@
 import { RoomClient, GameMsg } from '../net/ws'
 import { TiltController, GameState, Phase } from '../game/simulation'
+import { resumeAudio, isMuted, playHit, playWall, playScore, playMiss, playVictory, playDefeat } from '../game/audio'
 import {
   DEAD_ZONE_MS,
   INITIAL_SPEED_NORM,
@@ -274,6 +275,7 @@ export function renderGame(
       }
       state.phase = 'scoring'
       state.scoringUntil = Date.now() + POINT_PAUSE_MS
+      if (msg.scorer === role) playScore(); else playMiss()
     }
   }
 
@@ -348,9 +350,11 @@ export function renderGame(
       if (ball.x - BALL_R < 0) {
         ball.x = BALL_R
         ball.vx = Math.abs(ball.vx)
+        playWall()
       } else if (ball.x + BALL_R > W) {
         ball.x = W - BALL_R
         ball.vx = -Math.abs(ball.vx)
+        playWall()
       }
 
       // Paddle hit detection
@@ -373,9 +377,8 @@ export function renderGame(
 
         ball.vx = newSpeed * Math.sin(angle)
         ball.vy = -Math.abs(newSpeed * Math.cos(angle))
-
-        // Correct position so ball doesn't tunnel through
         ball.y = py - BALL_R
+        playHit()
       }
 
       // Ball exits top — send hit relay
@@ -402,6 +405,7 @@ export function renderGame(
         state.phase = 'scoring'
         state.scoringUntil = Date.now() + POINT_PAUSE_MS
         state.ball = null
+        playMiss()
       }
     }
 
@@ -442,6 +446,7 @@ export function renderGame(
         const winner = checkWinner(state.myScore, state.opponentScore)
         if (winner) {
           state.phase = 'game_over'
+          if (winner === 'me') playVictory(); else playDefeat()
         } else {
           afterScoring()
         }
@@ -512,6 +517,14 @@ export function renderGame(
       ctx.fillRect(0, 0, W, H)
     }
 
+    // Mute switch warning (iOS silent mode cuts Web Audio)
+    if (isMuted() && phase !== 'pre_game') {
+      ctx.fillStyle = 'rgba(255,200,0,0.85)'
+      ctx.font = `${Math.round(W * 0.033)}px -apple-system, sans-serif`
+      ctx.textAlign = 'right'
+      ctx.fillText('Son coupé', W - 10, H * 0.055)
+    }
+
     if (phase === 'game_over') {
       ctx.fillStyle = 'rgba(0,0,0,0.7)'
       ctx.fillRect(0, 0, W, H)
@@ -544,6 +557,7 @@ export function renderGame(
   }
 
   function handleTouchStart(e: TouchEvent): void {
+    resumeAudio()
     const touch = e.changedTouches[0]
     if (!touch) return
     const x = getCanvasX(touch.clientX)
@@ -603,6 +617,7 @@ export function renderGame(
 
   // Pre-game overlay — real <button> + click + async/await: the only pattern iOS 13+ accepts
   const handleStartBtn = async (): Promise<void> => {
+    resumeAudio()
     startBtn!.disabled = true
     const DevOrient = DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<'granted' | 'denied'>
@@ -651,6 +666,7 @@ export function renderGame(
       container.appendChild(tiltBtn)
 
       const enableTilt = async (): Promise<void> => {
+        resumeAudio()
         tiltBtn.remove()
         const DoeCtor = DeviceOrientationEvent as unknown as {
           requestPermission: () => Promise<'granted' | 'denied'>

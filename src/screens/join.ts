@@ -2,6 +2,7 @@ import { RoomClient } from '../net/ws.ts'
 import { startScan } from '../qr/scan.ts'
 import { measureServerOffset } from '../net/sync.ts'
 import { renderCountdown } from './countdown.ts'
+import { resumeAudio } from '../game/audio'
 
 type Tab = 'scanner' | 'code'
 
@@ -288,9 +289,9 @@ export function renderJoin(
   tabCode?.addEventListener('click', () => switchTab('code'))
 
   // Camera button — getUserMedia inside user gesture handler (iOS Safari)
-  btnStartCamera?.addEventListener('click', startCamera)
+  btnStartCamera?.addEventListener('click', () => { resumeAudio(); startCamera() })
 
-  btnJoinCode?.addEventListener('click', joinByCode)
+  btnJoinCode?.addEventListener('click', () => { resumeAudio(); joinByCode() })
 
   roomCodeInput?.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Enter') joinByCode()
