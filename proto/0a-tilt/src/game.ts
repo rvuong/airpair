@@ -6,6 +6,8 @@ const PADDLE_MARGIN = 40;
 const PADDLE_RADIUS = 7;
 const BALL_RADIUS = 10;
 const INITIAL_SPEED = 400;
+const SPEED_INCREASE_FACTOR = 1.06;
+const MAX_SPEED = 950;
 
 interface Ball {
   x: number;
@@ -49,6 +51,7 @@ export class Game {
   private rafId: number = 0;
   private lastTime: number = 0;
   private suspended: boolean = false;
+  private hitCount: number = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -179,9 +182,11 @@ export class Game {
       const normalizedHit = hitPos * 2 - 1;
       const bounceAngle = normalizedHit * 65 * (Math.PI / 180);
 
-      const speed = Math.sqrt(
+      const rawSpeed = Math.sqrt(
         this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy
       );
+      this.hitCount++;
+      const speed = Math.min(rawSpeed * SPEED_INCREASE_FACTOR, MAX_SPEED);
       this.ball.vx = Math.sin(bounceAngle) * speed;
       this.ball.vy = -Math.abs(Math.cos(bounceAngle) * speed);
       this.ball.y = paddleTop - BALL_RADIUS;
@@ -191,6 +196,7 @@ export class Game {
 
     if (this.ball.y - BALL_RADIUS > ch) {
       this.ball = resetBall(cw);
+      this.hitCount = 0;
     }
   }
 
@@ -207,6 +213,13 @@ export class Game {
     this.ctx.beginPath();
     this.ctx.arc(this.ball.x, this.ball.y, BALL_RADIUS, 0, Math.PI * 2);
     this.ctx.fill();
+
+    if (this.hitCount > 0) {
+      this.ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      this.ctx.font = '28px monospace';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(String(this.hitCount), cw / 2, 48);
+    }
 
     const paddleTop = ch - PADDLE_MARGIN - PADDLE_HEIGHT;
     const r = PADDLE_RADIUS;
