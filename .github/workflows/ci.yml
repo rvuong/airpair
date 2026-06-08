@@ -69,22 +69,29 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
 
-  # Phase 1 — décommenter quand src/ existe
-  # src:
-  #   name: MVP — typecheck + build + budgets
-  #   if: hashFiles('src/package.json') != ''
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: src
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with: { node-version: 20, cache: npm, cache-dependency-path: src/package-lock.json }
-  #     - run: npm ci
-  #     - run: npm run typecheck
-  #     - run: npm run build
-  #     - name: Bundle ≤ 150 Ko gzip
-  #       run: node -e "..." (même script que proto-0a ci-dessus)
-  #     - name: Trafic WS ≤ 20 Ko/partie (TODO: test simulé à écrire)
-  #       run: npm run test:ws-budget
+  src:
+    name: MVP — typecheck + build + budgets
+    if: hashFiles('src/package.json') != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Bundle ≤ 150 Ko gzip
+        run: |
+          node -e "
+            const fs = require('fs'), zlib = require('zlib');
+            const files = fs.readdirSync('dist/assets').filter(f => f.endsWith('.js'));
+            const total = files.reduce((s, f) => s + zlib.gzipSync(fs.readFileSync('dist/assets/'+f)).length, 0);
+            console.log('Bundle gzip:', total, 'octets');
+            if (total > 153600) { console.error('FAIL: > 150 Ko'); process.exit(1); }
+          "
