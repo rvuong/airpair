@@ -295,6 +295,37 @@ vieillit mal et mélange décisions actées et supersédées. Specs détaillées
 
 ---
 
+## D19 — Thèmes graphiques occasionnels ⏸ (post Phase 3)
+
+**Idée.** Permettre au joueur A de choisir un thème visuel appliqué aux deux
+écrans simultanément : fond coloré, lignes, balle thématiques. Exemples :
+Roland Garros (fond terre battue ocre, lignes blanches, balle jaune), Wimbledon
+(fond vert, balle blanche), Noël, etc.
+
+**Objectif déclaré.** Renforcer la proximité physique — deux joueurs face à
+face partageant le même univers visuel crée une connivence de circonstance
+("on joue le Roland Garros").
+
+**Challenge.** L'objectif de "renforcer la proximité physique" est déjà
+assuré par le dispositif lui-même (coprésence, tilt, son). Le thème ajoute
+de la personnalité et une raison de rouvrir l'app (occasion calendaire), mais
+son effet sur la proximité physique est marginal. La vraie valeur est
+éditoriale et de rétention, pas de game design.
+
+**Points d'attention si implémenté.**
+- Noms de tournois (Roland Garros, Wimbledon) sont des marques déposées :
+  s'inspirer sans reproduire logos ni noms exacts. Nommer "Terre battue",
+  "Gazon", etc.
+- Synchronisation triviale : le thème choisi par A est envoyé au pair dans
+  le message d'appairage (payload room setup). Pas de complexité réseau.
+- Implémentation légère : palette CSS + asset balle alternatif.
+  Le rendu Canvas paramétré par un objet `Theme` suffit.
+
+**Statut.** Hors scope jusqu'à validation Phase 3. À réévaluer selon
+l'audience et la traction.
+
+---
+
 ## Questions ouvertes (à trancher par prototype/playtest)
 
 1. Le tilt est-il fun ? (proto 0a — pari central, critère go/pivot/stop)
