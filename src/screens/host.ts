@@ -2,6 +2,7 @@ import { RoomClient } from '../net/ws'
 import { drawQR } from '../qr/generate'
 import { measureServerOffset } from '../net/sync'
 import { renderCountdown } from './countdown'
+import { resumeAudio } from '../game/audio'
 
 /**
  * Renders the host (player A) screen into `container`.
@@ -108,6 +109,7 @@ export function renderHost(
     }
 
     btnLaunch.addEventListener('click', () => {
+      resumeAudio()
       btnLaunch.disabled = true
       client.startCountdown()
     })
