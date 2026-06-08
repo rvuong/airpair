@@ -238,6 +238,26 @@ export function renderGame(
     state.rallyCount = 0
   }
 
+  // Alternates each game: A serves odd games, B serves even games
+  let firstServer: 'A' | 'B' = 'A'
+
+  function resetGame(): void {
+    firstServer = firstServer === 'A' ? 'B' : 'A'
+    state.myScore = 0
+    state.opponentScore = 0
+    state.rallyCount = 0
+    state.ball = null
+    state.ballArrivalTime = null
+    state.scoringUntil = null
+    pendingHit = null
+    if (firstServer === role) {
+      state.phase = 'serving'
+      placeBallOnPaddle()
+    } else {
+      state.phase = 'waiting'
+    }
+  }
+
   function afterScoring(): void {
     const iServe = determineServer(state.myScore, state.opponentScore, role)
     if (iServe) {
@@ -267,6 +287,8 @@ export function renderGame(
       if (state.phase === 'dead_zone' || state.phase === 'waiting') {
         state.phase = 'waiting'
       }
+    } else if (msg.type === 'rematch') {
+      resetGame()
     } else if (msg.type === 'miss') {
       if (msg.scorer === role) {
         state.myScore++
@@ -551,13 +573,22 @@ export function renderGame(
       ctx.font = `${Math.round(W * 0.07)}px -apple-system, sans-serif`
       ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, H / 2 + W * 0.04)
 
-      // Back button
+      // Revanche button (primary)
       ctx.fillStyle = '#fff'
-      roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.62, W * 0.6, W * 0.13, 12)
+      roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.60, W * 0.6, W * 0.13, 12)
       ctx.fill()
       ctx.fillStyle = '#000'
       ctx.font = `bold ${Math.round(W * 0.05)}px -apple-system, sans-serif`
-      ctx.fillText('Retour', W / 2, H * 0.62 + W * 0.085)
+      ctx.fillText('Revanche', W / 2, H * 0.60 + W * 0.085)
+
+      // Back button (secondary)
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+      ctx.lineWidth = 1.5
+      roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.76, W * 0.6, W * 0.11, 12)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      ctx.font = `${Math.round(W * 0.045)}px -apple-system, sans-serif`
+      ctx.fillText('Retour', W / 2, H * 0.76 + W * 0.075)
     }
   }
 
@@ -580,7 +611,8 @@ export function renderGame(
     if (state.phase === 'serving') {
       serveBall()
     } else if (state.phase === 'game_over') {
-      checkBackButtonTap(touch.clientX, touch.clientY)
+      e.preventDefault()  // suppress the synthetic click that would fire serveBall()
+      checkGameOverTap(touch.clientX, touch.clientY)
     }
   }
 
@@ -604,20 +636,23 @@ export function renderGame(
     if (state.phase === 'serving') {
       serveBall()
     } else if (state.phase === 'game_over') {
-      checkBackButtonTap(e.clientX, e.clientY)
+      checkGameOverTap(e.clientX, e.clientY)
     }
   }
 
-  function checkBackButtonTap(clientX: number, clientY: number): void {
-    // Back button bounds: x: W/2 - W*0.3 .. W/2 + W*0.3, y: H*0.62 .. H*0.62 + W*0.13
+  function checkGameOverTap(clientX: number, clientY: number): void {
     const bx = W / 2 - W * 0.3
-    const by = H * 0.62
     const bw = W * 0.6
-    const bh = W * 0.13
-    if (
-      clientX >= bx && clientX <= bx + bw &&
-      clientY >= by && clientY <= by + bh
-    ) {
+    // Revanche button
+    if (clientY >= H * 0.60 && clientY <= H * 0.60 + W * 0.13 &&
+        clientX >= bx && clientX <= bx + bw) {
+      client.relay({ type: 'rematch' } satisfies GameMsg)
+      resetGame()
+      return
+    }
+    // Back button
+    if (clientY >= H * 0.76 && clientY <= H * 0.76 + W * 0.11 &&
+        clientX >= bx && clientX <= bx + bw) {
       onBack()
     }
   }
