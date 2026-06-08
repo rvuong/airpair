@@ -1,0 +1,13 @@
+export const DEAD_ZONE_MS = 400
+export const INITIAL_SPEED_NORM = 0.45   // fraction of H per second
+export const SPEED_FACTOR = 1.06
+export const MAX_SPEED_NORM = 1.1        // fraction of H per second
+export const BALL_RADIUS_NORM = 0.013    // fraction of W
+export const PADDLE_WIDTH_NORM = 0.28    // fraction of W
+export const PADDLE_HEIGHT = 14
+export const PADDLE_MARGIN = 52          // px from bottom
+export const PADDLE_CORNER = 7
+export const MAX_BOUNCE_ANGLE_DEG = 65
+export const POINT_PAUSE_MS = 1200
+export const WIN_SCORE = 11
+export const WIN_MARGIN = 2

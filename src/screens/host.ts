@@ -13,7 +13,7 @@ import { renderCountdown } from './countdown'
 export function renderHost(
   container: HTMLElement,
   onBack: () => void,
-  onReady: () => void
+  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number) => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -25,6 +25,7 @@ export function renderHost(
 
   const client = new RoomClient()
   let destroyed = false
+  let handedOff = false
 
   const statusEl = container.querySelector<HTMLElement>('#host-status')
 
@@ -102,8 +103,8 @@ export function renderHost(
     screenEl.appendChild(btnLaunch)
 
     client.onCountdown = (tStart: number) => {
-      destroyed = true
-      renderCountdown(container, tStart, serverOffset, onReady)
+      handedOff = true
+      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset))
     }
 
     btnLaunch.addEventListener('click', () => {
@@ -146,7 +147,7 @@ export function renderHost(
   return () => {
     destroyed = true
     btnBack?.removeEventListener('click', handleBack)
-    client.disconnect()
+    if (!handedOff) client.disconnect()
     container.innerHTML = ''
   }
 }

@@ -14,7 +14,7 @@ type Tab = 'scanner' | 'code'
 export function renderJoin(
   container: HTMLElement,
   onBack: () => void,
-  onReady: () => void
+  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number) => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -62,6 +62,7 @@ export function renderJoin(
 
   const client = new RoomClient()
   let destroyed = false
+  let handedOff = false
   let stopScan: (() => void) | null = null
   let videoStream: MediaStream | null = null
   let activeTab: Tab = 'scanner'
@@ -181,8 +182,8 @@ export function renderJoin(
     syncEl.textContent = 'En attente du lancement…'
 
     client.onCountdown = (tStart: number) => {
-      destroyed = true
-      renderCountdown(container, tStart, serverOffset, onReady)
+      handedOff = true
+      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'B', serverOffset))
     }
   }
 
@@ -310,7 +311,7 @@ export function renderJoin(
     destroyed = true
     btnBack?.removeEventListener('click', handleBack)
     stopCamera()
-    client.disconnect()
+    if (!handedOff) client.disconnect()
     container.innerHTML = ''
   }
 }

@@ -22,6 +22,7 @@
     "screens",
     "net",
     "qr",
+    "game",
     "vite.config.ts"
   ]
 }
