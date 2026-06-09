@@ -86,6 +86,13 @@ main pour 3 personnes sur 4 ? Sinon : pivot tactile ou arrêt — c'est le pari
 central du projet. Point critique de tuning : le calibrage du neutre (la tenue
 "confortable" varie selon les joueurs) + re-centrage avant chaque manche.
 
+**Amendement (9 juin 2026, post-playtest #2) :** tilt perçu comme imprécis.
+Ajustements actés (PR fix/ball-size-tilt-precision) :
+- `amplitude` : 20° → 15° (plage complète accessible sans incliner trop fort)
+- `exponent` : 1.4 → 1.1 (quasi-linéaire, réponse plus prédictible)
+- `alpha` : 0.3 → 0.45 (moins de lissage, lag réduit ~80 ms → ~40 ms)
+Déadzone inchangée (1,5°).
+
 ---
 
 ## D04 — Architecture réseau et synchronisation ✅
@@ -336,16 +343,17 @@ le principal frein au critère go/no-go "redemander une revanche".
 
 1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
    en playtests phase 2.
-2. Tuning tilt : alpha 0.3 → 0.5 (réduire lag perçu ~80 ms → ~40 ms),
-   amplitude 20° → 16°. Sensation "élastique" (accélération progressive) :
-   à prototyper. Conflit touch/tilt à investiguer (contact accidentel override
-   possible). PR 2 après retour playtest sur PR 1.
-3. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
-4. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
-5. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
-6. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
+2. ~~Tuning tilt : alpha 0.3 → 0.5, amplitude 20° → 16°.~~ **Acté (9 juin
+   2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
+   D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
+   quasi-linéaire. Conflit touch/tilt : à surveiller en playtest.
+3. Taille de la balle : voir D20.
+4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
+5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
+6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
+7. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
    sont un premier palier ; à affiner par itérations.
-7. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
+8. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
    spontanément une revanche ?"
 
 ---
@@ -401,6 +409,23 @@ publiés) ; les chiffres SCI publiés respectent docs/sci.md (fourchettes,
 étiquettes [mesuré]/[estimé]) ; le temps de rédaction entre au worklog SCI ;
 garde-fou : ne jamais arbitrer une décision projet pour "faire un meilleur
 post".
+
+---
+
+## D20 — Taille de la balle 🔬
+
+**Contexte.** Playtest #2 (9 juin 2026) : la balle est jugée trop petite à la
+valeur initiale `BALL_RADIUS_NORM = 0.013` (~10 px de diamètre sur iPhone 11).
+
+**Options envisagées.** (a) 10 px (initial) ; (b) 15 px (×1.5, valeur
+"raisonnable") ; (c) 25 px (×2.5, exagération délibérée pour trouver la
+limite haute).
+
+**Décision : test de la valeur (c) — 25 px — en cours.** Démarche : partir
+de la valeur exagérée, puis reculer jusqu'au confort. `BALL_RADIUS_NORM =
+0.0333` (PR fix/ball-size-tilt-precision).
+
+**À trancher** par playtest suivant.
 
 ---
 
