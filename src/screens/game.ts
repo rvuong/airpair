@@ -178,7 +178,7 @@ export function renderGame(
     scoringUntil: null,
   }
 
-  const tilt = new TiltController({ deadzone: 1.5, amplitude: 20, exponent: 1.4, alpha: 0.3 })
+  const tilt = new TiltController({ deadzone: 1.5, amplitude: 15, exponent: 1.1, alpha: 0.45 })
   let paddleX = W / 2 - paddleWidth / 2
   let serviceSpeedNorm = INITIAL_SPEED_NORM
   const paddleY = (): number => H - PADDLE_MARGIN
