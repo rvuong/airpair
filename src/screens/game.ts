@@ -105,6 +105,10 @@ export function renderGame(
       display:flex;align-items:center;justify-content:center;
       flex-direction:column;gap:20px;
     ">
+      <p style="
+        color:rgba(255,255,255,0.55);font-size:15px;
+        font-family:-apple-system,sans-serif;margin:0;
+      ">Premier à 7 points · marge de 2</p>
       <button id="start-btn" style="
         background:#f5f5f5;color:#111;border:none;border-radius:16px;
         padding:20px 40px;font-size:20px;font-weight:700;
@@ -176,6 +180,7 @@ export function renderGame(
 
   const tilt = new TiltController({ deadzone: 1.5, amplitude: 20, exponent: 1.4, alpha: 0.3 })
   let paddleX = W / 2 - paddleWidth / 2
+  let serviceSpeedNorm = INITIAL_SPEED_NORM
   const paddleY = (): number => H - PADDLE_MARGIN
 
   // ---------------------------------------------------------------------------
@@ -231,9 +236,8 @@ export function renderGame(
 
   function serveBall(): void {
     if (state.phase !== 'serving' || !state.ball) return
-    state.ball.vy = -(H * INITIAL_SPEED_NORM)
-    // Give a slight random horizontal component for first serve
-    state.ball.vx = (Math.random() * 0.4 - 0.2) * W * INITIAL_SPEED_NORM
+    state.ball.vy = -(H * serviceSpeedNorm)
+    state.ball.vx = (Math.random() * 0.4 - 0.2) * W * serviceSpeedNorm
     state.phase = 'playing'
     state.rallyCount = 0
   }
@@ -246,6 +250,7 @@ export function renderGame(
     state.myScore = 0
     state.opponentScore = 0
     state.rallyCount = 0
+    serviceSpeedNorm = INITIAL_SPEED_NORM
     state.ball = null
     state.ballArrivalTime = null
     state.scoringUntil = null
@@ -259,6 +264,7 @@ export function renderGame(
   }
 
   function afterScoring(): void {
+    serviceSpeedNorm = Math.min(serviceSpeedNorm * 1.10, MAX_SPEED_NORM)
     const iServe = determineServer(state.myScore, state.opponentScore, role)
     if (iServe) {
       state.phase = 'serving'
