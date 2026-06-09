@@ -106,7 +106,7 @@ export function renderGame(
       flex-direction:column;gap:20px;
     ">
       <p style="
-        color:rgba(255,255,255,0.55);font-size:15px;
+        color:rgba(255,255,255,0.55);font-size:30px;
         font-family:-apple-system,sans-serif;margin:0;
       ">Premier à 7 points · marge de 2</p>
       <button id="start-btn" style="
@@ -116,7 +116,7 @@ export function renderGame(
         -webkit-tap-highlight-color:transparent;touch-action:manipulation;
       ">Toucher pour commencer</button>
       <p id="perm-msg" style="
-        display:none;color:#ffcc00;font-size:14px;
+        display:none;color:#ffcc00;font-size:28px;
         font-family:-apple-system,sans-serif;text-align:center;padding:0 32px;
       "></p>
     </div>
@@ -542,14 +542,14 @@ export function renderGame(
 
     if (phase === 'waiting' || phase === 'dead_zone') {
       ctx.fillStyle = 'rgba(255,255,255,0.4)'
-      ctx.font = `${Math.round(W * 0.04)}px -apple-system, sans-serif`
+      ctx.font = `${Math.round(W * 0.08)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
       ctx.fillText('Adversaire…', W / 2, H - 20)
     }
 
     if (phase === 'serving') {
       ctx.fillStyle = 'rgba(255,255,255,0.5)'
-      ctx.font = `${Math.round(W * 0.04)}px -apple-system, sans-serif`
+      ctx.font = `${Math.round(W * 0.08)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
       ctx.fillText('Tap pour servir', W / 2, H - 20)
     }
@@ -563,7 +563,7 @@ export function renderGame(
     // Mute switch warning (iOS silent mode cuts Web Audio)
     if (isMuted() && phase !== 'pre_game') {
       ctx.fillStyle = 'rgba(255,200,0,0.85)'
-      ctx.font = `${Math.round(W * 0.033)}px -apple-system, sans-serif`
+      ctx.font = `${Math.round(W * 0.066)}px -apple-system, sans-serif`
       ctx.textAlign = 'right'
       ctx.fillText('Son coupé', W - 10, H * 0.055)
     }
@@ -586,7 +586,7 @@ export function renderGame(
       roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.60, W * 0.6, W * 0.13, 12)
       ctx.fill()
       ctx.fillStyle = '#000'
-      ctx.font = `bold ${Math.round(W * 0.05)}px -apple-system, sans-serif`
+      ctx.font = `bold ${Math.round(W * 0.10)}px -apple-system, sans-serif`
       ctx.fillText('Revanche', W / 2, H * 0.60 + W * 0.085)
 
       // Back button (secondary)
@@ -595,7 +595,7 @@ export function renderGame(
       roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.76, W * 0.6, W * 0.11, 12)
       ctx.stroke()
       ctx.fillStyle = 'rgba(255,255,255,0.7)'
-      ctx.font = `${Math.round(W * 0.045)}px -apple-system, sans-serif`
+      ctx.font = `${Math.round(W * 0.09)}px -apple-system, sans-serif`
       ctx.fillText('Retour', W / 2, H * 0.76 + W * 0.075)
     }
   }
@@ -713,7 +713,7 @@ export function renderGame(
     const waitMsg = document.createElement('p')
     waitMsg.textContent = 'En attente du joueur A…'
     waitMsg.style.cssText = `
-      color:rgba(255,255,255,0.55);font-size:15px;
+      color:rgba(255,255,255,0.55);font-size:30px;
       font-family:-apple-system,sans-serif;margin:0;
     `
     preOverlay?.appendChild(waitMsg)
@@ -726,7 +726,7 @@ export function renderGame(
       tiltBtn.style.cssText = `
         background:rgba(255,255,255,0.15);color:#fff;
         border:1px solid rgba(255,255,255,0.35);border-radius:10px;
-        padding:12px 24px;font-size:15px;font-family:-apple-system,sans-serif;
+        padding:12px 24px;font-size:30px;font-family:-apple-system,sans-serif;
         cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px;
       `
       preOverlay?.appendChild(tiltBtn)
