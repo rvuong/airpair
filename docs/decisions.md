@@ -226,14 +226,22 @@ horloge).
 ## D11 — Hébergement ✅
 
 **Options envisagées.** (a) GitHub Pages ; (b) AWS S3 (+ CloudFront) ;
-(c) tier gratuit Render/Fly.io/Railway pour le serveur WS ; (d) EC2/Lightsail.
+(c) tier gratuit Render/Fly.io/Railway pour le serveur WS ; (d) EC2 AWS.
 
 **Décision.** Client statique : **GitHub Pages** (gratuit, HTTPS natif —
-indispensable pour capteurs et caméra, déploiement par push). S3 seul écarté :
-endpoint website HTTP uniquement, il faudrait CloudFront pour du HTTPS = de la
-config pour rien à ce stade. Serveur WS : **tier gratuit externe** en phase 1 ;
-migration vers l'AWS disponible plus tard si "go" (TLS et maintien en vie à
-gérer soi-même).
+indispensable pour capteurs et caméra, déploiement par push). Serveur WS :
+**EC2 t4g.nano AWS eu-west-1** (compte AWS existant, ~4 €/mois, isolation
+totale de la prod odomate, Elastic IP stable).
+
+**Pourquoi EC2 plutôt que tier gratuit.** Fly.io a supprimé son free tier en
+2024 pour les nouveaux comptes (2h d'essai seulement). Les alternatives
+gratuites (Render, Railway) ont soit un sleep après inactivité, soit une
+durée d'essai limitée. EC2 t4g.nano à ~3,40 $/mois sur un compte déjà
+facturé est plus simple, stable, et centralisé. Pas de load balancer
+(coût fixe +16 $/mois injustifié) : Nginx + Let's Encrypt directement sur
+l'instance. URL : `wss://ws.odomate.eu` (sous-domaine de la zone Route 53
+odomate.eu existante, zéro coût supplémentaire). CI/CD : workflow GitHub
+Actions `deploy-server.yml` — SSH + git pull + tsc + pm2 reload.
 
 **Dev local :** Vite en HTTPS sur réseau local (`@vitejs/plugin-basic-ssl`),
 certificat à accepter sur l'iPhone — itération sans déploiement.
@@ -258,12 +266,24 @@ téléphones (emprunter un Android = validation cross-platform) en phase 1.
 
 ---
 
-## D13 — Règles du jeu ✅ (non prépondérant)
+## D13 — Règles du jeu ✅ (amendé après premier playtest)
 
-Matchs en 11 points, 2 points d'écart, service alterné tous les 2 points,
-vitesse de balle croissante à chaque échange (sinon échanges interminables —
-défaut connu de Pong). Point quand l'adversaire rate. Détail des règles : pas
-prioritaire avant la phase 2.
+**MVP initial :** 11 points, marge 2, service alterné tous les 2 points,
+vitesse de balle croissante à chaque échange.
+
+**Amendement (9 juin 2026, post-premier playtest) :** jeu trop lent et trop
+long en conditions réelles. Ajustements actés :
+- Score : **7 points**, marge 2 inchangée (8-6, 9-7, 12-10 possibles).
+- Vitesse initiale de service : **0.60 × H/s** (vs 0.45 — équivaut à la
+  vitesse du 3e échange avant).
+- Accélération par frappe : **×1.10** (vs ×1.06 — plafond atteint plus vite,
+  échanges tendus rapidement).
+- **Escalade du service :** la vitesse de départ de chaque nouveau service
+  augmente de +10 % par rapport au précédent (plafonné à MAX_SPEED_NORM).
+  Effet : la partie s'emballe progressivement dès le service, pas seulement
+  pendant l'échange. Remise à 0.60 à chaque revanche.
+- **Affichage pré-partie :** "Premier à 7 points · marge de 2" visible avant
+  le lancement — le joueur sait où il va.
 
 ---
 
@@ -315,13 +335,17 @@ le principal frein au critère go/no-go "redemander une revanche".
 ## Questions ouvertes (à trancher par prototype/playtest)
 
 1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
-   en playtests phase 1 avec plusieurs joueurs.
-2. Valeurs de tuning : zone morte du tilt, amplitude, exposant, lissage,
-   durée de traversée de la zone morte, vitesses de balle, taille de raquette.
+   en playtests phase 2.
+2. Tuning tilt : alpha 0.3 → 0.5 (réduire lag perçu ~80 ms → ~40 ms),
+   amplitude 20° → 16°. Sensation "élastique" (accélération progressive) :
+   à prototyper. Conflit touch/tilt à investiguer (contact accidentel override
+   possible). PR 2 après retour playtest sur PR 1.
 3. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
 4. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
 5. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
-6. Critère go/no-go fin de phase 1 : "les joueurs redemandent-ils
+6. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
+   sont un premier palier ; à affiner par itérations.
+7. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
    spontanément une revanche ?"
 
 ---
