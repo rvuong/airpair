@@ -82,10 +82,9 @@ l'espace invisible entre les deux téléphones**. Tout le reste est secondaire.
 ### Contrôle au tilt (spec proto 0a)
 1. Source : `deviceorientation`, lecture de `gamma` (roulis en portrait), ~60 Hz.
 2. Calibrage : au tap "Jouer", `gamma0` = neutre. Commande = `gamma − gamma0`.
-3. Courbe de réponse : zone morte ±1,5°, mapping ±2° → ±20° vers la pleine
-   course, courbe légèrement exponentielle (précision au centre, vitesse aux
-   bords).
-4. Lissage : passe-bas exponentiel, α ≈ 0,3.
+3. Courbe de réponse : zone morte ±1,5°, mapping vers la pleine course sur ±15°
+   (post-playtest #2, réduit de 20°), exposant 1.1 (quasi-linéaire).
+4. Lissage : passe-bas exponentiel, α = 0,45 (post-playtest #2, réduit de 0,3).
 5. Re-centrage : bouton "recalibrer" + recalibrage auto avant chaque manche.
 6. **Panneau de tuning à l'écran** pour zone morte / amplitude / exposant /
    lissage (itération en live).
@@ -121,10 +120,15 @@ premier serveur, déploiement GitHub Pages.
 **Serveur WS déployé le 9 juin 2026** : EC2 t4g.nano eu-west-1, `wss://ws.odomate.eu`,
 TLS Let's Encrypt, CI/CD GitHub Actions.
 
-**Premier playtest réel (9 juin 2026)** : jeu trop lent, trop long.
-Corrections en cours (PR feat/game-tuning-v1) :
+**Playtest #1 (9 juin 2026)** : jeu trop lent, trop long.
+Corrections mergées (feat/game-tuning-v1) :
 vitesse initiale 0.45 → 0.60, accélération 1.06 → 1.10, score 11 → 7 pts (marge 2),
-escalade du service +10% par point. Tilt (alpha, conflit touch) : PR suivante.
+escalade du service +10% par point.
+
+**Playtest #2 (9 juin 2026)** : vitesse OK. Balle trop petite. Tilt imprécis.
+Corrections en cours (fix/ball-size-tilt-precision) :
+balle 10 px → 25 px (test d'exagération, D20), tilt amplitude 20° → 15°,
+exponent 1.4 → 1.1, alpha 0.3 → 0.45 (D03).
 
 → Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
 
