@@ -120,6 +120,14 @@ premier serveur, déploiement GitHub Pages.
 **Serveur WS déployé le 9 juin 2026** : EC2 t4g.nano eu-west-1, `wss://ws.odomate.eu`,
 TLS Let's Encrypt, CI/CD GitHub Actions.
 
+→ Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
+
+### Phase 2 — Sensation ← EN COURS (depuis le 9 juin 2026)
+Playtests 5-10 paires. Tuning : vitesse de balle, taille de raquette, durée de
+zone morte, gain du tilt. Toggles à trancher : replay atténué du son de frappe
+adverse. Si latence du relais gênante : WebRTC DataChannel P2P (serveur =
+signalisation seule).
+
 **Playtest #1 (9 juin 2026)** : jeu trop lent, trop long.
 Corrections mergées (feat/game-tuning-v1) :
 vitesse initiale 0.45 → 0.60, accélération 1.06 → 1.10, score 11 → 7 pts (marge 2),
@@ -129,14 +137,6 @@ escalade du service +10% par point.
 Corrections en cours (fix/ball-size-tilt-precision) :
 balle 10 px → 25 px (test d'exagération, D20), tilt amplitude 20° → 15°,
 exponent 1.4 → 1.1, alpha 0.3 → 0.45 (D03).
-
-→ Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
-
-### Phase 2 — Sensation (2-3 semaines, si go) ← EN COURS
-Playtests 5-10 paires. Tuning : vitesse de balle, taille de raquette, durée de
-zone morte, gain du tilt. Toggles à trancher : replay atténué du son de frappe
-adverse. Si latence du relais gênante : WebRTC DataChannel P2P (serveur =
-signalisation seule).
 
 ### Phase 3 — Profondeur (selon résultats)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,

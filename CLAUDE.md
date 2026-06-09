@@ -35,12 +35,33 @@ Exemples : `feat(tilt): add live tuning panel` · `fix(ios): unlock AudioContext
 - Phase 0 : `0.1.x` (protos) · Phase 1 MVP : `0.2.0` · Go phase 2 : `0.3.0` · Go phase 3 : `1.0.0`
 - Patch (`x`) : fix dans la phase · Minor (`y`) : fin de phase ou feature significative
 
+**Création de PR** — ne jamais créer la PR via CLI (`gh pr create`).
+Après commit + push : afficher le lien GitHub, proposer un titre et une description. L'utilisateur crée la PR manuellement dans l'interface GitHub.
+
+**Après merge d'une PR** — obligatoire, dans cet ordre :
+1. `git checkout main`
+2. `git pull origin main`
+3. `git branch -d <branche-mergée>`
+
 **CI** (`.github/workflows/ci.yml`) — sur chaque PR vers `main` :
 typecheck + build + bundle ≤ 150 Ko gzip (jobs conditionnels, skippés si package.json absent)
 
 **Deploy** (`.github/workflows/deploy.yml`) — sur merge dans `main`, path `src/**` :
 build Vite → GitHub Pages (`BASE_URL=/pongbros/`)
 Activer dans Settings → Pages → Source → GitHub Actions avant le premier déploiement.
+
+## Contributing
+**Chaque incrément doit être documenté.** Toute PR qui modifie un comportement,
+un paramètre de jeu, ou une décision d'architecture doit s'accompagner d'une
+note dans le fichier `.md` adéquat :
+- Nouveau choix d'architecture ou de design → entrée dans `docs/decisions.md`
+- Tuning de paramètre de jeu (vitesse, taille, seuils) → amendement de la
+  décision concernée dans `docs/decisions.md`
+- Résultat de playtest → `PROJECT.md` (section Phase 2) + décision(s) amendée(s)
+- Changement de roadmap ou d'état de phase → `PROJECT.md`
+
+La doc voyage dans le même commit ou la même PR que le code. Un incrément sans
+note d'intention n'est pas mergeable.
 
 ## iOS Safari — checklist (iPhone 11, cible de test)
 `requestPermission()` capteurs dans handler de geste · AudioContext débloqué dans ce même geste · `touch-action: none` + `overscroll-behavior: none` + preventDefault touchmove · Wake Lock · portrait assumé · bouton silence coupe Web Audio → avertir visuellement
