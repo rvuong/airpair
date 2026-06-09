@@ -139,9 +139,12 @@ balle 10 px → 25 px (test d'exagération, D20), tilt amplitude 20° → 15°,
 exponent 1.4 → 1.1, alpha 0.3 → 0.45 (D03).
 
 **Playtest #3 (9 juin 2026)** : balle 25 px trop grande → 20 px (−5 px, D20).
-Textes illisibles ("Deux joueurs, un seul écran partagé", "← Retour",
-"En attente joueur B…") → test ×2 de toutes les polices petites (D21).
-Amorce intégration normes accessibilité malvoyance (D21).
+Textes illisibles → test ×2 polices petites (D21). Amorce accessibilité malvoyance.
+
+**Playtest #3 bis (9 juin 2026)** : chevauchements après ×2 textes.
+"Adversaire…" / "Tap pour servir" recouvraient la raquette → remontés au-dessus
+(baseline `H − PADDLE_MARGIN − PADDLE_HEIGHT/2 − 16`). "Premier à 7 points ·
+marge de 2" wrappait sur Pixel 7 → raccourci en "7 pts · marge 2".
 
 ### Phase 3 — Profondeur (selon résultats)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
