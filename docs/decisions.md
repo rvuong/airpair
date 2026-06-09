@@ -412,6 +412,60 @@ post".
 
 ---
 
+## D21 — Accessibilité malvoyance 🔬
+
+**Contexte.** Playtest #3 (9 juin 2026) : libellés illisibles à l'usage réel
+("Deux joueurs, un seul écran partagé", "← Retour", "En attente joueur B…",
+textes Canvas en jeu). Question posée : quelle norme d'accessibilité visuelle
+intégrer, dans quelles contraintes ?
+
+**Contraintes du projet qui bornent le périmètre.**
+- Canvas 2D pour le jeu : pas de DOM → ARIA, focus, navigation clavier, et
+  reflow (WCAG 1.4.10) sont inapplicables dans la zone de jeu.
+- `user-scalable=no` dans le viewport (délibéré : anti-scroll, anti-zoom
+  qui casserait le jeu) → bloque WCAG 1.4.4 (Resize Text) ; la mitigation
+  est de garantir que les textes sont lisibles sans zoom.
+- Bundle ≤ 150 Ko gzip (pas de lib d'a11y lourde).
+- Cible principale : iPhone 11 Safari (375 px CSS, écran ~6" à bras tendu).
+
+**Critères WCAG 2.1 qui s'appliquent à Canvas (images of text = même règle
+que texte HTML) :**
+- **SC 1.4.3 AA** — Contraste minimum : ≥ 4,5:1 (texte normal < 24 px, ou
+  gras < 18,5 px) ; ≥ 3:1 (grand texte ≥ 24 px, ou gras ≥ 18,5 px).
+- **SC 1.4.6 AAA** — Contraste renforcé : 7:1 / 4,5:1 (aspirationnel).
+- **SC 1.4.11 AA** — Contraste non-textuel : ≥ 3:1 pour raquette/balle si
+  c'est le seul moyen d'identifier l'état de jeu.
+- **SC 1.4.1 A** — Ne jamais utiliser la couleur seule pour transmettre un
+  état de jeu (ex. balle rouge = faute : ajouter forme/position/son).
+- **Touch targets ≥ 44×44 px** (Apple HIG, WCAG 2.5.5 AAA, GAG Basic) —
+  s'applique aux overlays DOM (boutons pre-game, Revanche, Retour Canvas).
+- **Police HUD ≥ 24 px** (Game Accessibility Guidelines, niveau Basic).
+
+**Critères inapplicables (Canvas + `user-scalable=no` assumé) :**
+ARIA, keyboard nav (2.1.x), focus management (2.4.x), reflow (1.4.10),
+Name/Role/Value (4.1.2), non-text alt (1.1.1).
+
+**Plan d'intégration par phase.**
+
+*Immédiat (ce PR).* Tous les textes petits doublés en test (× 2 — voir
+D20). Objectif cible ≥ 24 px pour tout texte HUD Canvas et label DOM.
+
+*Phase 2.* Audit des ratios de contraste effectifs : textes blanc
+semi-transparent (rgba 0.4–0.55) sur fond jeu sombre → mesurer avec un
+outil (APCA ou WCAG ratio). Corriger si < 3:1 sur fond le plus clair
+possible (balle lumineuse en approche). Vérifier taille tactile des boutons
+Canvas (Revanche, Retour) : hitbox ≥ 44×44 px.
+
+*Phase 3 (Advanced GAG).* Toggle taille de texte in-game : seul substitut
+réaliste à Dynamic Type iOS pour un Canvas PWA. Non prioritaire avant
+validation du fun.
+
+**Sources.** WCAG 2.1 SC 1.4.3/1.4.6/1.4.11/1.4.1 (w3.org) ·
+Game Accessibility Guidelines full list (gameaccessibilityguidelines.com) ·
+IGDA GASIG Visual (igda-gasig.org) · APCA in a Nutshell (apcacontrast.com).
+
+---
+
 ## D20 — Taille de la balle 🔬
 
 **Contexte.** Playtest #2 (9 juin 2026) : la balle est jugée trop petite à la
@@ -421,9 +475,8 @@ valeur initiale `BALL_RADIUS_NORM = 0.013` (~10 px de diamètre sur iPhone 11).
 "raisonnable") ; (c) 25 px (×2.5, exagération délibérée pour trouver la
 limite haute).
 
-**Décision : test de la valeur (c) — 25 px — en cours.** Démarche : partir
-de la valeur exagérée, puis reculer jusqu'au confort. `BALL_RADIUS_NORM =
-0.0333` (PR fix/ball-size-tilt-precision).
+**Playtest #2 :** test (c) 25 px → trop grande. Réduit à 20 px (−5 px,
+`BALL_RADIUS_NORM = 0.0267`) en playtest #3.
 
 **À trancher** par playtest suivant.
 
