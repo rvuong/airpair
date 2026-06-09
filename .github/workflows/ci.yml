@@ -3,75 +3,10 @@ on:
   pull_request:
     branches: [main]
 
-# Jobs conditionnels : skippés si le package.json n'existe pas encore.
-# GitHub Actions considère un job skipé comme succès → branch protection OK.
-
 jobs:
-
-  proto-0a:
-    name: Proto 0a — tilt
-    if: hashFiles('proto/0a-tilt/package.json') != ''
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: proto/0a-tilt
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: proto/0a-tilt/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run build
-      - name: Bundle ≤ 150 Ko gzip
-        run: |
-          node -e "
-            const fs = require('fs'), zlib = require('zlib');
-            const files = fs.readdirSync('dist/assets').filter(f => f.endsWith('.js'));
-            const total = files.reduce((s, f) => s + zlib.gzipSync(fs.readFileSync('dist/assets/'+f)).length, 0);
-            console.log('Bundle gzip:', total, 'octets');
-            if (total > 153600) { console.error('FAIL: > 150 Ko'); process.exit(1); }
-          "
-
-  proto-0b-client:
-    name: Proto 0b — client sync
-    if: hashFiles('proto/0b-sync/client/package.json') != ''
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: proto/0b-sync/client
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: proto/0b-sync/client/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
-
-  proto-0b-server:
-    name: Proto 0b — serveur WS
-    if: hashFiles('proto/0b-sync/server/package.json') != ''
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: proto/0b-sync/server
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: proto/0b-sync/server/package-lock.json
-      - run: npm ci
-      - run: npm run typecheck
 
   src:
     name: MVP — typecheck + build + budgets
-    if: hashFiles('src/package.json') != ''
     runs-on: ubuntu-latest
     defaults:
       run:
