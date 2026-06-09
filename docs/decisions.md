@@ -482,6 +482,58 @@ limite haute).
 
 ---
 
+## D23 — Musique de fond 8-bit ⏸ (phase 3, conditionnel)
+
+**Contexte.** Retour playtest (10 juin 2026) : "pas de son". Idée proposée :
+musique de fond type chiptune 8-bit, inspiration jeux Atari/arcade années 80.
+
+**Question préalable à trancher.** "Pas de son" peut désigner deux problèmes
+différents : (a) les sons de jeu (frappe, rebond, point) n'ont pas été
+entendus — bug AudioContext iOS, bouton silence, volume trop bas ; (b) il
+manque vraiment une musique d'ambiance. La réponse oriente complètement la
+solution. **À investiguer en priorité lors du prochain playtest.**
+
+**Tension avec D08.** L'audio est le canal de feedback principal : les sons
+de frappe sont de l'information de jeu, pas de l'habillage. Une musique de
+fond peut les masquer, en particulier dans les environnements bruyants.
+Règle impérative si implémenté : hiérarchie audio stricte (sons de jeu
+toujours en premier plan, musique clairement en dessous) + toggle
+activation/désactivation.
+
+**Ce qui plaide pour.**
+- Cohérence stylistique évidente : Pong est né sur Atari en 1972, le
+  chiptune est dans son ADN.
+- Coût technique quasi nul : synthèse procédurale via WebAudio oscillators =
+  zéro octet de bundle, zéro dépendance.
+- Compense l'austérité visuelle (D22) par une couche sensorielle.
+- Peut renforcer la synchronisation émotionnelle entre les deux joueurs.
+
+**Ce qui plaide contre.**
+- Boucle répétitive sur 5-10 min : risque d'irritation rapide.
+- Contexte social en face-à-face : la musique couvre la communication
+  verbale et brise le naturel de l'interaction.
+- Le silence du bouton iOS (D08) devient encore plus saillant et gênant
+  quand il y a une musique attendue.
+- Complexité de mix : calibrer les volumes relatifs (musique + FX) sur
+  tous les appareils est du travail non trivial.
+
+**Options d'implémentation (pour mémoire, pas de spec).**
+- Synthèse WebAudio temps réel (oscillateurs carrés/triangle, séquenceur
+  minimal) : bundle 0 Ko, effort moyen, rendu authentiquement 8-bit.
+- Fichier audio court OGG en boucle (~20-30 Ko gzip) : effort faible,
+  dépend d'une composition.
+- Génération algorithmique (lib type `jsfxr`, `ZzFX`) : bundle ~2 Ko,
+  sons procéduraux à chaque partie.
+
+**Statut : ⏸ phase 3, et conditionnel.** Ne pas implémenter avant :
+1. Confirmation que les sons de jeu existants sont bien entendus (sinon
+   corriger D08 d'abord).
+2. Go/no-go phase 2 (critère "revanche spontanée").
+3. Toggle obligatoire (off par défaut ou on par défaut à valider en
+   playtest).
+
+---
+
 ## D22 — Thèmes visuels ⏸ (phase 3)
 
 **Contexte.** Retour playtest (10 juin 2026) : graphismes austères. Décision :
