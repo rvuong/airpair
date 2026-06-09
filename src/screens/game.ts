@@ -293,6 +293,8 @@ export function renderGame(
       if (state.phase === 'dead_zone' || state.phase === 'waiting') {
         state.phase = 'waiting'
       }
+    } else if (msg.type === 'game_start') {
+      if (role === 'B') activateGame()
     } else if (msg.type === 'rematch') {
       resetGame()
     } else if (msg.type === 'miss') {
@@ -681,6 +683,7 @@ export function renderGame(
         const result = await DevOrient.requestPermission()
         dbg.perm = result
         if (result === 'granted') {
+          client.relay({ type: 'game_start' } satisfies GameMsg)
           activateGame()
         } else {
           if (permMsg) {
@@ -691,35 +694,44 @@ export function renderGame(
         }
       } catch (err: unknown) {
         dbg.perm = String(err).slice(-50)
+        client.relay({ type: 'game_start' } satisfies GameMsg)
         activateGame()
       }
     } else {
       dbg.perm = 'no-api'
+      client.relay({ type: 'game_start' } satisfies GameMsg)
       activateGame()
     }
   }
 
   startBtn?.addEventListener('click', handleStartBtn)
 
-  // Player B goes directly to waiting — no overlay interaction needed
+  // Player B — adapt overlay, wait for game_start relay from A
   if (role === 'B') {
-    activateGame()
-    // Small non-blocking button to request tilt permission before the ball arrives
+    if (startBtn) startBtn.style.display = 'none'
+
+    const waitMsg = document.createElement('p')
+    waitMsg.textContent = 'En attente du joueur A…'
+    waitMsg.style.cssText = `
+      color:rgba(255,255,255,0.55);font-size:15px;
+      font-family:-apple-system,sans-serif;margin:0;
+    `
+    preOverlay?.appendChild(waitMsg)
+
+    // iOS only — request tilt permission while waiting
     const DevOrient = DeviceOrientationEvent as unknown as { requestPermission?: unknown }
     if (typeof DevOrient.requestPermission === 'function') {
       const tiltBtn = document.createElement('button')
-      tiltBtn.id = 'tilt-btn'
-      tiltBtn.textContent = 'Activer tilt'
+      tiltBtn.textContent = 'Activer le tilt'
       tiltBtn.style.cssText = `
-        position:fixed;bottom:64px;right:16px;z-index:5;
         background:rgba(255,255,255,0.15);color:#fff;
         border:1px solid rgba(255,255,255,0.35);border-radius:10px;
-        padding:10px 16px;font-size:14px;font-family:-apple-system,sans-serif;
-        cursor:pointer;-webkit-tap-highlight-color:transparent;
+        padding:12px 24px;font-size:15px;font-family:-apple-system,sans-serif;
+        cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px;
       `
-      container.appendChild(tiltBtn)
+      preOverlay?.appendChild(tiltBtn)
 
-      const enableTilt = async (): Promise<void> => {
+      tiltBtn.addEventListener('click', async () => {
         resumeAudio()
         tiltBtn.remove()
         const DoeCtor = DeviceOrientationEvent as unknown as {
@@ -731,10 +743,9 @@ export function renderGame(
           if (result === 'granted') startTiltListener()
         } catch (err: unknown) {
           dbg.perm = String(err).slice(-30)
+          startTiltListener()
         }
-      }
-
-      tiltBtn.addEventListener('click', enableTilt)
+      })
     }
   }
 
