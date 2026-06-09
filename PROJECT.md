@@ -151,6 +151,7 @@ Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
 (expiration QR, comparaison IP), éventuelle migration AWS.
 Thèmes visuels choisis par l'hébergeur (D22) : Terre battue · Gazon · Synthétique · JO Paris 2024.
+Musique de fond 8-bit optionnelle (D23) — conditionnel : valider d'abord que les sons de jeu sont bien entendus.
 
 ## Organisation du repo
 
