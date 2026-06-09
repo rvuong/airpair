@@ -150,6 +150,7 @@ marge de 2" wrappait sur Pixel 7 → raccourci en "7 pts · marge 2".
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
 (expiration QR, comparaison IP), éventuelle migration AWS.
+Thèmes visuels choisis par l'hébergeur (D22) : Terre battue · Gazon · Synthétique · JO Paris 2024.
 
 ## Organisation du repo
 
