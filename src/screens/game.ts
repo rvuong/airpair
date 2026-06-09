@@ -108,7 +108,7 @@ export function renderGame(
       <p style="
         color:rgba(255,255,255,0.55);font-size:30px;
         font-family:-apple-system,sans-serif;margin:0;
-      ">Premier à 7 points · marge de 2</p>
+      ">7 pts · marge 2</p>
       <button id="start-btn" style="
         background:#f5f5f5;color:#111;border:none;border-radius:16px;
         padding:20px 40px;font-size:20px;font-weight:700;
@@ -544,14 +544,14 @@ export function renderGame(
       ctx.fillStyle = 'rgba(255,255,255,0.4)'
       ctx.font = `${Math.round(W * 0.08)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
-      ctx.fillText('Adversaire…', W / 2, H - 20)
+      ctx.fillText('Adversaire…', W / 2, H - PADDLE_MARGIN - PADDLE_HEIGHT / 2 - 16)
     }
 
     if (phase === 'serving') {
       ctx.fillStyle = 'rgba(255,255,255,0.5)'
       ctx.font = `${Math.round(W * 0.08)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
-      ctx.fillText('Tap pour servir', W / 2, H - 20)
+      ctx.fillText('Tap pour servir', W / 2, H - PADDLE_MARGIN - PADDLE_HEIGHT / 2 - 16)
     }
 
 
