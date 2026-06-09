@@ -482,6 +482,41 @@ limite haute).
 
 ---
 
+## D22 — Thèmes visuels ⏸ (phase 3)
+
+**Contexte.** Retour playtest (10 juin 2026) : graphismes austères. Décision :
+ne pas toucher à l'esthétique de base (elle fonctionne), mais prévoir un
+système de thèmes pour ajouter de la personnalité et de la proximité entre
+les joueurs.
+
+**Principe.** L'hébergeur choisit un thème au moment de créer la partie ;
+le joueur qui rejoint reçoit automatiquement le même thème. Cohérence visuelle
+du terrain = renforcement de la sensation de terrain partagé.
+
+**Thèmes envisagés (liste ouverte) :**
+| Thème | Fond | Bandes | Balle | Notes |
+|---|---|---|---|---|
+| Synthétique (défaut) | Bleu dur | Blanches | Jaune | Actuel épuré |
+| Terre battue | Ocre (type Roland Garros) | Blanches | Jaune | Texture granuleuse optionnelle |
+| Gazon | Vert | Blanches | Jaune | Bandes de tonte en alternance |
+| JO Paris 2024 | Charte JO 2024 (violet/rose/bleu) | Selon charte | Jaune | Droits à vérifier pour usage public |
+
+**Ce qu'un thème couvre :** couleur de fond, couleur des bandes/lignes,
+couleur de la balle, couleur de la raquette. Pas de texture haute résolution
+(contrainte bundle ≤ 150 Ko).
+
+**Ce qu'un thème ne couvre pas (pour l'instant) :** sons, typographie,
+animations.
+
+**Implémentation envisagée :** objet `Theme` passé à l'écran de jeu, choix
+stocké dans la room côté serveur et relayé au joueur B au moment du `game_start`.
+Le thème "Synthétique" (actuel) reste le défaut.
+
+**Statut : roadmap phase 3 — aucune implémentation avant validation du fun
+(critère go/no-go phase 2).**
+
+---
+
 ## D17bis — Précision volet réalisation : mesure de l'usage IA ✅
 
 Amendement de D17 suite à question : la réalisation (conception comprise) EST
