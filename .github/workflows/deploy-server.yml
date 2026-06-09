@@ -1,0 +1,39 @@
+name: Deploy — Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-server.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/ubuntu/pongbros-repo
+
+            # Pull latest code
+            git pull origin main
+
+            # Install deps + compile
+            cd server
+            npm ci --omit=dev
+            npm install --save-dev typescript @types/node @types/ws
+            npx tsc
+
+            # Graceful reload (zero downtime)
+            pm2 reload pongbros-server --update-env
+            pm2 save
