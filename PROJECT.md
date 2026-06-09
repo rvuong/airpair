@@ -117,10 +117,18 @@ Appairage QR, compte à rebours synchronisé, boucle de jeu complète (service,
 échange, score à 11), sons soignés (frappe, rebond, point, compte à rebours,
 victoire/défaite), indicateur d'approche, bouton revanche avec alternance du
 premier serveur, déploiement GitHub Pages.
-→ **En attente de playtests.** Critère go/no-go phase 2 :
-"les joueurs redemandent-ils spontanément une revanche ?"
 
-### Phase 2 — Sensation (2-3 semaines, si go) ← À VENIR
+**Serveur WS déployé le 9 juin 2026** : EC2 t4g.nano eu-west-1, `wss://ws.odomate.eu`,
+TLS Let's Encrypt, CI/CD GitHub Actions.
+
+**Premier playtest réel (9 juin 2026)** : jeu trop lent, trop long.
+Corrections en cours (PR feat/game-tuning-v1) :
+vitesse initiale 0.45 → 0.60, accélération 1.06 → 1.10, score 11 → 7 pts (marge 2),
+escalade du service +10% par point. Tilt (alpha, conflit touch) : PR suivante.
+
+→ Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
+
+### Phase 2 — Sensation (2-3 semaines, si go) ← EN COURS
 Playtests 5-10 paires. Tuning : vitesse de balle, taille de raquette, durée de
 zone morte, gain du tilt. Toggles à trancher : replay atténué du son de frappe
 adverse. Si latence du relais gênante : WebRTC DataChannel P2P (serveur =
