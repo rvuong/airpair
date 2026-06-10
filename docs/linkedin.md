@@ -29,24 +29,24 @@ leçon transférable au-delà du projet. Matière première : `docs/decisions.md
 
 | # | Titre de travail | Source | Leçon transférable |
 |---|---|---|---|
-| 1 | Un Pong à deux téléphones, face à face : l'idée et son moment magique | Intention | Identifier LE moment magique d'un produit et tout y subordonner |
-| 2 | Comment j'ai supprimé 60 % de la complexité avant d'écrire une ligne de code | D01, D02 | Challenger les exigences implicites (localiser ≠ nécessaire) |
-| 3 | Votre accéléromètre ne sait pas où il est (et pourquoi c'est important) | D03 | Connaître les limites physiques des capteurs avant de designer dessus |
-| 4 | Le netcode le plus simple du monde : quand le déterminisme remplace le streaming | D04, D05 | Exploiter les propriétés du domaine pour simplifier l'architecture |
-| 5 | Designer avec une IA : ce que Claude a challengé (et où j'ai dit non) | Conversation de conception | L'IA comme sparring partner, pas comme oracle ; garder l'arbitrage |
-| 6 | Proto 0a : le tilt est-il fun ? Résultats du premier test qui peut tuer le projet | Phase 0 | Tester le risque principal en premier, avec un critère d'arrêt écrit |
+| 1 | Faire un Pong à deux téléphones. L'idée tient en une phrase. | Intention | Identifier LE moment magique d'un produit et tout y subordonner |
+| 2 | Claude Code comme outil de conception : intention, exploration, cadrage | Processus conception | L'IA comme sparring partner dès la phase de design, pas seulement pour coder |
+| 3 | Comment j'ai supprimé 60 % de la complexité avant d'écrire une ligne de code | D01, D02 | Challenger les exigences implicites (localiser ≠ nécessaire) |
+| 4 | Mesurer le CO₂ d'un side project : pourquoi et comment | D17 | Une méthode de mesure proportionnée ; poser le cadre avant d'avoir les chiffres |
+| 5 | Votre accéléromètre ne sait pas où il est (et pourquoi c'est important) | D03 | Connaître les limites physiques des capteurs avant de designer dessus |
+| 6 | Le netcode le plus simple du monde : quand le déterminisme remplace le streaming | D04, D05 | Exploiter les propriétés du domaine pour simplifier l'architecture |
 | 7 | Moins montrer pour mieux jouer : pourquoi j'ai refusé d'afficher la balle adverse | D06, D07, D08 | Le retrait d'information comme outil de design (tension, regard) |
-| 8 | Mesurer le CO₂ d'un side project : mise en place du SCI (ISO 21031) | D17 | Une méthode de mesure proportionnée, comparaison relative > chiffre absolu |
-| 9 | Combien "coûte" l'IA de mon projet ? Tokens, fourchettes et honnêteté | Volet A SCI, ccusage | Mesurer son usage IA ; assumer l'incertitude en fourchette |
-| 10 | MVP : la première vraie partie (et tout ce qui a cassé) | Phase 1 ✅ — **prêt à rédiger** | Le chemin entre "ça marche en démo" et "ça marche chez les autres" |
-| 11 | Go ou no-go : "est-ce qu'ils redemandent une revanche ?" | Fin phase 1 | Choisir un critère de décision honnête AVANT de voir les résultats |
-| 12 | Ce que les playtests ont détruit dans mes certitudes | Phase 2 | Tuning par l'observation ; les joueurs ne font jamais ce qu'on prévoit |
-| 13 | Bilan carbone v1 : le poste dominant n'est pas celui que vous croyez | Baseline SCI | L'embodied des terminaux domine → supporter les vieux appareils |
-| 14 | Bilan de la démarche : ce que je referais, ce que j'abandonnerais | Rétro globale | Article long de synthèse |
+| 8 | Proto 0a : le tilt est-il fun ? Résultats du premier test qui peut tuer le projet | Phase 0 | Tester le risque principal en premier, avec un critère d'arrêt écrit |
+| 9 | iPhone Safari : le cahier des pièges qu'on ne vous dit pas | D12 | Les contraintes mobiles comme contraintes de design, pas seulement techniques |
+| 10 | MVP : la première vraie partie (et tout ce qui a cassé) | Phase 1 ✅ | Le chemin entre "ça marche en démo" et "ça marche chez les autres" |
+| 11 | Ce que les playtests ont détruit dans mes certitudes | Playtests | Tuning par l'observation ; les joueurs ne font jamais ce qu'on prévoit |
+| 12 | Go ou no-go : "est-ce qu'ils redemandent une revanche ?" | Fin phase 2 | ⏸ Choisir un critère de décision honnête AVANT de voir les résultats |
+| 13 | Bilan carbone : les vrais chiffres — et ce que l'IA a vraiment coûté | SCI complet, ccusage, SCI volet A | ⏸ Mesurer globalement et zoomer sur l'IA ; l'embodied domine, l'IA surprend |
+| 14 | Retour d'expérience Claude Code : ce que j'aurais fait différemment | Rétro processus IA | ⏸ L'outil change la façon de concevoir, pas seulement de coder |
+| 15 | Bilan de la démarche : ce que je referais, ce que j'abandonnerais | Rétro globale | ⏸ Article long de synthèse |
 
-Épisodes bonus selon l'actualité du projet : les pièges iOS d'une PWA (D12),
-choisir un nom sans se faire attaquer par Atari (D15), CLAUDE.md en français
-ou en anglais.
+Épisodes bonus selon l'actualité du projet : choisir un nom sans se faire
+attaquer par Atari (D15), CLAUDE.md en français ou en anglais.
 
 ## Gabarit d'épisode (docs/episodes/NN-titre.md)
 
