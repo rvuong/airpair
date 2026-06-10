@@ -37,9 +37,8 @@ jobs:
       - run: npm run build
         working-directory: src
         env:
-          # Vite a besoin de la base URL pour GitHub Pages : /pongbros/
-          # À adapter si le repo n'est pas "pongbros"
-          BASE_URL: /pongbros/
+          # Vite a besoin de la base URL pour GitHub Pages : /airpair/
+          BASE_URL: /airpair/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: src/dist
