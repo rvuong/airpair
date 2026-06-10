@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>AirPair — Génération icônes PNG</title>
+  <style>
+    body { font-family: system-ui; background: #111; color: #fff; padding: 32px; }
+    h1 { color: #00d4e8; margin-bottom: 8px; }
+    p { color: #888; margin-bottom: 32px; }
+    .icons { display: flex; gap: 32px; flex-wrap: wrap; }
+    .icon-group { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    canvas { border-radius: 8px; }
+    a.dl { display: block; padding: 8px 16px; background: #222; border-radius: 8px;
+            color: #fff; text-decoration: none; font-size: 0.9rem; text-align: center; }
+    a.dl:hover { background: #333; }
+    .note { margin-top: 32px; background: #1a1a1a; border-radius: 8px; padding: 16px;
+             color: #aaa; font-size: 0.85rem; line-height: 1.6; }
+    code { background: #333; padding: 2px 6px; border-radius: 4px; color: #ffe44d; }
+  </style>
+</head>
+<body>
+  <h1>AirPair — icônes PNG</h1>
+  <p>Ouvre ce fichier dans un navigateur, puis clique sur les liens pour télécharger les PNG.<br>
+     Place les fichiers dans <code>src/public/</code> et ajoute-les au manifest.</p>
+  <div class="icons" id="output"></div>
+  <div class="note">
+    <strong>Après téléchargement, ajouter dans <code>src/public/manifest.webmanifest</code> :</strong><br><br>
+    <code>{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }</code><br>
+    <code>{ "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }</code>
+  </div>
+
+  <script>
+    const SVG_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="22" fill="#080818"/>
+  <rect x="22" y="20" width="56" height="12" rx="6" fill="#00d4e8"/>
+  <line x1="50" y1="32" x2="50" y2="42" stroke="#ffe44d" stroke-width="2" stroke-dasharray="2,3" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="50" cy="50" r="8" fill="#ffe44d"/>
+  <line x1="50" y1="58" x2="50" y2="68" stroke="#ffe44d" stroke-width="2" stroke-dasharray="2,3" stroke-linecap="round" opacity="0.5"/>
+  <rect x="22" y="68" width="56" height="12" rx="6" fill="#ff2d78"/>
+</svg>`
+
+    // Version maskable : fond plein (pas de rx), contenu centré dans les 80% intérieurs
+    // 80% safe zone = padding 10% de chaque côté → à 512px : 51.2px de padding
+    const SVG_MASKABLE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#080818"/>
+  <rect x="30" y="28" width="40" height="8.6" rx="4.3" fill="#00d4e8"/>
+  <line x1="50" y1="36.6" x2="50" y2="43" stroke="#ffe44d" stroke-width="1.8" stroke-dasharray="1.8,2.5" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="50" cy="50" r="7" fill="#ffe44d"/>
+  <line x1="50" y1="57" x2="50" y2="63.4" stroke="#ffe44d" stroke-width="1.8" stroke-dasharray="1.8,2.5" stroke-linecap="round" opacity="0.5"/>
+  <rect x="30" y="63.4" width="40" height="8.6" rx="4.3" fill="#ff2d78"/>
+</svg>`
+
+    const configs = [
+      { svg: SVG_ICON,      size: 192,  name: 'icon-192.png',          label: '192×192 (standard)',  scale: 0.4 },
+      { svg: SVG_MASKABLE,  size: 512,  name: 'icon-512-maskable.png', label: '512×512 (maskable)',   scale: 0.15 },
+    ]
+
+    const output = document.getElementById('output')
+
+    configs.forEach(({ svg, size, name, label, scale }) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext('2d')
+
+      const img = new Image()
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, size, size)
+
+        // Preview canvas (scaled down for display)
+        const preview = document.createElement('canvas')
+        preview.width  = size * scale
+        preview.height = size * scale
+        preview.getContext('2d').drawImage(canvas, 0, 0, preview.width, preview.height)
+
+        const a = document.createElement('a')
+        a.href = canvas.toDataURL('image/png')
+        a.download = name
+        a.className = 'dl'
+        a.textContent = `Télécharger ${name}`
+
+        const group = document.createElement('div')
+        group.className = 'icon-group'
+
+        const lbl = document.createElement('span')
+        lbl.style.cssText = 'font-size:0.8rem;color:#888'
+        lbl.textContent = label
+
+        group.appendChild(preview)
+        group.appendChild(lbl)
+        group.appendChild(a)
+        output.appendChild(group)
+      }
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+    })
+  </script>
+</body>
+</html>

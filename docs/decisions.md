@@ -621,9 +621,14 @@ l'OS — zéro bundle, rendu natif optimal. Cohérent avec D10 (pas de dépendan
 superflue). Le logo peut incorporer une typo vectorisée (chemin SVG) sans
 charger de font runtime.
 
-**Prochaine étape : production du logo.** Outil à choisir (Figma, Inkscape,
-ou génération procédurale SVG). Livrable : fichier `.svg` + exports PNG
-192×192 et 512×512 pour le manifest PWA.
+**Logo produit (10 juin 2026).** SVG procédural pur, sans outil externe.
+Livrables : `src/assets/icon.svg` (100×100, carré), `src/assets/logo.svg`
+(300×80, icône + wordmark), `src/public/favicon.svg` (identique icon.svg,
+servi directement). Manifest PWA `src/public/manifest.webmanifest` créé avec
+référence SVG (`"sizes": "any"`). Favicon + manifest câblés dans `index.html`.
+PNG 192×192 / 512×512 : à générer via `scripts/gen-icons.html` (script HTML
+autonome, zéro dépendance) et ajouter au manifest pour les anciens launchers
+Android.
 
 ---
 
