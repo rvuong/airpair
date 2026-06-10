@@ -6,7 +6,7 @@ Physical racket game for two smartphones, face to face. The ball crosses the inv
 
 Two players stand facing each other, each holding their phone in portrait mode. Each player sees their half of the court — their paddle at the bottom, the ball when it's in their zone. The ball leaves one screen and reappears on the other, like table tennis.
 
-Control: tilt the phone left/right. First to 11 points wins.
+Control: tilt the phone left/right. First to 7 points wins.
 
 ## Play locally
 
