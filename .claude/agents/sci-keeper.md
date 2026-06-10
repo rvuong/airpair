@@ -5,7 +5,7 @@ model: claude-haiku-4-5-20251001
 tools: [Read, Write, Edit, Bash]
 ---
 
-Tu maintiens le journal SCI (Software Carbon Intensity) du projet Pong Bros.
+Tu maintiens le journal SCI (Software Carbon Intensity) du projet AirPair.
 
 ## Tâche principale : ajouter une ligne dans sci/worklog.csv
 

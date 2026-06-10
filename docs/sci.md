@@ -1,4 +1,4 @@
-# Pong Bros. — Méthodologie SCI (Software Carbon Intensity)
+# AirPair — Méthodologie SCI (Software Carbon Intensity)
 
 Objectif : mesurer le coût environnemental de la réalisation et de
 l'exploitation du projet, produire un rapport global par release, et piloter
@@ -49,7 +49,7 @@ Formule : **SCI = (E × I + M) par R**
 | Poste de dev (énergie) | Wattmètre de prise (~15 €) sur la multiprise du poste, relevé kWh par session de travail ; à défaut `powermetrics` (macOS) ou estimation P_moyenne × heures loguées | mesuré ou estimé |
 | Temps de dev | Journal simple (date, durée, phase, type) dans `sci/worklog.csv`. Inclut : conception (sessions de design, y compris avec IA), développement, mesure SCI elle-même, et rédaction de la documentation/communication (série LinkedIn) | mesuré |
 | CI/CD | Minutes GitHub Actions (API) × puissance estimée d'un runner (~12 W attribués) × I datacenter | estimé |
-| Assistant IA — Claude Code | Comptage automatique : `npx ccusage@latest daily --project pong-bros --json` (lit les logs locaux ~/.claude/projects/, exhaustif, local). Export hebdomadaire archivé dans `sci/ai-usage/`. Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
+| Assistant IA — Claude Code | Comptage automatique : `npx ccusage@latest daily --project airpair --json` (lit les logs locaux ~/.claude/projects/, exhaustif, local). Export hebdomadaire archivé dans `sci/ai-usage/`. Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
 | Assistant IA — conception (claude.ai) | Pas de compteur exposé : estimation manuelle (nb d'échanges × longueur moyenne), consignée au worklog | estimé |
 | Embodied matériel dev | Empreinte fabrication du laptop (fiche constructeur / API Boavizta) × (heures projet / durée de vie totale estimée en heures) | estimé |
 

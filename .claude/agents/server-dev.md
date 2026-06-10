@@ -5,7 +5,7 @@ model: claude-haiku-4-5-20251001
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 ---
 
-Tu implémentes le serveur WebSocket Node.js de Pong Bros. Environ 100 lignes, pas plus.
+Tu implémentes le serveur WebSocket Node.js de AirPair. Environ 100 lignes, pas plus.
 
 ## Périmètre strict
 Node.js + `ws` uniquement — pas d'autre dépendance.

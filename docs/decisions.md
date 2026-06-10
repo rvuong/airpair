@@ -1,4 +1,4 @@
-# Pong Bros. — Journal de décisions
+# AirPair — Journal de décisions
 
 Format : pour chaque sujet → contexte, options envisagées, décision,
 justification, implications. Ce fichier capture le POURQUOI des choix, y

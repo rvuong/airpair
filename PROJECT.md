@@ -1,11 +1,7 @@
-# Pong Bros. (nom de travail)
+# AirPair
 
-Pong physique à deux smartphones, face à face. La balle traverse l'espace réel
-entre les deux écrans. Esprit : "je joue avec mon pote".
-
-> Note nom : "PONG" est une marque Atari et "Bros." évoque Nintendo — sans
-> risque pour un projet perso/repo, à renommer avant toute publication store.
-> Alternatives en réserve : PingBros, PongPals, Bounce Bros, Face2Ball.
+Jeu physique à deux smartphones, face à face. La balle traverse l'espace
+invisible entre les deux écrans. Esprit : "je joue avec mon pote".
 
 ## Intention
 

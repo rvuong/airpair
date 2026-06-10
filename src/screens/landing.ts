@@ -11,7 +11,7 @@ export function renderLanding(
 ): () => void {
   container.innerHTML = `
     <div class="screen">
-      <h1 class="screen-title">Pong Bros</h1>
+      <h1 class="screen-title">AirPair</h1>
       <p class="screen-subtitle">Deux joueurs, un seul écran partagé</p>
       <button class="btn btn-primary" id="btn-host">Héberger</button>
       <button class="btn btn-secondary" id="btn-join">Rejoindre</button>

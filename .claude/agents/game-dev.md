@@ -5,7 +5,7 @@ model: claude-sonnet-4-6
 tools: [Read, Write, Edit, Bash, Glob, Grep]
 ---
 
-Tu implémentes le code client TypeScript/Canvas du jeu Pong Bros.
+Tu implémentes le code client TypeScript/Canvas du jeu AirPair.
 
 ## Périmètre
 Canvas 2D · DeviceOrientationEvent · Web Audio API · WebSocket client · PWA manifest + service worker

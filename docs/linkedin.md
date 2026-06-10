@@ -1,4 +1,4 @@
-# Pong Bros. — Série LinkedIn "journal de bord"
+# AirPair — Série LinkedIn "journal de bord"
 
 Objectif : documenter la démarche globale (design, technique, IA, ingénierie
 responsable) en épisodes. Chaque épisode = UNE décision ou UN résultat + UNE
