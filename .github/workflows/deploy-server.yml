@@ -25,8 +25,12 @@ jobs:
             set -e
             cd /home/ubuntu/pongbros-repo
 
-            # Pull latest code
-            git pull origin main
+            # Ensure remote points to the current repo name
+            git remote set-url origin https://github.com/rvuong/airpair.git
+
+            # Discard any local changes and pull latest code
+            git fetch origin
+            git reset --hard origin/main
 
             # Install deps + compile
             cd server
