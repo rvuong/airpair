@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="AirPair">
+  <title>AirPair</title>
+  <rect width="100" height="100" rx="22" fill="#080818"/>
+  <rect x="22" y="20" width="56" height="12" rx="6" fill="#00d4e8"/>
+  <line x1="50" y1="32" x2="50" y2="42" stroke="#ffe44d" stroke-width="2" stroke-dasharray="2,3" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="50" cy="50" r="8" fill="#ffe44d"/>
+  <line x1="50" y1="58" x2="50" y2="68" stroke="#ffe44d" stroke-width="2" stroke-dasharray="2,3" stroke-linecap="round" opacity="0.5"/>
+  <rect x="22" y="68" width="56" height="12" rx="6" fill="#ff2d78"/>
+</svg>
