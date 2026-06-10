@@ -584,54 +584,46 @@ activation/désactivation.
 
 ---
 
-## D24 — Identité visuelle AirPair 🔬
+## D24 — Identité visuelle AirPair ✅
 
 **Contexte.** Le nom AirPair est acté (D15). Avant toute diffusion publique
 (LinkedIn, GitHub public, store), une identité visuelle cohérente est
-nécessaire : logo, icône PWA, palette, typographie. L'identité doit être
-déclinée dans le jeu (écran de démarrage, PWA manifest) et dans les
-communications (LinkedIn, README).
+nécessaire : logo, icône PWA, palette, typographie.
+
+**Périmètre : UI uniquement.** L'identité s'applique aux écrans DOM (démarrage,
+appairage, fin de partie, README, LinkedIn). Le terrain de jeu (Canvas) n'est
+pas concerné — il relève de D22 (thèmes visuels, phase 3).
 
 **Contraintes non négociables.**
-- Bundle ≤ 150 Ko gzip — pas d'image lourde, pas de font externe chargée
-  au runtime sans subsetting.
+- Bundle ≤ 150 Ko gzip — pas d'image lourde.
 - PWA : icône 512×512 + 192×192 (PNG), maskable, fond plein (pas de
   transparence pour les stores Android).
-- Canvas 2D : le thème "Synthétique" actuel (D22) reste la base de jeu ;
-  l'identité s'applique aux écrans UI (démarrage, appairage, fin de partie),
-  pas forcément au terrain.
+- Contraste ≥ 4,5:1 sur tout texte UI (D21).
 
-**Axes de conception à explorer.**
+**Décisions actées (10 juin 2026).**
 
-*Symbolique du logo.* Le concept central est le passage de balle dans l'air
-entre deux positions face à face. Pistes :
-- Deux raquettes en miroir (face à face) avec une balle ou une trajectoire
-  au centre.
-- Une ellipse/arc évoquant la trajectoire aérienne (le "A" de Air).
-- Forme abstraite en deux moitiés symétriques — les deux demi-terrains,
-  les deux téléphones.
+*Logo : vectoriel + typographique.* SVG inline ou fichier `.svg` — zéro coût
+bundle, scalable à toutes tailles (favicon 16px → bannière LinkedIn). Le logo
+combine une marque iconique (vecto) et le nom "AirPair" composé. Variante
+icône seule (carré) pour PWA et favicon.
+Symbolique : le passage de balle dans l'air entre deux positions face à face —
+deux raquettes en miroir, trajectoire/arc central, ou deux demi-formes
+symétriques. À préciser en production.
 
-*Palette.* Le bleu dur du thème Synthétique actuel est un point de départ.
-À décider : conserver ce bleu comme couleur primaire de l'identité, ou
-définir une palette propre à AirPair (plus sobre ? plus sportive ?).
-Contrainte : contraste ≥ 4,5:1 sur fond clair pour tout texte UI (D21).
+*Palette : indépendante, registre rétro 8-bit.* Palette propre à AirPair,
+sans héritage du bleu Synthétique (D22). Inspiration couleurs d'écrans CRT
+et cartouches des années 80 : noir profond ou bleu très sombre en fond,
+accents cyan, magenta, vert phosphore ou jaune arcade — vifs, saturés, mais
+pas criards. Deux ou trois couleurs max (cohérence icône PWA sur fond plein).
 
-*Typographie.* Pas de font runtime non subsetted. Options :
-- Font système (SF Pro / Roboto / system-ui) : zéro bundle, rendu natif.
-- Font web subsetée (≤ 10 Ko gzip, ex. Inter, Geist) pour les écrans UI
-  seulement — à justifier par la différenciation visuelle apportée.
-- Pas de font custom dans le Canvas (le rendu canvas varie selon l'OS).
+*Typographie : font système.* `system-ui` / `-apple-system` / `Roboto` selon
+l'OS — zéro bundle, rendu natif optimal. Cohérent avec D10 (pas de dépendance
+superflue). Le logo peut incorporer une typo vectorisée (chemin SVG) sans
+charger de font runtime.
 
-**Questions ouvertes.**
-1. Logo : illustration vectorielle ou typographique pur ?
-2. Palette AirPair : dérivée du thème Synthétique ou indépendante ?
-3. Typographie : system font suffisante ou font web pour l'identité ?
-4. Périmètre d'application en phase 2 : UI seule, ou terrain de jeu aussi
-   (cohérence avec D22 thèmes visuels) ?
-
-**Statut : 🔬 à traiter avant diffusion publique.** Aucune implémentation
-avant : (a) go/no-go phase 2 si l'identité s'applique au jeu lui-même ;
-(b) immédiat si le périmètre est limité au logo/icône PWA/LinkedIn.
+**Prochaine étape : production du logo.** Outil à choisir (Figma, Inkscape,
+ou génération procédurale SVG). Livrable : fichier `.svg` + exports PNG
+192×192 et 512×512 pour le manifest PWA.
 
 ---
 
@@ -653,5 +645,6 @@ avant : (a) go/no-go phase 2 si l'identité s'applique au jeu lui-même ;
    spontanément une revanche ?"
 9. Validation cross-platform Android : recruter au moins un joueur Android en
    phase 2 (voir D12).
-10. Nom du projet : trancher avant toute diffusion publique — LinkedIn, GitHub
-    public, store (voir D15).
+10. ~~Nom du projet : trancher avant toute diffusion publique.~~ **Acté (10 juin
+    2026) :** AirPair (voir D15).
+11. Identité visuelle AirPair : production du logo SVG (voir D24).
