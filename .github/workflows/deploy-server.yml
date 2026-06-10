@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-            cd /home/ubuntu/airpair-repo
+            cd /home/ubuntu/pongbros-repo
 
             # Pull latest code
             git pull origin main
