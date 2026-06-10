@@ -38,6 +38,7 @@ jobs:
             npm install --save-dev typescript @types/node @types/ws
             npx tsc
 
-            # Graceful reload (zero downtime)
-            pm2 reload airpair-server --update-env
+            # Graceful reload (zero downtime), start on first deploy
+            pm2 reload airpair-server --update-env \
+              || pm2 start dist/server.js --name airpair-server
             pm2 save
