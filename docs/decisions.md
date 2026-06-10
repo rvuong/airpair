@@ -621,14 +621,20 @@ l'OS — zéro bundle, rendu natif optimal. Cohérent avec D10 (pas de dépendan
 superflue). Le logo peut incorporer une typo vectorisée (chemin SVG) sans
 charger de font runtime.
 
-**Logo produit (10 juin 2026).** SVG procédural pur, sans outil externe.
-Livrables : `src/assets/icon.svg` (100×100, carré), `src/assets/logo.svg`
-(300×80, icône + wordmark), `src/public/favicon.svg` (identique icon.svg,
-servi directement). Manifest PWA `src/public/manifest.webmanifest` créé avec
-référence SVG (`"sizes": "any"`). Favicon + manifest câblés dans `index.html`.
-PNG 192×192 / 512×512 : à générer via `scripts/gen-icons.html` (script HTML
-autonome, zéro dépendance) et ajouter au manifest pour les anciens launchers
-Android.
+**Identité complète (10 juin 2026).** SVG procédural pur, sans outil externe.
+
+*Fichiers produits :*
+- `src/assets/icon.svg` (100×100, carré) · `src/assets/logo.svg` (300×80, icône + wordmark)
+- `src/public/favicon.svg` — favicon SVG, câblé dans `index.html`
+- `src/public/icon-192.png` · `src/public/icon-512-maskable.png` — générés via `scripts/gen-icons.html`
+- `src/public/apple-touch-icon.png` (192px) — iOS "Add to Home Screen"
+- `src/public/manifest.webmanifest` — icônes SVG + PNG déclarées, `display: standalone`
+
+*Dans `index.html` :* `<link rel="icon">`, `<link rel="apple-touch-icon">`, `<link rel="manifest">`, `<meta name="theme-color" content="#080818">`.
+
+*Landing screen :* logo SVG inline remplace le `<h1>AirPair</h1>` texte brut.
+
+Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (manifest PNG maskable).
 
 ---
 
@@ -652,4 +658,4 @@ Android.
    phase 2 (voir D12).
 10. ~~Nom du projet : trancher avant toute diffusion publique.~~ **Acté (10 juin
     2026) :** AirPair (voir D15).
-11. Identité visuelle AirPair : production du logo SVG (voir D24).
+11. ~~Identité visuelle AirPair : production du logo SVG (voir D24).~~ **Acté (10 juin 2026) :** logo, favicon, manifest PWA, icônes PNG, apple-touch-icon — installation fonctionnelle iOS + Android.
