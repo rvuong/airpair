@@ -23,7 +23,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-            cd /home/ubuntu/pongbros-repo
+            cd /home/ubuntu/airpair-repo
 
             # Pull latest code
             git pull origin main
@@ -35,5 +35,5 @@ jobs:
             npx tsc
 
             # Graceful reload (zero downtime)
-            pm2 reload pongbros-server --update-env
+            pm2 reload airpair-server --update-env
             pm2 save
