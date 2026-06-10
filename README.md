@@ -1,6 +1,6 @@
-# Pong Bros.
+# AirPair
 
-Physical Pong for two smartphones, face to face. The ball crosses the real space between the two screens.
+Physical racket game for two smartphones, face to face. The ball crosses the invisible space between the two screens.
 
 ## Concept
 

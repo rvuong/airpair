@@ -1,4 +1,4 @@
-# Pong Bros. — Journal de décisions
+# AirPair — Journal de décisions
 
 Format : pour chaque sujet → contexte, options envisagées, décision,
 justification, implications. Ce fichier capture le POURQUOI des choix, y
@@ -165,7 +165,9 @@ L'indicateur d'approche donne l'information d'équité ("je pouvais savoir") —
 adverse.
 
 **À valider (phase 2).** Garder les deux variantes derrière un toggle et
-trancher en playtest.
+trancher en playtest. Le ✅ vaut pour la décision de base (indicateur
+d'approche déployé en MVP) ; le 🔬 vaut pour la comparaison toggle — aucun
+playtest dédié n'a encore été conduit.
 
 ---
 
@@ -271,6 +273,12 @@ votre téléphone" · vibration non supportée (D09).
 clavier/souris, suffisant pour valider la synchro. Test à deux vrais
 téléphones (emprunter un Android = validation cross-platform) en phase 1.
 
+**Playtests Android — priorité phase 2.** Les playtests 1-3 (juin 2026) ont
+tous été conduits sur iPhone uniquement. Recruter au moins un joueur Android
+(Chrome) pour valider : sensors API, AudioContext, tilt cross-platform, rendu
+Canvas. Chrome Android diffère d'iOS Safari sur les permissions capteurs (pas
+de `requestPermission()` nécessaire) et sur l'haptique (D09).
+
 ---
 
 ## D13 — Règles du jeu ✅ (amendé après premier playtest)
@@ -302,13 +310,30 @@ avec D03). Explicitement hors MVP.
 
 ---
 
-## D15 — Nom du projet ✅ (non bloquant)
+## D15 — Nom du projet ✅
 
-**Décision :** nom de travail **"Pong Bros."** — orientation "je joue avec mon
-pote". Signaux pour plus tard : "PONG" est une marque Atari toujours défendue ;
-"Bros." évoque Nintendo. Sans risque pour un projet perso ; à renommer avant
-toute publication store. Alternatives en réserve : PingBros, PongPals,
-Bounce Bros, Face2Ball.
+**Décision : AirPair** (acté le 10 juin 2026).
+
+**Pourquoi AirPair.** Trois lectures simultanées sans explication nécessaire :
+- **Air** : la traversée invisible entre les deux écrans — le moment magique
+  central du concept (D01, D06). Ancrage dans le registre tennis (balle dans
+  l'air, face à face) plutôt que tennis de table (surface, espace contraint).
+- **Pair** : deux joueurs + le geste d'entrée dans le jeu (appairage QR, D05).
+- **AirPair** ensemble : rime intérieure légère, 7 lettres, fonctionne en FR
+  et EN, aucun risque IP identifié.
+
+**Alternatives écartées.** Pong Bros. (nom de travail — "PONG" marque Atari,
+"Bros." évoque Nintendo) ; PingBros, PongPals, Bounce Bros, Face2Ball (trop
+génériques ou mêmes risques IP) ; AirRally, Plink (finalistes — bons noms,
+mais AirPair nomme simultanément plus de dimensions du concept).
+
+**Vérifications à faire avant publication store.**
+1. Marque classe 41 EUIPO + USPTO (divertissement, jeux).
+2. Conflits sur App Store / Google Play.
+3. Disponibilité domaine (`airpair.app` ou `.io`).
+
+**Prochaine étape : identité visuelle AirPair** — logo, palette, typographie,
+icône PWA. À traiter avant toute diffusion publique (LinkedIn, GitHub public).
 
 ---
 
@@ -319,42 +344,6 @@ Claude Code. `docs/decisions.md` (ce fichier) = le pourquoi, par sujet, amendé
 au fil des décisions — préféré à une synthèse narrative de conversation, qui
 vieillit mal et mélange décisions actées et supersédées. Specs détaillées dans
 `docs/*.md` au fil de l'eau.
-
----
-
-## D19 — Revanche et alternance du premier service ✅
-
-**Contexte.** En fin de partie, l'expérience naturelle du ping-pong est de
-rejouer immédiatement. Sans bouton revanche, les joueurs doivent recharger
-la page et re-appairer — friction qui tue l'envie spontanée de rematch.
-
-**Décision.** Bouton "Revanche" en fin de partie. Le premier service change
-de joueur à chaque partie : si A a servi en premier, B sert en premier à la
-revanche — équité perçue sans règle à expliquer.
-
-**Pourquoi.** L'alternance est implicite (comme au tennis de table) ; le
-joueur qui vient de perdre a "la balle" psychologiquement. La mise en œuvre
-est triviale (bit `firstServer` qui flip). L'absence de relance facile était
-le principal frein au critère go/no-go "redemander une revanche".
-
----
-
-## Questions ouvertes (à trancher par prototype/playtest)
-
-1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
-   en playtests phase 2.
-2. ~~Tuning tilt : alpha 0.3 → 0.5, amplitude 20° → 16°.~~ **Acté (9 juin
-   2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
-   D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
-   quasi-linéaire. Conflit touch/tilt : à surveiller en playtest.
-3. Taille de la balle : voir D20.
-4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
-5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
-6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
-7. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
-   sont un premier palier ; à affiner par itérations.
-8. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
-   spontanément une revanche ?"
 
 ---
 
@@ -386,6 +375,15 @@ release dans `sci/reports/`. Usage IA (Claude Code) inclus dans le volet
 réalisation, rapporté en fourchette (forte incertitude). Détail complet :
 `docs/sci.md`.
 
+**Amendement — Précision volet réalisation : mesure de l'usage IA.** La
+réalisation (conception comprise) EST mesurée — volet A de docs/sci.md —
+mais rapportée en total (kgCO₂e), distinct du taux SCI d'exploitation, avec
+pont par amortissement sur les parties cumulées. Protocole tokens précisé :
+Claude Code compté exhaustivement via ccusage (logs locaux, export hebdo dans
+sci/ai-usage/) ; sessions de conception claude.ai estimées manuellement au
+worklog ; conversion CO₂e en fourchette basse/haute (aucun facteur officiel
+par token, ~1 ordre de grandeur d'incertitude, sources dans factors.yaml).
+
 ---
 
 ## D18 — Documentation publique : série LinkedIn ✅
@@ -409,6 +407,39 @@ publiés) ; les chiffres SCI publiés respectent docs/sci.md (fourchettes,
 étiquettes [mesuré]/[estimé]) ; le temps de rédaction entre au worklog SCI ;
 garde-fou : ne jamais arbitrer une décision projet pour "faire un meilleur
 post".
+
+---
+
+## D19 — Revanche et alternance du premier service ✅
+
+**Contexte.** En fin de partie, l'expérience naturelle du ping-pong est de
+rejouer immédiatement. Sans bouton revanche, les joueurs doivent recharger
+la page et re-appairer — friction qui tue l'envie spontanée de rematch.
+
+**Décision.** Bouton "Revanche" en fin de partie. Le premier service change
+de joueur à chaque partie : si A a servi en premier, B sert en premier à la
+revanche — équité perçue sans règle à expliquer.
+
+**Pourquoi.** L'alternance est implicite (comme au tennis de table) ; le
+joueur qui vient de perdre a "la balle" psychologiquement. La mise en œuvre
+est triviale (bit `firstServer` qui flip). L'absence de relance facile était
+le principal frein au critère go/no-go "redemander une revanche".
+
+---
+
+## D20 — Taille de la balle 🔬
+
+**Contexte.** Playtest #2 (9 juin 2026) : la balle est jugée trop petite à la
+valeur initiale `BALL_RADIUS_NORM = 0.013` (~10 px de diamètre sur iPhone 11).
+
+**Options envisagées.** (a) 10 px (initial) ; (b) 15 px (×1.5, valeur
+"raisonnable") ; (c) 25 px (×2.5, exagération délibérée pour trouver la
+limite haute).
+
+**Playtest #2 :** test (c) 25 px → trop grande. Réduit à 20 px (−5 px,
+`BALL_RADIUS_NORM = 0.0267`) en playtest #3.
+
+**À trancher** par playtest suivant.
 
 ---
 
@@ -466,19 +497,38 @@ IGDA GASIG Visual (igda-gasig.org) · APCA in a Nutshell (apcacontrast.com).
 
 ---
 
-## D20 — Taille de la balle 🔬
+## D22 — Thèmes visuels ⏸ (phase 3)
 
-**Contexte.** Playtest #2 (9 juin 2026) : la balle est jugée trop petite à la
-valeur initiale `BALL_RADIUS_NORM = 0.013` (~10 px de diamètre sur iPhone 11).
+**Contexte.** Retour playtest (10 juin 2026) : graphismes austères. Décision :
+ne pas toucher à l'esthétique de base (elle fonctionne), mais prévoir un
+système de thèmes pour ajouter de la personnalité et de la proximité entre
+les joueurs.
 
-**Options envisagées.** (a) 10 px (initial) ; (b) 15 px (×1.5, valeur
-"raisonnable") ; (c) 25 px (×2.5, exagération délibérée pour trouver la
-limite haute).
+**Principe.** L'hébergeur choisit un thème au moment de créer la partie ;
+le joueur qui rejoint reçoit automatiquement le même thème. Cohérence visuelle
+du terrain = renforcement de la sensation de terrain partagé.
 
-**Playtest #2 :** test (c) 25 px → trop grande. Réduit à 20 px (−5 px,
-`BALL_RADIUS_NORM = 0.0267`) en playtest #3.
+**Thèmes envisagés (liste ouverte) :**
+| Thème | Fond | Bandes | Balle | Notes |
+|---|---|---|---|---|
+| Synthétique (défaut) | Bleu dur | Blanches | Jaune | Actuel épuré |
+| Terre battue | Ocre (type Roland Garros) | Blanches | Jaune | Texture granuleuse optionnelle |
+| Gazon | Vert | Blanches | Jaune | Bandes de tonte en alternance |
+| JO Paris 2024 | Charte JO 2024 (violet/rose/bleu) | Selon charte | Jaune | Droits à vérifier pour usage public |
 
-**À trancher** par playtest suivant.
+**Ce qu'un thème couvre :** couleur de fond, couleur des bandes/lignes,
+couleur de la balle, couleur de la raquette. Pas de texture haute résolution
+(contrainte bundle ≤ 150 Ko).
+
+**Ce qu'un thème ne couvre pas (pour l'instant) :** sons, typographie,
+animations.
+
+**Implémentation envisagée :** objet `Theme` passé à l'écran de jeu, choix
+stocké dans la room côté serveur et relayé au joueur B au moment du `game_start`.
+Le thème "Synthétique" (actuel) reste le défaut.
+
+**Statut : roadmap phase 3 — aucune implémentation avant validation du fun
+(critère go/no-go phase 2).**
 
 ---
 
@@ -534,48 +584,67 @@ activation/désactivation.
 
 ---
 
-## D22 — Thèmes visuels ⏸ (phase 3)
+## D24 — Identité visuelle AirPair ✅
 
-**Contexte.** Retour playtest (10 juin 2026) : graphismes austères. Décision :
-ne pas toucher à l'esthétique de base (elle fonctionne), mais prévoir un
-système de thèmes pour ajouter de la personnalité et de la proximité entre
-les joueurs.
+**Contexte.** Le nom AirPair est acté (D15). Avant toute diffusion publique
+(LinkedIn, GitHub public, store), une identité visuelle cohérente est
+nécessaire : logo, icône PWA, palette, typographie.
 
-**Principe.** L'hébergeur choisit un thème au moment de créer la partie ;
-le joueur qui rejoint reçoit automatiquement le même thème. Cohérence visuelle
-du terrain = renforcement de la sensation de terrain partagé.
+**Périmètre : UI uniquement.** L'identité s'applique aux écrans DOM (démarrage,
+appairage, fin de partie, README, LinkedIn). Le terrain de jeu (Canvas) n'est
+pas concerné — il relève de D22 (thèmes visuels, phase 3).
 
-**Thèmes envisagés (liste ouverte) :**
-| Thème | Fond | Bandes | Balle | Notes |
-|---|---|---|---|---|
-| Synthétique (défaut) | Bleu dur | Blanches | Jaune | Actuel épuré |
-| Terre battue | Ocre (type Roland Garros) | Blanches | Jaune | Texture granuleuse optionnelle |
-| Gazon | Vert | Blanches | Jaune | Bandes de tonte en alternance |
-| JO Paris 2024 | Charte JO 2024 (violet/rose/bleu) | Selon charte | Jaune | Droits à vérifier pour usage public |
+**Contraintes non négociables.**
+- Bundle ≤ 150 Ko gzip — pas d'image lourde.
+- PWA : icône 512×512 + 192×192 (PNG), maskable, fond plein (pas de
+  transparence pour les stores Android).
+- Contraste ≥ 4,5:1 sur tout texte UI (D21).
 
-**Ce qu'un thème couvre :** couleur de fond, couleur des bandes/lignes,
-couleur de la balle, couleur de la raquette. Pas de texture haute résolution
-(contrainte bundle ≤ 150 Ko).
+**Décisions actées (10 juin 2026).**
 
-**Ce qu'un thème ne couvre pas (pour l'instant) :** sons, typographie,
-animations.
+*Logo : vectoriel + typographique.* SVG inline ou fichier `.svg` — zéro coût
+bundle, scalable à toutes tailles (favicon 16px → bannière LinkedIn). Le logo
+combine une marque iconique (vecto) et le nom "AirPair" composé. Variante
+icône seule (carré) pour PWA et favicon.
+Symbolique : le passage de balle dans l'air entre deux positions face à face —
+deux raquettes en miroir, trajectoire/arc central, ou deux demi-formes
+symétriques. À préciser en production.
 
-**Implémentation envisagée :** objet `Theme` passé à l'écran de jeu, choix
-stocké dans la room côté serveur et relayé au joueur B au moment du `game_start`.
-Le thème "Synthétique" (actuel) reste le défaut.
+*Palette : indépendante, registre rétro 8-bit.* Palette propre à AirPair,
+sans héritage du bleu Synthétique (D22). Inspiration couleurs d'écrans CRT
+et cartouches des années 80 : noir profond ou bleu très sombre en fond,
+accents cyan, magenta, vert phosphore ou jaune arcade — vifs, saturés, mais
+pas criards. Deux ou trois couleurs max (cohérence icône PWA sur fond plein).
 
-**Statut : roadmap phase 3 — aucune implémentation avant validation du fun
-(critère go/no-go phase 2).**
+*Typographie : font système.* `system-ui` / `-apple-system` / `Roboto` selon
+l'OS — zéro bundle, rendu natif optimal. Cohérent avec D10 (pas de dépendance
+superflue). Le logo peut incorporer une typo vectorisée (chemin SVG) sans
+charger de font runtime.
+
+**Prochaine étape : production du logo.** Outil à choisir (Figma, Inkscape,
+ou génération procédurale SVG). Livrable : fichier `.svg` + exports PNG
+192×192 et 512×512 pour le manifest PWA.
 
 ---
 
-## D17bis — Précision volet réalisation : mesure de l'usage IA ✅
+## Questions ouvertes (à trancher par prototype/playtest)
 
-Amendement de D17 suite à question : la réalisation (conception comprise) EST
-mesurée — volet A de docs/sci.md — mais rapportée en total (kgCO₂e), distinct
-du taux SCI d'exploitation, avec pont par amortissement sur les parties
-cumulées. Protocole tokens précisé : Claude Code compté exhaustivement via
-ccusage (logs locaux, export hebdo dans sci/ai-usage/) ; sessions de
-conception claude.ai estimées manuellement au worklog ; conversion CO₂e en
-fourchette basse/haute (aucun facteur officiel par token, ~1 ordre de
-grandeur d'incertitude, sources dans factors.yaml).
+1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
+   en playtests phase 2.
+2. ~~Tuning tilt : alpha 0.3 → 0.5, amplitude 20° → 16°.~~ **Acté (9 juin
+   2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
+   D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
+   quasi-linéaire. Conflit touch/tilt : à surveiller en playtest.
+3. Taille de la balle : voir D20.
+4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
+5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
+6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
+7. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
+   sont un premier palier ; à affiner par itérations.
+8. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
+   spontanément une revanche ?"
+9. Validation cross-platform Android : recruter au moins un joueur Android en
+   phase 2 (voir D12).
+10. ~~Nom du projet : trancher avant toute diffusion publique.~~ **Acté (10 juin
+    2026) :** AirPair (voir D15).
+11. Identité visuelle AirPair : production du logo SVG (voir D24).

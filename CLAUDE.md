@@ -1,6 +1,6 @@
-# Pong Bros — contexte projet
+# AirPair — contexte projet
 
-**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/pongbros/**
+**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/pongbros/** *(URL à jour après renommage repo → airpair, voir D24)*
 En attente de playtests. Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
 Phase 1 livré : appairage QR · boucle de jeu (score à 11) · sons · indicateur d'approche · revanche · deploy GitHub Pages
 
@@ -51,7 +51,7 @@ L'utilisateur crée la PR manuellement dans l'interface GitHub.
 typecheck + build + bundle ≤ 150 Ko gzip (jobs conditionnels, skippés si package.json absent)
 
 **Deploy** (`.github/workflows/deploy.yml`) — sur merge dans `main`, path `src/**` :
-build Vite → GitHub Pages (`BASE_URL=/pongbros/`)
+build Vite → GitHub Pages (`BASE_URL=/airpair/`) *(à mettre à jour avec le renommage repo)*
 Activer dans Settings → Pages → Source → GitHub Actions avant le premier déploiement.
 
 ## Contributing
