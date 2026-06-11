@@ -30,8 +30,9 @@ Formule : **SCI = (E × I + M) par R**
 
 ## Cadrage
 
-- **Unité fonctionnelle R : une partie jouée** (match à 11 points, 2 joueurs,
-  durée typique 3-5 min). Comptable côté serveur (événement fin de match).
+- **Unité fonctionnelle R : une partie jouée** (match à 7 points, marge 2,
+  2 joueurs, durée typique 2-4 min — cf. D13). Comptable côté serveur
+  (événement fin de match).
   Indicateur secondaire : gCO₂e par joueur-minute (pour comparer à d'autres
   loisirs numériques).
 - **Périmètre exploitation :** (1) terminaux des 2 joueurs : énergie de la
@@ -49,7 +50,7 @@ Formule : **SCI = (E × I + M) par R**
 | Poste de dev (énergie) | Wattmètre de prise (~15 €) sur la multiprise du poste, relevé kWh par session de travail ; à défaut `powermetrics` (macOS) ou estimation P_moyenne × heures loguées | mesuré ou estimé |
 | Temps de dev | Journal simple (date, durée, phase, type) dans `sci/worklog.csv`. Inclut : conception (sessions de design, y compris avec IA), développement, mesure SCI elle-même, et rédaction de la documentation/communication (série LinkedIn) | mesuré |
 | CI/CD | Minutes GitHub Actions (API) × puissance estimée d'un runner (~12 W attribués) × I datacenter | estimé |
-| Assistant IA — Claude Code | Comptage automatique : `npx ccusage@latest daily --project airpair --json` (lit les logs locaux ~/.claude/projects/, exhaustif, local). Export hebdomadaire archivé dans `sci/ai-usage/`. Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
+| Assistant IA — Claude Code | Extraction par projet : `python3 sci/extract-ai-usage.py` (lit les logs locaux `~/.claude/projects/-home-remyvuong-projects-personal-airpair/*.jsonl`, déduplication par `requestId`). Vue globale toutes sessions : `npx ccusage@latest daily --json` (ne supporte pas de filtre par projet). Export archivé dans `sci/ai-usage/`. Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
 | Assistant IA — conception (claude.ai) | Pas de compteur exposé : estimation manuelle (nb d'échanges × longueur moyenne), consignée au worklog | estimé |
 | Embodied matériel dev | Empreinte fabrication du laptop (fiche constructeur / API Boavizta) × (heures projet / durée de vie totale estimée en heures) | estimé |
 
@@ -85,11 +86,15 @@ Sortie : `kgCO₂e total de réalisation`, ventilé par poste et par phase
 
 ### B3. Serveur
 
+Instance de production : **EC2 t4g.nano, AWS eu-west-1** (`wss://ws.odomate.eu`)
+— cf. D11.
+
 - CPU-secondes et octets traités par le process Node (métriques process
-  standard), part de VM attribuée, × TDP attribué × PUE estimé du
-  datacenter × I de la région d'hébergement.
+  standard), part de VM attribuée, × TDP attribué (5 W estimé) × PUE 1,2
+  (AWS) × I eu-west-1 (200 gCO₂e/kWh). Valeurs figées dans `sci/factors.yaml`
+  (`server`).
 - Embodied serveur : part au prorata via méthodologie Cloud Carbon
-  Footprint / Boavizta.
+  Footprint / Boavizta (à calculer en fin de phase 1).
 - Attendu : négligeable devant B1 (un relais WS pour 2 joueurs ne fait
   presque rien) — le mesurer le prouvera.
 

@@ -1,0 +1,191 @@
+# sci/factors.yaml — AirPair
+# Facteurs d'émission figés pour le calcul SCI (SCI v1.1 / ISO IEC 21031:2024).
+# Principe : la valeur est dans la comparaison entre versions, pas dans le chiffre absolu.
+# Tout changement → incrémenter version + décrire l'amendement + recalculer les séries.
+#
+# Étiquettes : [mesuré] = relevé instrumenté | [estimé] = calcul ou source publiée
+
+meta:
+  version: "1.0.0"
+  frozen_date: "2026-06-11"
+  sci_spec: "SCI v1.1 / ISO IEC 21031:2024"
+  changelog:
+    - date: "2026-06-11"
+      note: "Version initiale — gel en phase 1 (baseline SCI v1 en fin de phase 1)."
+
+# ─── Intensité carbone du réseau électrique (I) ───────────────────────────────
+electricity:
+
+  # Valeur par défaut pour les mesures locales (joueurs en France)
+  france_rte_2023:
+    value: 52
+    unit: gCO2e_per_kWh
+    source: "RTE — Bilan électrique 2023, facteur d'émission moyen annuel"
+    url: "https://www.rte-france.com/eco2mix/les-emissions-de-co2-par-kwh-produit-en-france"
+    label: estimé          # facteur publié, non mesuré sur ce projet
+
+  # Analyse de sensibilité (recalcul en substitution de france_rte_2023)
+  world_average_iea_2023:
+    value: 490
+    unit: gCO2e_per_kWh
+    source: "IEA World Energy Outlook 2023, intensité électrique mondiale"
+    label: estimé
+    usage: sensitivity_analysis_only
+
+  # Serveur de production — AWS eu-west-1 (Irlande) — cf. D11
+  aws_eu_west_1_2023:
+    value: 200
+    unit: gCO2e_per_kWh
+    source: "EirGrid — Annual Sustainability Report 2023 (réseau irlandais)"
+    note: >
+      Grille brute conservatrice. AWS publie un CFE% ≈ 70 % pour eu-west-1 (2023),
+      mais on n'applique pas le netting vert tant que non vérifié sur la période
+      de mesure.
+    label: estimé
+    usage: server_b3
+
+# ─── Réseau — modèle CO2.js SWD v4 (The Green Web Foundation) ────────────────
+#
+# Choix du modèle : SWD v4 (Sustainable Web Design) plutôt qu'OneByte.
+# Raison : SWD décompose le système en 4 segments (data centers 15 %, réseau 14 %,
+# terminaux 52 %, fabrication 19 %). On isole ici le segment réseau seul pour
+# éviter le double-comptage avec B1 (terminaux) et B3 (serveur).
+#
+# SWD v4 total : 0.81 kWh/GB — segment réseau (14 %) : 0.1134 kWh/GB
+network:
+  model: SWD_v4
+  source: "The Green Web Foundation — CO2.js, SWD v4 methodology"
+  url: "https://developers.thegreenwebfoundation.org/co2js/overview/"
+
+  network_segment_kwh_per_gb:
+    value: 0.1134
+    unit: kWh_per_GB
+    derivation: "0.81 kWh/GB × 14 % (réseau seul)"
+    label: estimé
+
+  green_hosting_server:
+    verified: false
+    note: >
+      AWS eu-west-1 non certifié «vert» dans la base Green Web Foundation à
+      2026-06-11. À revérifier en fin de phase 1 (peut réduire le facteur réseau).
+
+# ─── Terminaux joueurs (B1) ───────────────────────────────────────────────────
+devices:
+
+  iphone_11:
+    battery_capacity_wh: 11.91    # 3110 mAh × 3.83 V / 1000
+    source_battery: "Apple — iPhone 11 Tech Specs (batterie 3110 mAh)"
+    embodied_kgco2e: 79
+    source_embodied: "Apple Product Environmental Report — iPhone 11, sept. 2019"
+    url_embodied: "https://www.apple.com/environment/pdf/products/iphone/iPhone_11_PER_sept2019.pdf"
+    label: mesuré_spec        # chiffres publiés par Apple sur l'appareil réel de test
+
+  android_midrange_generic:
+    embodied_kgco2e: 70
+    source_embodied: "Estimation catégorielle — Boavizta DB, smartphones Android milieu de gamme 2022"
+    url_embodied: "https://datavizta.boavizta.org/"
+    uncertainty: "±30 %"
+    label: estimé
+    note: "Remplacer par fiche constructeur dès qu'un appareil Android est recruté en playtest."
+
+  # Hypothèses d'amortissement (décision D17 — docs/decisions.md)
+  usage_assumptions:
+    device_lifetime_years: 4
+    daily_use_hours: 3
+    device_lifetime_hours: 4380    # 4 × 365 × 3
+    typical_game_duration_min: 3   # milieu de fourchette 2-4 min — 7 points, cf. D13
+    note: >
+      Part d'embodied par partie =
+        embodied_kgco2e × (durée_partie_h / 4380) × 2 joueurs.
+      Exemple iPhone 11 : 79 × (0.0667 / 4380) × 2 ≈ 0.0024 kgCO₂e / partie.
+
+# ─── Serveur (B3) — EC2 t4g.nano AWS eu-west-1 (cf. D11) ─────────────────────
+server:
+  instance: "EC2 t4g.nano"
+  provider: "AWS"
+  region: "eu-west-1 (Irlande)"
+  vcpu: 2
+  ram_gb: 0.5
+
+  tdp_attributed_w: 5
+  # t4g.nano = 1/32e de chip Graviton2 (~160 W TDP puce complète)
+  # Attribution prorata vCPU : 160 W × (2 / 64 vCPU) ≈ 5 W
+  source_tdp: "AWS Graviton2 TDP estimé, prorata vCPU (pas de publication officielle)"
+  label_tdp: estimé
+
+  pue: 1.2
+  source_pue: "AWS Sustainability Report 2022 (PUE annoncé ≤ 1.2)"
+  label_pue: estimé
+
+  embodied_note: >
+    À calculer en fin de phase 1 via Cloud Carbon Footprint / Boavizta (prorata
+    instance nano sur serveur partagé × durée d'usage du projet).
+
+# ─── Poste de développement (volet A) ────────────────────────────────────────
+dev_machine:
+  model: "Lenovo ThinkPad P14s Gen 5 (2025) — AMD Ryzen PRO 8040"
+
+  # Consommation déduite des specs constructeur :
+  # TDP CPU AMD Ryzen PRO 8040 : 15-28 W (cTDP). Ajout écran (~4 W), RAM, SSD, WiFi (~3 W).
+  # Charge dev mixte (édition + build + IA) → ~35 W central.
+  power_average_w: 35
+  power_range_w: [20, 55]    # veille légère → build intensif
+  source_power: >
+    Déduit : TDP AMD Ryzen PRO 8040 (28 W cTDP max) + périphériques internes estimés.
+    À affiner avec wattmètre de prise (prévu dès phase 0 — docs/sci.md).
+  label_power: estimé
+
+  embodied_kgco2e: 250
+  source_embodied: >
+    Estimé d'après Lenovo PCF ThinkPad P14s Gen 4 AMD (~235 kgCO₂e, Lenovo EPD 2023).
+    Lenovo n'a pas publié de fiche PCF pour le Gen 5 à 2026-06-11.
+    À remplacer dès publication.
+  url_embodied: "https://www.lenovo.com/us/en/compliance/eco-declaration"
+  label_embodied: estimé
+  uncertainty_embodied: "±20 %"
+
+  lifetime_years: 5
+  daily_use_hours: 7.2          # hypothèse usage professionnel
+  lifetime_hours: 13140         # 5 × 365 × 7.2
+
+# ─── CI/CD — GitHub Actions (volet A) ────────────────────────────────────────
+ci:
+  platform: "GitHub Actions (hébergé sur Azure)"
+  runner_power_w: 12
+  source_runner: >
+    Estimation consensus : ~1/8 de cœur d'un serveur rack ~100 W.
+    Pas de publication officielle GitHub sur la puissance par runner-minute.
+  pue: 1.2
+  source_pue: "Microsoft Sustainability Report 2022 (Azure PUE ≤ 1.2)"
+  grid_intensity_gco2e_per_kwh: 200    # Azure West Europe — identique à eu-west-1
+  label: estimé
+
+# ─── Inférence IA — Claude Code (volet A) ────────────────────────────────────
+#
+# Aucun facteur officiel par token publié par Anthropic à 2026-06-11.
+# Fourchette basse/haute retenue ; recalcul automatique si facteur officiel publié.
+# Comptage exhaustif via `npx ccusage@latest` (logs locaux ~/.claude/projects/).
+# ~1 ordre de grandeur d'incertitude entre basse et haute (cf. D17).
+ai_inference:
+  model_used: "claude-sonnet-4-6 (Sonnet 4.6)"
+  note: "Aucun facteur officiel par token publié par Anthropic à 2026-06-11."
+  uncertainty: "~1 ordre de grandeur entre fourchette basse et haute"
+
+  input_tokens_gco2e_per_1k:
+    low: 0.0003
+    high: 0.003
+
+  output_tokens_gco2e_per_1k:
+    low: 0.001
+    high: 0.010
+    note: "Output ≈ 3-10× plus coûteux qu'input (sampling + génération)."
+
+  sources:
+    - "Luccioni et al. 2023 — Power Hungry Processing: Scrutinizing Energy Use in AI (arXiv:2311.16863)"
+    - "Patterson et al. 2021 — Carbon and the Broad Ecosystem of Deep Learning (arXiv:2104.10350)"
+    - "Samsi et al. 2023 — From Words to Watts (arXiv:2310.03003)"
+  label: estimé_fourchette
+
+  claude_ai_sessions:
+    method: "Estimation manuelle — nb d'échanges × longueur moyenne, consigné au worklog SCI"
+    label: estimé
