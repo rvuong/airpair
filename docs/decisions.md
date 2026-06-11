@@ -255,6 +255,10 @@ Actions `deploy-server.yml` — SSH + git pull + tsc + pm2 reload.
 **Dev local :** Vite en HTTPS sur réseau local (`@vitejs/plugin-basic-ssl`),
 certificat à accepter sur l'iPhone — itération sans déploiement.
 
+**SCI (B3) :** t4g.nano ARM Graviton2 — TDP attribué estimé ~5 W (prorata vCPU),
+PUE AWS ≤ 1,2, grille eu-west-1 (Irlande) ~200 gCO₂e/kWh. Facteurs versionnés
+dans `sci/factors.yaml` (`server`).
+
 ---
 
 ## D12 — Cible de test et pièges iOS ✅
