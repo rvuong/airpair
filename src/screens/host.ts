@@ -19,7 +19,7 @@ export function renderHost(
   container.innerHTML = `
     <div class="screen">
       <button class="btn-back" id="btn-back">← Retour</button>
-      <h2 class="screen-title">Héberger</h2>
+      <h2 class="screen-title">Nouvelle partie</h2>
       <p id="host-status" class="status-msg">Connexion en cours…</p>
     </div>
   `

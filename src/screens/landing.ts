@@ -27,7 +27,7 @@ export function renderLanding(
       </svg>
       <p class="screen-subtitle">2 joueurs, 2 terrains, 1 seule balle</p>
       <button class="btn btn-primary" id="btn-host">Nouvelle partie</button>
-      <button class="btn btn-secondary" id="btn-join">Rejoindre une partie</button>
+      <button class="btn btn-secondary" id="btn-join">Rejoindre</button>
     </div>
   `
 
