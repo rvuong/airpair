@@ -4,7 +4,7 @@ import { resumeAudio, isMuted, playHit, playWall, playScore, playMiss, playVicto
 import {
   DEAD_ZONE_MS,
   INITIAL_SPEED_NORM,
-  SPEED_FACTOR,
+  SPEED_LERP,
   MAX_SPEED_NORM,
   BALL_RADIUS_NORM,
   PADDLE_WIDTH_NORM,
@@ -264,7 +264,7 @@ export function renderGame(
   }
 
   function afterScoring(): void {
-    serviceSpeedNorm = Math.min(serviceSpeedNorm * 1.10, MAX_SPEED_NORM)
+    serviceSpeedNorm = serviceSpeedNorm + (MAX_SPEED_NORM - serviceSpeedNorm) * SPEED_LERP
     const iServe = determineServer(state.myScore, state.opponentScore, role)
     if (iServe) {
       state.phase = 'serving'
@@ -397,7 +397,7 @@ export function renderGame(
       ) {
         // Compute speed
         const currentSpeed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy)
-        const newSpeed = Math.min(currentSpeed * SPEED_FACTOR, MAX_SPEED_NORM * H)
+        const newSpeed = currentSpeed + (MAX_SPEED_NORM * H - currentSpeed) * SPEED_LERP
         state.rallyCount++
 
         // Angle based on relative position on paddle
@@ -722,25 +722,43 @@ export function renderGame(
     const DevOrient = DeviceOrientationEvent as unknown as { requestPermission?: unknown }
     if (typeof DevOrient.requestPermission === 'function') {
       const tiltBtn = document.createElement('button')
-      tiltBtn.textContent = 'Activer le tilt'
+      tiltBtn.textContent = 'Incliner pour jouer'
       tiltBtn.style.cssText = `
         background:rgba(255,255,255,0.15);color:#fff;
         border:1px solid rgba(255,255,255,0.35);border-radius:10px;
         padding:12px 24px;font-size:30px;font-family:-apple-system,sans-serif;
         cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px;
       `
+      const tiltHint = document.createElement('p')
+      tiltHint.textContent = '(le toucher fonctionne aussi)'
+      tiltHint.style.cssText = `
+        color:rgba(255,255,255,0.35);font-size:22px;
+        font-family:-apple-system,sans-serif;margin:0;
+      `
       preOverlay?.appendChild(tiltBtn)
+      preOverlay?.appendChild(tiltHint)
 
       tiltBtn.addEventListener('click', async () => {
         resumeAudio()
         tiltBtn.remove()
+        tiltHint.remove()
         const DoeCtor = DeviceOrientationEvent as unknown as {
           requestPermission: () => Promise<'granted' | 'denied'>
         }
         try {
           const result = await DoeCtor.requestPermission()
           dbg.perm = result
-          if (result === 'granted') startTiltListener()
+          if (result === 'granted') {
+            startTiltListener()
+          } else {
+            const msg = document.createElement('p')
+            msg.textContent = 'Inclinaison non autorisée — Contrôle au doigt actif'
+            msg.style.cssText = `
+              color:rgba(255,255,255,0.45);font-size:24px;
+              font-family:-apple-system,sans-serif;text-align:center;padding:0 32px;
+            `
+            preOverlay?.appendChild(msg)
+          }
         } catch (err: unknown) {
           dbg.perm = String(err).slice(-30)
           startTiltListener()

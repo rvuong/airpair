@@ -20,7 +20,7 @@ export function renderJoin(
   container.innerHTML = `
     <div class="screen">
       <button class="btn-back" id="btn-back">← Retour</button>
-      <h2 class="screen-title">Rejoindre</h2>
+      <h2 class="screen-title">Rejoindre une partie</h2>
 
       <div class="tab-bar" role="tablist">
         <button class="btn-tab active" id="tab-scanner" role="tab" aria-selected="true">Scanner</button>
