@@ -35,12 +35,10 @@ Exemples : `feat(tilt): add live tuning panel` · `fix(ios): unlock AudioContext
 - Phase 0 : `0.1.x` (protos) · Phase 1 MVP : `0.2.0` · Go phase 2 : `0.3.0` · Go phase 3 : `1.0.0`
 - Patch (`x`) : fix dans la phase · Minor (`y`) : fin de phase ou feature significative
 
-**Création de PR** — ne jamais créer la PR via CLI (`gh pr create`).
-Après chaque commit + push, **toujours** proposer :
-1. Le lien GitHub vers la PR
-2. Un titre (format Conventional Commits)
-3. Une description (contexte, changements, lien vers décisions doc si applicable)
-L'utilisateur crée la PR manuellement dans l'interface GitHub.
+**Création de PR** — via CLI (`gh pr create`) ou interface GitHub, au choix.
+Chaque PR doit obligatoirement avoir :
+1. Un titre au format Conventional Commits
+2. Une description (contexte, changements, lien vers `docs/decisions.md` si applicable)
 
 **Après merge d'une PR** — obligatoire, dans cet ordre :
 1. `git checkout main`
