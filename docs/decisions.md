@@ -304,6 +304,16 @@ long en conditions réelles. Ajustements actés :
 - **Affichage pré-partie :** "Premier à 7 points · marge de 2" visible avant
   le lancement — le joueur sait où il va.
 
+**Amendement 2 (12 juin 2026, post-playtest iPhone) :** balle trop lente au
+service (~3 s pour traverser l'écran sur iPhone 13). Ajustements actés :
+- Vitesse initiale : **1.20 × H/s** (doublée vs 0.60).
+- Plafond : **2.20 × H/s** (doublé pour préserver la marge d'accélération).
+- Courbe de croissance : **logarithmique (lerp factor 0.20)** — chaque frappe
+  rapproche la vitesse du plafond par `v += (MAX - v) × 0.20`. Remplace la
+  croissance géométrique ×1.10 : les premières frappes accélèrent davantage,
+  puis les gains diminuent à l'approche du plafond (sensation naturelle).
+- Même logique pour l'escalade du service point par point.
+
 ---
 
 ## D14 — Effets de balle ⏸ (phase 3)
@@ -654,8 +664,9 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
 4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
 5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
 6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
-7. Vitesses de balle et taille de raquette : les valeurs de D13 post-playtest
-   sont un premier palier ; à affiner par itérations.
+7. ~~Vitesses de balle : les valeurs de D13 post-playtest sont un premier palier.~~
+   **Acté (12 juin 2026) :** vitesses doublées (initial 1.20, max 2.20), courbe logarithmique
+   (lerp 0.20) — voir D13 amendement 2.
 8. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
    spontanément une revanche ?"
 9. Validation cross-platform Android : recruter au moins un joueur Android en

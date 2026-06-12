@@ -1,7 +1,7 @@
 export const DEAD_ZONE_MS = 400
-export const INITIAL_SPEED_NORM = 0.60   // fraction of H per second
-export const SPEED_FACTOR = 1.10
-export const MAX_SPEED_NORM = 1.1        // fraction of H per second
+export const INITIAL_SPEED_NORM = 1.20   // fraction of H per second
+export const SPEED_LERP = 0.20           // logarithmic approach factor per hit/point
+export const MAX_SPEED_NORM = 2.20       // fraction of H per second
 export const BALL_RADIUS_NORM = 0.0267   // fraction of W
 export const PADDLE_WIDTH_NORM = 0.28    // fraction of W
 export const PADDLE_HEIGHT = 14

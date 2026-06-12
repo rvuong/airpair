@@ -20,10 +20,14 @@ export function renderLanding(
         <line x1="40" y1="46.4" x2="40" y2="54.4" stroke="#ffe44d" stroke-width="1.6" stroke-dasharray="1.6,2.4" stroke-linecap="round" opacity="0.5"/>
         <rect x="17.6" y="54.4" width="44.8" height="9.6" rx="4.8" fill="#ff2d78"/>
         <text x="96" y="40" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif" font-size="38" font-weight="800" letter-spacing="-1" dominant-baseline="central"><tspan fill="#00d4e8">Air</tspan><tspan fill="#ff2d78">Pair</tspan></text>
+        <g transform="translate(275, 12) rotate(25)">
+          <rect x="-22" y="-9" width="44" height="18" rx="3" fill="#ffe44d"/>
+          <text x="0" y="0" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="11" font-weight="700" fill="#111" text-anchor="middle" dominant-baseline="central">beta</text>
+        </g>
       </svg>
-      <p class="screen-subtitle">Deux joueurs, un seul écran partagé</p>
-      <button class="btn btn-primary" id="btn-host">Héberger</button>
-      <button class="btn btn-secondary" id="btn-join">Rejoindre</button>
+      <p class="screen-subtitle">2 joueurs, 2 terrains, 1 seule balle</p>
+      <button class="btn btn-primary" id="btn-host">Nouvelle partie</button>
+      <button class="btn btn-secondary" id="btn-join">Rejoindre une partie</button>
     </div>
   `
 
