@@ -572,31 +572,50 @@ export function renderGame(
       ctx.fillStyle = 'rgba(0,0,0,0.7)'
       ctx.fillRect(0, 0, W, H)
 
-      ctx.fillStyle = '#fff'
-      ctx.font = `bold ${Math.round(W * 0.12)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
-      const txt = state.myScore > state.opponentScore ? 'Victoire !' : 'Défaite'
-      ctx.fillText(txt, W / 2, H / 2 - W * 0.06)
+      ctx.textBaseline = 'middle'
 
-      ctx.font = `${Math.round(W * 0.07)}px -apple-system, sans-serif`
-      ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, H / 2 + W * 0.04)
+      // Lay out the whole block and vertically center it in the canvas.
+      // Heights (in W units): title≈0.09, gap=0.06, score≈0.06, gap=0.07,
+      //   revanche btn=0.13, gap=0.04, retour btn=0.11  → total≈0.50W
+      const revanBtnH = W * 0.13
+      const retourBtnH = W * 0.11
+      const blockH = W * 0.50
+      const blockTop = H / 2 - blockH / 2
+
+      const titleY    = blockTop + W * 0.045
+      const scoreY    = titleY   + W * 0.105
+      const revanTop  = scoreY   + W * 0.085
+      const retourTop = revanTop + revanBtnH + W * 0.04
+      const btnX      = W / 2 - W * 0.3
+      const btnW      = W * 0.6
+
+      const txt = state.myScore > state.opponentScore ? 'Victoire !' : 'Défaite'
+      ctx.fillStyle = '#fff'
+      ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
+      ctx.fillText(txt, W / 2, titleY)
+
+      ctx.font = `${Math.round(W * 0.06)}px -apple-system, sans-serif`
+      ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, scoreY)
 
       // Revanche button (primary)
       ctx.fillStyle = '#fff'
-      roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.60, W * 0.6, W * 0.13, 12)
+      roundedRectPath(ctx, btnX, revanTop, btnW, revanBtnH, 12)
       ctx.fill()
       ctx.fillStyle = '#000'
-      ctx.font = `bold ${Math.round(W * 0.10)}px -apple-system, sans-serif`
-      ctx.fillText('Revanche', W / 2, H * 0.60 + W * 0.085)
+      ctx.font = `bold ${Math.round(W * 0.075)}px -apple-system, sans-serif`
+      ctx.fillText('Revanche', W / 2, revanTop + revanBtnH / 2)
 
       // Back button (secondary)
       ctx.strokeStyle = 'rgba(255,255,255,0.5)'
       ctx.lineWidth = 1.5
-      roundedRectPath(ctx, W / 2 - W * 0.3, H * 0.76, W * 0.6, W * 0.11, 12)
+      roundedRectPath(ctx, btnX, retourTop, btnW, retourBtnH, 12)
       ctx.stroke()
       ctx.fillStyle = 'rgba(255,255,255,0.7)'
-      ctx.font = `${Math.round(W * 0.09)}px -apple-system, sans-serif`
-      ctx.fillText('Retour', W / 2, H * 0.76 + W * 0.075)
+      ctx.font = `${Math.round(W * 0.065)}px -apple-system, sans-serif`
+      ctx.fillText('Retour', W / 2, retourTop + retourBtnH / 2)
+
+      ctx.textBaseline = 'alphabetic'
     }
   }
 
@@ -649,18 +668,24 @@ export function renderGame(
   }
 
   function checkGameOverTap(clientX: number, clientY: number): void {
-    const bx = W / 2 - W * 0.3
-    const bw = W * 0.6
+    const revanBtnH = W * 0.13
+    const retourBtnH = W * 0.11
+    const blockTop = H / 2 - W * 0.25
+    const scoreY   = blockTop + W * 0.045 + W * 0.105
+    const revanTop = scoreY + W * 0.085
+    const retourTop = revanTop + revanBtnH + W * 0.04
+    const btnX = W / 2 - W * 0.3
+    const btnW = W * 0.6
     // Revanche button
-    if (clientY >= H * 0.60 && clientY <= H * 0.60 + W * 0.13 &&
-        clientX >= bx && clientX <= bx + bw) {
+    if (clientY >= revanTop && clientY <= revanTop + revanBtnH &&
+        clientX >= btnX && clientX <= btnX + btnW) {
       client.relay({ type: 'rematch' } satisfies GameMsg)
       resetGame()
       return
     }
     // Back button
-    if (clientY >= H * 0.76 && clientY <= H * 0.76 + W * 0.11 &&
-        clientX >= bx && clientX <= bx + bw) {
+    if (clientY >= retourTop && clientY <= retourTop + retourBtnH &&
+        clientX >= btnX && clientX <= btnX + btnW) {
       onBack()
     }
   }
