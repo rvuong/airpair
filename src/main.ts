@@ -5,10 +5,12 @@ import { renderGame } from './screens/game.ts'
 import { RoomClient } from './net/ws.ts'
 
 // ---------------------------------------------------------------------------
-// iOS Safari: prevent scroll/bounce on all touchmove events
+// iOS Safari: prevent scroll/bounce except inside scrollable pre-game screens
 // ---------------------------------------------------------------------------
 document.addEventListener('touchmove', (e: TouchEvent) => {
-  e.preventDefault()
+  if (!(e.target as HTMLElement).closest('.screen')) {
+    e.preventDefault()
+  }
 }, { passive: false })
 
 // ---------------------------------------------------------------------------
