@@ -98,7 +98,7 @@ export function renderGame(
 ): () => void {
   // Build DOM: canvas + pre-game overlay
   container.innerHTML = `
-    <canvas id="game-canvas" style="display:block;touch-action:none;"></canvas>
+    <canvas id="game-canvas" style="position:fixed;top:0;left:0;touch-action:none;"></canvas>
     <div id="pre-overlay" style="
       position:fixed;inset:0;z-index:10;
       background:rgba(0,0,0,0.85);
