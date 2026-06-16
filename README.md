@@ -32,3 +32,4 @@ Open `https://<local-ip>:5173` on both phones (accept the self-signed certificat
 
 - [`PROJECT.md`](PROJECT.md) — intent, concept, architecture, roadmap
 - [`docs/decisions.md`](docs/decisions.md) — decision log (the why)
+- [`docs/glossaire.md`](docs/decisions.md) — glossary

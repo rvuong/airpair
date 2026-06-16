@@ -1,21 +1,21 @@
 # AirPair — contexte projet
 
-**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/pongbros/** *(URL à jour après renommage repo → airpair, voir D24)*
+**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/airpair/**
 En attente de playtests. Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
-Phase 1 livré : appairage QR · boucle de jeu (score à 11) · sons · indicateur d'approche · revanche · deploy GitHub Pages
+Phase 1 livré : appairage QR · boucle de jeu (score à 7 après playtests) · sons · indicateur d'approche · revanche · deploy GitHub Pages
 
 Phase 0 ✅ : `proto/0a-tilt/` (tilt) · `proto/0b-sync/` (synchro réseau)
 
 ## Stack
 Client : Vite + TypeScript, Canvas 2D, PWA
 Serveur : Node.js + `ws`, ~100 lignes
-Docs : `PROJECT.md` (intention + roadmap), `docs/decisions.md` (pourquoi des choix)
+Docs : [PROJECT.md](./PROJECT.md) (intention + roadmap), [docs/decisions.md](./docs/decisions.md) (pourquoi des choix), [docs/glossaire.md](./docs/glossaire.md) (glossaire).
 
 ## Agents disponibles
 - Code jeu (Canvas, tilt, boucle de jeu) → `game-dev`
 - Serveur WebSocket → `server-dev`
-- Worklog SCI → `sci-keeper`
-- Épisode LinkedIn → `linkedin-writer`
+- Worklog Software Carbon Index (SCI) → `sci-keeper`
+- Assistant rédaction des épisodes LinkedIn → `linkedin-writer`
 
 ## Règles absolues
 - Simulation déterministe : **zéro streaming de position**, un seul message `{t_frappe, position, vecteur_vitesse}` par frappe
@@ -45,22 +45,22 @@ Chaque PR doit obligatoirement avoir :
 2. `git pull origin main`
 3. `git branch -d <branche-mergée>`
 
-**CI** (`.github/workflows/ci.yml`) — sur chaque PR vers `main` :
+**CI** ([.github/workflows/ci.yml](./.github/workflows/ci.yml)) — sur chaque PR vers `main` :
 typecheck + build + bundle ≤ 150 Ko gzip (jobs conditionnels, skippés si package.json absent)
 
-**Deploy** (`.github/workflows/deploy.yml`) — sur merge dans `main`, path `src/**` :
-build Vite → GitHub Pages (`BASE_URL=/airpair/`) *(à mettre à jour avec le renommage repo)*
+**Deploy** ([.github/workflows/deploy.yml](./.github/workflows/deploy.yml)) — sur merge dans `main`, path `src/**` :
+build Vite → GitHub Pages (`BASE_URL=/airpair/`)
 Activer dans Settings → Pages → Source → GitHub Actions avant le premier déploiement.
 
 ## Contributing
 **Chaque incrément doit être documenté.** Toute PR qui modifie un comportement,
 un paramètre de jeu, ou une décision d'architecture doit s'accompagner d'une
 note dans le fichier `.md` adéquat :
-- Nouveau choix d'architecture ou de design → entrée dans `docs/decisions.md`
+- Nouveau choix d'architecture ou de design → entrée dans [docs/decisions.md](./docs/decisions.md)
 - Tuning de paramètre de jeu (vitesse, taille, seuils) → amendement de la
-  décision concernée dans `docs/decisions.md`
+  décision concernée dans [docs/decisions.md](./docs/decisions.md)
 - Résultat de playtest → `PROJECT.md` (section Phase 2) + décision(s) amendée(s)
-- Changement de roadmap ou d'état de phase → `PROJECT.md`
+- Changement de roadmap ou d'état de phase → [PROJECT.md](./PROJECT.md)
 
 La doc voyage dans le même commit ou la même PR que le code. Un incrément sans
 note d'intention n'est pas mergeable.
