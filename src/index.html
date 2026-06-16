@@ -32,7 +32,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-height: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: hidden;
         padding: env(safe-area-inset-top, 16px) 24px env(safe-area-inset-bottom, 24px);
       }
 
@@ -65,8 +67,8 @@
         display: block;
         width: 100%;
         max-width: 320px;
-        min-height: 56px;
-        padding: 14px 24px;
+        min-height: 3em;
+        padding: 0.75em 1.33em;
         border: none;
         border-radius: 12px;
         font-size: 1.125rem;
@@ -94,8 +96,8 @@
 
       .btn-tab {
         flex: 1;
-        min-height: 44px;
-        padding: 10px 16px;
+        min-height: 2.5em;
+        padding: 0.5em 0.85em;
         border: none;
         border-radius: 8px;
         font-size: 1.875rem;
@@ -148,8 +150,11 @@
         flex-direction: column;
         align-items: center;
         width: 100%;
+        flex: 1;
+        min-height: 0;
         gap: 20px;
         padding-top: 48px;
+        padding-bottom: 24px;
         touch-action: pan-y;
         overflow-y: auto;
       }
@@ -266,7 +271,6 @@
       /* Countdown screen */
       .screen-countdown {
         justify-content: center;
-        min-height: 100%;
       }
 
       .countdown-number {
