@@ -169,6 +169,20 @@ trancher en playtest. Le ✅ vaut pour la décision de base (indicateur
 d'approche déployé en MVP) ; le 🔬 vaut pour la comparaison toggle — aucun
 playtest dédié n'a encore été conduit.
 
+**🔬 En question (15 juin 2026, post-playtest #4) :** indicateur perçu comme
+trop tardif ("voir d'où arrive la balle sans délai"). Piste : avancer
+l'apparition de l'indicateur dès l'entrée en zone morte (vs seulement dans
+les dernières ms). Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 5.
+
+**Trajectoire de prédiction (15 juin 2026) : ❌ écarté sur le principe.**
+Le feedback "voir la trajectoire" peut désigner deux choses. La *traînée*
+(positions passées) est du juice neutre — elle renforce la physicalité de la
+balle. La *ligne de prédiction* (positions futures) est une contradiction
+directe avec cette décision et avec le moment magique : elle résout à l'avance
+ce que la traversée invisible est censée laisser dans l'incertitude. La charge
+de la preuve est inversée — il faudrait un playtest démontrant un bénéfice
+clair pour rouvrir la question. Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 8.
+
 ---
 
 ## D07 — Silhouette de l'adversaire ❌
@@ -257,7 +271,7 @@ certificat à accepter sur l'iPhone — itération sans déploiement.
 
 **SCI (B3) :** t4g.nano ARM Graviton2 — TDP attribué estimé ~5 W (prorata vCPU),
 PUE AWS ≤ 1,2, grille eu-west-1 (Irlande) ~200 gCO₂e/kWh. Facteurs versionnés
-dans `sci/factors.yaml` (`server`).
+dans [`sci/factors.yaml`](../sci/factors.yaml) (`server`).
 
 ---
 
@@ -314,6 +328,12 @@ service (~3 s pour traverser l'écran sur iPhone 13). Ajustements actés :
   puis les gains diminuent à l'approche du plafond (sensation naturelle).
 - Même logique pour l'escalade du service point par point.
 
+**🔬 En question (15 juin 2026, post-playtest #4) :** jeu perçu trop rapide.
+Valeur de 1.20 × H/s trop élevée pour les nouveaux joueurs. Piste : ramener
+à ~0.80-0.90 en conservant le plafond et le lerp (la courbe logarithmique
+absorbe l'accélération). À confirmer par le prochain playtest — voir
+[`docs/playtest-4-work.md`](./playtest-4-work.md).
+
 ---
 
 ## D14 — Effets de balle ⏸ (phase 3)
@@ -353,7 +373,7 @@ icône PWA. À traiter avant toute diffusion publique (LinkedIn, GitHub public).
 
 ## D16 — Documentation du projet ✅
 
-`PROJECT.md` = état courant, court (< 200 lignes), contexte d'entrée pour
+[`PROJECT.md`](../PROJECT.md) = état courant, court (< 200 lignes), contexte d'entrée pour
 Claude Code. `docs/decisions.md` (ce fichier) = le pourquoi, par sujet, amendé
 au fil des décisions — préféré à une synthèse narrative de conversation, qui
 vieillit mal et mélange décisions actées et supersédées. Specs détaillées dans
@@ -371,7 +391,7 @@ Référentiel : Software Carbon Intensity (GSF, ISO/IEC 21031:2024).
 ponctuel en kgCO₂e (le SCI ne couvre pas le dev), SCI d'exploitation = taux ;
 lien par amortissement du total sur les parties cumulées. (2) Unité
 fonctionnelle R = une partie jouée. (3) Facteurs d'émission figés et
-versionnés (`sci/factors.yaml`) : la valeur est dans la comparaison relative
+versionnés ([`sci/factors.yaml`](../sci/factors.yaml)) : la valeur est dans la comparaison relative
 entre versions, pas dans le chiffre absolu. (4) Chaque chiffre étiqueté
 [mesuré] ou [estimé]. (5) Pas de télémétrie intrusive : compteurs agrégés
 côté serveur uniquement.
@@ -385,12 +405,12 @@ changer de téléphone).
 **Implications.** Worklog + wattmètre dès la phase 0 ; baseline SCI complète
 en fin de phase 1 ; budgets CI immédiats (bundle ≤ 150 Ko gzip, ≤ 20 Ko par
 partie, EcoIndex A) ; manifest Impact Framework versionné ; rapport par
-release dans `sci/reports/`. Usage IA (Claude Code) inclus dans le volet
+release dans [`sci/reports/`](../sci/reports/). Usage IA (Claude Code) inclus dans le volet
 réalisation, rapporté en fourchette (forte incertitude). Détail complet :
-`docs/sci.md`.
+[`docs/sci.md`](./sci.md).
 
 **Amendement — Précision volet réalisation : mesure de l'usage IA.** La
-réalisation (conception comprise) EST mesurée — volet A de docs/sci.md —
+réalisation (conception comprise) EST mesurée — volet A de [docs/sci.md](./sci.md) —
 mais rapportée en total (kgCO₂e), distinct du taux SCI d'exploitation, avec
 pont par amortissement sur les parties cumulées. Protocole tokens précisé :
 Claude Code compté exhaustivement via ccusage (logs locaux, export hebdo dans
@@ -407,8 +427,8 @@ forme d'épisodes (posts/articles LinkedIn).
 
 **Décision.** Série "journal de bord" dont la matière première est
 `docs/decisions.md` (1 épisode = 1 décision ou 1 résultat + 1 leçon
-transférable). Plan éditorial, gabarit et garde-fous dans `docs/linkedin.md` ;
-brouillons dans `docs/episodes/`, rédigés à chaud à chaque jalon, publiés
+transférable). Plan éditorial, gabarit et garde-fous dans [`docs/linkedin.md`](./linkedin.md) ;
+brouillons dans [`docs/episodes/`](./episodes/), rédigés à chaud à chaque jalon, publiés
 après relecture à froid. Cadence calée sur l'avancement réel.
 
 **Pourquoi.** Le journal de décisions a déjà la structure narrative d'un bon
@@ -541,6 +561,13 @@ animations.
 stocké dans la room côté serveur et relayé au joueur B au moment du `game_start`.
 Le thème "Synthétique" (actuel) reste le défaut.
 
+**Note (15 juin 2026) :** le feedback playtest #4 demande une "table". Avant
+d'implémenter quoi que ce soit : AirPair c'est la balle dans *l'air* entre
+deux écrans (D01, D15), pas sur une surface. Une texture de table contredit
+l'intention. Si le problème est un "manque de repère de terrain", la bonne
+réponse est des *lignes de terrain* (ce que ce thème prévoit déjà) — pas une
+surface plane. Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 4.
+
 **Statut : roadmap phase 3 — aucune implémentation avant validation du fun
 (critère go/no-go phase 2).**
 
@@ -653,6 +680,27 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
 ---
 
 ## Questions ouvertes (à trancher par prototype/playtest)
+
+> Ajouts post-playtest #4 (15 juin 2026) — voir analyse complète dans
+> [`docs/playtest-4-work.md`](./playtest-4-work.md).
+
+12. **Onboarding règles.** Aucune explication du contrôle ou des règles à
+    l'entrée en partie. Option : texte contextuel sur l'écran de calibrage
+    ("Inclinez pour bouger la raquette — premier à 7 points") + écran règles
+    optionnel. Quelle information minimale suffit ?
+13. **Lisibilité raquettes.** Couleur et contraste des raquettes insuffisants.
+    À vérifier et corriger indépendamment de D22 (thèmes phase 3).
+14. **Couleurs Canvas.** Palette D24 s'applique aux écrans DOM mais pas au
+    Canvas. Appliquer la palette AirPair au rendu de jeu (balle jaune, raquette
+    cyan, fond bleu sombre, lignes blanches) sans créer le système de thèmes
+    D22 — quick win qui anticipe le thème Synthétique.
+15. **Effet visuel de rebond.** Squash/stretch de la balle à l'impact (3-4
+    frames). Distinct de D14 (effets de trajectoire au gyroscope). Coût faible,
+    impact "juice" significatif.
+16. **Trajectoire de la balle — traînée vs prédiction.** Deux interprétations
+    du feedback "voir la trajectoire" : (a) traînée (positions passées, pur
+    juice, facile) ; (b) ligne de prédiction future (change la stratégie,
+    intersecte D06). Trancher laquelle implémenter en premier.
 
 1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
    en playtests phase 2.

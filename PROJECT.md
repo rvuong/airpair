@@ -142,6 +142,12 @@ Textes illisibles → test ×2 polices petites (D21). Amorce accessibilité malv
 (baseline `H − PADDLE_MARGIN − PADDLE_HEIGHT/2 − 16`). "Premier à 7 points ·
 marge de 2" wrappait sur Pixel 7 → raccourci en "7 pts · marge 2".
 
+**Playtest #4 (15 juin 2026)** : jeu trop rapide. Joueurs désorientés (pas de
+règles à l'entrée). Raquettes peu lisibles. Visuel austère : manque couleurs,
+effets de rebond, repère de terrain. Indicateur d'approche perçu comme trop
+tardif. Demande de voir la trajectoire de la balle.
+Analyse détaillée et priorisation en cours → [docs/playtest-4-work.md](./docs/playtest-4-work.md).
+
 ### Phase 3 — Profondeur (selon résultats)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
@@ -151,17 +157,18 @@ Musique de fond 8-bit optionnelle (D23) — conditionnel : valider d'abord que l
 
 ## Organisation du repo
 
-- `PROJECT.md` : ce fichier — intention, décisions, roadmap. Source de vérité
+- [PROJECT.md](./PROJECT.md) : ce fichier — intention, décisions, roadmap. Source de vérité
   sur l'état COURANT du projet. Court (< 200 lignes).
-- `docs/decisions.md` : journal de décisions (format ADR allégé) — pour chaque
+- [docs/decisions.md](./docs/decisions.md) : journal de décisions (format ADR allégé) — pour chaque
   sujet : contexte, options envisagées, décision, justification. C'est là que
   vit le POURQUOI (alternatives écartées comprises). Amendé quand une décision
   change, jamais réécrit en récit.
 - Specs détaillées dans des fichiers dédiés au fil de l'eau :
-  `docs/architecture.md`, `docs/netcode.md`, `docs/game-design.md`,
-  `docs/sci.md` (mesure environnementale), `docs/linkedin.md` (série publique),
-  `CONTRIBUTING.md`, etc.
-- Prototypes phase 0 dans `proto/0a-tilt/` et `proto/0b-sync/` (code jetable,
+  docs/architecture.md, docs/netcode.md, docs/game-design.md (à venir),
+  [docs/sci.md](./docs/sci.md) (mesure environnementale), [docs/linkedin.md](./docs/linkedin.md) (journal de conception),
+  [docs/glossaire.md](./docs/glossaire.md) (terminologie).
+- [CONTRIBUTING.md](./CONTRIBUTING.md) : guide de contribution (workflow git, format commits, règles doc).
+- Prototypes phase 0 dans [proto/0a-tilt/](./proto/0a-tilt/) et [proto/0b-sync/](./proto/0b-sync/) (code jetable,
   séparé du futur code MVP).
 - Toute nouvelle décision de design ou d'architecture se reporte ici (sections
   "Décisions actées" / "Roadmap") pour garder ce fichier comme contexte
