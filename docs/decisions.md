@@ -287,6 +287,16 @@ geste utilisateur (HTTPS requis) · déblocage AudioContext dans ce même geste 
 verrouillage d'orientation web sur iOS → assumer portrait + écran "tournez
 votre téléphone" · vibration non supportée (D09).
 
+**Piège PWA standalone — canvas overflow (découvert playtest juin 2026) :** en mode
+standalone (icône écran d'accueil), `window.innerHeight` = hauteur d'écran complète
+(safe areas incluses), contrairement à Safari browser où la toolbar réduit cette
+valeur. Si le canvas `display:block` est placé dans un conteneur flex avec
+`padding-bottom: env(safe-area-inset-bottom)` + `overflow-y: hidden`, le bas du
+canvas (raquette) est rogné — le joueur ne voit plus sa raquette. **Correction :
+`position:fixed; top:0; left:0` sur le canvas** — il sort du flux flex, les
+dimensions `window.innerWidth/innerHeight` s'alignent avec le viewport réel, et
+aucun parent ne peut rogner son contenu.
+
 **Proto 0b à un seul iPhone :** second client = navigateur desktop
 clavier/souris, suffisant pour valider la synchro. Test à deux vrais
 téléphones (emprunter un Android = validation cross-platform) en phase 1.
