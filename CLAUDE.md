@@ -15,7 +15,6 @@ Docs : [PROJECT.md](./PROJECT.md) (intention + roadmap), [docs/decisions.md](./d
 - Code jeu (Canvas, tilt, boucle de jeu) → `game-dev`
 - Serveur WebSocket → `server-dev`
 - Worklog Software Carbon Index (SCI) → `sci-keeper`
-- Assistant rédaction des épisodes LinkedIn → `linkedin-writer`
 
 ## Règles absolues
 - Simulation déterministe : **zéro streaming de position**, un seul message `{t_frappe, position, vecteur_vitesse}` par frappe

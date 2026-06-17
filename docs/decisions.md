@@ -437,9 +437,8 @@ forme d'épisodes (posts/articles LinkedIn).
 
 **Décision.** Série "journal de bord" dont la matière première est
 `docs/decisions.md` (1 épisode = 1 décision ou 1 résultat + 1 leçon
-transférable). Plan éditorial, gabarit et garde-fous dans [`docs/linkedin.md`](./linkedin.md) ;
-brouillons dans [`docs/episodes/`](./episodes/), rédigés à chaud à chaque jalon, publiés
-après relecture à froid. Cadence calée sur l'avancement réel.
+transférable). Brouillons rédigés à chaud à chaque jalon, publiés après relecture à froid.
+Cadence calée sur l'avancement réel.
 
 **Pourquoi.** Le journal de décisions a déjà la structure narrative d'un bon
 post (problème → options → arbitrage → leçon) : coût marginal de rédaction

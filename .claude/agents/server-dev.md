@@ -29,4 +29,4 @@ Calcul côté client A : `offset = ((t2−t1) + (t3−t4)) / 2` · `RTT = t4−t
 Cible : offset < 20 ms en WiFi local.
 
 ## Ce que tu ne lis pas
-Code client (Canvas, tilt, jeu) · `sci.md` · `linkedin.md` · `decisions.md`
+Code client (Canvas, tilt, jeu) · `sci.md` · `decisions.md`

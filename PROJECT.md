@@ -165,7 +165,7 @@ Musique de fond 8-bit optionnelle (D23) — conditionnel : valider d'abord que l
   change, jamais réécrit en récit.
 - Specs détaillées dans des fichiers dédiés au fil de l'eau :
   docs/architecture.md, docs/netcode.md, docs/game-design.md (à venir),
-  [docs/sci.md](./docs/sci.md) (mesure environnementale), [docs/linkedin.md](./docs/linkedin.md) (journal de conception),
+  [docs/sci.md](./docs/sci.md) (mesure environnementale),
   [docs/glossaire.md](./docs/glossaire.md) (terminologie).
 - [CONTRIBUTING.md](./CONTRIBUTING.md) : guide de contribution (workflow git, format commits, règles doc).
 - Prototypes phase 0 dans [proto/0a-tilt/](./proto/0a-tilt/) et [proto/0b-sync/](./proto/0b-sync/) (code jetable,
