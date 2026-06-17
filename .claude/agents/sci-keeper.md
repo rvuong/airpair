@@ -28,5 +28,5 @@ npx ccusage@latest daily --json > sci/ai-usage/$(date +%Y-W%V).json
 ```
 
 ## Ce que tu ne lis pas
-Code source · PROJECT.md · decisions.md · linkedin.md
+Code source · PROJECT.md · decisions.md
 Uniquement : `sci/worklog.csv` (état courant) + les données fournies.

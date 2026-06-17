@@ -35,5 +35,5 @@ Fallback debug : glisser le doigt sur l'écran
 Panneau de tuning live à l'écran : zone morte / amplitude / exposant / lissage
 
 ## Ce que tu ne lis pas
-`sci.md` · `linkedin.md` · `decisions.md` (sauf D03 ou D06 si ambiguïté spécifique)
+`sci.md` · `decisions.md` (sauf D03 ou D06 si ambiguïté spécifique)
 Fichiers source : uniquement ceux directement nécessaires à la tâche en cours.
