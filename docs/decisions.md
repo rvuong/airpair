@@ -172,7 +172,7 @@ playtest dédié n'a encore été conduit.
 **🔬 En question (15 juin 2026, post-playtest #4) :** indicateur perçu comme
 trop tardif ("voir d'où arrive la balle sans délai"). Piste : avancer
 l'apparition de l'indicateur dès l'entrée en zone morte (vs seulement dans
-les dernières ms). Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 5.
+les dernières ms). Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 5.
 
 **Trajectoire de prédiction (15 juin 2026) : ❌ écarté sur le principe.**
 Le feedback "voir la trajectoire" peut désigner deux choses. La *traînée*
@@ -181,7 +181,7 @@ balle. La *ligne de prédiction* (positions futures) est une contradiction
 directe avec cette décision et avec le moment magique : elle résout à l'avance
 ce que la traversée invisible est censée laisser dans l'incertitude. La charge
 de la preuve est inversée — il faudrait un playtest démontrant un bénéfice
-clair pour rouvrir la question. Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 8.
+clair pour rouvrir la question. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 8.
 
 ---
 
@@ -338,11 +338,9 @@ service (~3 s pour traverser l'écran sur iPhone 13). Ajustements actés :
   puis les gains diminuent à l'approche du plafond (sensation naturelle).
 - Même logique pour l'escalade du service point par point.
 
-**🔬 En question (15 juin 2026, post-playtest #4) :** jeu perçu trop rapide.
-Valeur de 1.20 × H/s trop élevée pour les nouveaux joueurs. Piste : ramener
-à ~0.80-0.90 en conservant le plafond et le lerp (la courbe logarithmique
-absorbe l'accélération). À confirmer par le prochain playtest — voir
-[`docs/playtest-4-work.md`](./playtest-4-work.md).
+**Amendement 3 (17 juin 2026) :** vitesse 1.20 × H/s confirmée OK après tests
+récents. La piste de réduction à 0.80-0.90 (playtest #4) est close — voir
+[`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 2.
 
 ---
 
@@ -470,7 +468,7 @@ le principal frein au critère go/no-go "redemander une revanche".
 
 ---
 
-## D20 — Taille de la balle 🔬
+## D20 — Taille de la balle ✅
 
 **Contexte.** Playtest #2 (9 juin 2026) : la balle est jugée trop petite à la
 valeur initiale `BALL_RADIUS_NORM = 0.013` (~10 px de diamètre sur iPhone 11).
@@ -482,7 +480,7 @@ limite haute).
 **Playtest #2 :** test (c) 25 px → trop grande. Réduit à 20 px (−5 px,
 `BALL_RADIUS_NORM = 0.0267`) en playtest #3.
 
-**À trancher** par playtest suivant.
+**Décision actée (19 juin 2026, post-playtests) :** 20 px (`BALL_RADIUS_NORM = 0.0267`) validé.
 
 ---
 
@@ -575,7 +573,7 @@ d'implémenter quoi que ce soit : AirPair c'est la balle dans *l'air* entre
 deux écrans (D01, D15), pas sur une surface. Une texture de table contredit
 l'intention. Si le problème est un "manque de repère de terrain", la bonne
 réponse est des *lignes de terrain* (ce que ce thème prévoit déjà) — pas une
-surface plane. Voir [`docs/playtest-4-work.md`](./playtest-4-work.md) item 4.
+surface plane. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 4.
 
 **Statut : roadmap phase 3 — aucune implémentation avant validation du fun
 (critère go/no-go phase 2).**
@@ -691,7 +689,7 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
 ## Questions ouvertes (à trancher par prototype/playtest)
 
 > Ajouts post-playtest #4 (15 juin 2026) — voir analyse complète dans
-> [`docs/playtest-4-work.md`](./playtest-4-work.md).
+> [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md).
 
 12. **Onboarding règles.** Aucune explication du contrôle ou des règles à
     l'entrée en partie. Option : texte contextuel sur l'écran de calibrage
@@ -717,7 +715,7 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
    2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
    D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
    quasi-linéaire. Conflit touch/tilt : à surveiller en playtest.
-3. Taille de la balle : voir D20.
+3. ~~Taille de la balle : voir D20.~~ **Acté (19 juin 2026) :** 20 px / `BALL_RADIUS_NORM = 0.0267` validé en playtests.
 4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
 5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
 6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
