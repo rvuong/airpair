@@ -146,7 +146,8 @@ marge de 2" wrappait sur Pixel 7 → raccourci en "7 pts · marge 2".
 règles à l'entrée). Raquettes peu lisibles. Visuel austère : manque couleurs,
 effets de rebond, repère de terrain. Indicateur d'approche perçu comme trop
 tardif. Demande de voir la trajectoire de la balle.
-Analyse détaillée et priorisation en cours → [docs/playtest-4-work.md](./docs/playtest-4-work.md).
+Analyse détaillée et priorisation en cours → [docs/playtests/playtest-4-work.md](./docs/playtests/playtest-4-work.md).
+Note : vitesse confirmée OK après tests récents — item #2 clos.
 
 ### Phase 3 — Profondeur (selon résultats)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
