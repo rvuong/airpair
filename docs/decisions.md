@@ -297,6 +297,8 @@ canvas (raquette) est rogné — le joueur ne voit plus sa raquette. **Correctio
 dimensions `window.innerWidth/innerHeight` s'alignent avec le viewport réel, et
 aucun parent ne peut rogner son contenu.
 
+**Piège PWA standalone — score rogné par la barre de statut (découvert juin 2026) :** avec `viewport-fit=cover` + `apple-mobile-web-app-status-bar-style: black-translucent`, `position:fixed;top:0` place le canvas sous la barre de statut iOS (~44 px sur iPhone 11). En Safari, la toolbar réduit `window.innerHeight` et masque le bug (le score à `H×0.055 ≈ 46 px` tombe plus bas dans le canvas et reste visible). En PWA standalone, `window.innerHeight` = hauteur d'écran complète ; le score tombe exactement dans la barre. **Correction : exposer `env(safe-area-inset-top)` comme variable CSS `--sat` sur `:root` ; dans `resizeCanvas()`, lire `--sat` en JS, soustraire de `H` et positionner `canvas.style.top` à sa valeur. En Safari/desktop, `--sat` vaut `0px` — comportement inchangé.**
+
 **Proto 0b à un seul iPhone :** second client = navigateur desktop
 clavier/souris, suffisant pour valider la synchro. Test à deux vrais
 téléphones (emprunter un Android = validation cross-platform) en phase 1.
@@ -575,6 +577,8 @@ l'intention. Si le problème est un "manque de repère de terrain", la bonne
 réponse est des *lignes de terrain* (ce que ce thème prévoit déjà) — pas une
 surface plane. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 4.
 
+**Amendement (19 juin 2026) — palette logo appliquée au Canvas en quick win (Q13/Q14) :** sans attendre le système de thèmes phase 3, la palette D24 a été appliquée directement aux éléments Canvas : raquette A rose `#ff2d78`, raquette B cyan `#00d4e8`, balle et indicateur d'approche jaune `#ffe600`. Fond et lignes inchangés (noir + blanc 15 % opacité). Validé en playtest. Le système de thèmes D22 reste en roadmap phase 3 et viendra par-dessus ces valeurs par défaut.
+
 **Statut : roadmap phase 3 — aucune implémentation avant validation du fun
 (critère go/no-go phase 2).**
 
@@ -695,12 +699,8 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
     l'entrée en partie. Option : texte contextuel sur l'écran de calibrage
     ("Inclinez pour bouger la raquette — premier à 7 points") + écran règles
     optionnel. Quelle information minimale suffit ?
-13. **Lisibilité raquettes.** Couleur et contraste des raquettes insuffisants.
-    À vérifier et corriger indépendamment de D22 (thèmes phase 3).
-14. **Couleurs Canvas.** Palette D24 s'applique aux écrans DOM mais pas au
-    Canvas. Appliquer la palette AirPair au rendu de jeu (balle jaune, raquette
-    cyan, fond bleu sombre, lignes blanches) sans créer le système de thèmes
-    D22 — quick win qui anticipe le thème Synthétique.
+13. ~~**Lisibilité raquettes.**~~ **Acté (19 juin 2026, validé playtest) :** raquette A rose `#ff2d78`, raquette B cyan `#00d4e8` — palette logo D24. Couleurs stables pendant toute la partie (déterminées par le rôle A/B). Contrastes sur fond noir : rose 6,1:1 ; cyan 11,9:1 (tous ≥ 3:1 SC 1.4.11, D21).
+14. ~~**Couleurs Canvas.**~~ **Acté (19 juin 2026, validé playtest) :** balle et indicateur d'approche jaune `#ffe600` (contraste 16,8:1 sur noir). Raquette A rose, raquette B cyan (voir Q13). Fond et lignes inchangés. Voir D22 amendement.
 15. **Effet visuel de rebond.** Squash/stretch de la balle à l'impact (3-4
     frames). Distinct de D14 (effets de trajectoire au gyroscope). Coût faible,
     impact "juice" significatif.

@@ -149,6 +149,10 @@ tardif. Demande de voir la trajectoire de la balle.
 Analyse détaillée et priorisation en cours → [docs/playtests/playtest-4-work.md](./docs/playtests/playtest-4-work.md).
 Note : vitesse confirmée OK après tests récents — item #2 clos.
 
+**Corrections post-playtest #4 (19 juin 2026) :**
+- Couleurs Canvas (Q13/Q14 closes) : raquette A rose `#ff2d78`, raquette B cyan `#00d4e8`, balle jaune `#ffe600` — palette logo appliquée au Canvas en quick win. Validé en playtest.
+- Fix PWA score rogné (D12) : `env(safe-area-inset-top)` lu en JS pour décaler le canvas sous la barre de statut iOS en mode standalone.
+
 ### Phase 3 — Profondeur (selon résultats)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
