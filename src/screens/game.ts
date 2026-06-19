@@ -517,7 +517,7 @@ export function renderGame(
     // which lets us place the line at the true vertical mid-point of the score text.
     const scoreText = `${state.myScore} – ${state.opponentScore}`
     const scoreY = H * 0.055
-    const knockoutMargin = 12  // px clearance on each side of the score
+    const knockoutMargin = 16  // px clearance on each side of the score
 
     ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
     const metrics = ctx.measureText(scoreText)
