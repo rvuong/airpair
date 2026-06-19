@@ -513,13 +513,16 @@ export function renderGame(
 
     // Score + dashed line with typographic knockout around it
     // measureText() requires the font to be set first, so font is set before the line.
+    // actualBoundingBoxAscent gives the exact distance from baseline to top of rendered glyphs,
+    // which lets us place the line at the true vertical mid-point of the score text.
     const scoreText = `${state.myScore} – ${state.opponentScore}`
-    const lineY = H * 0.05
     const scoreY = H * 0.055
     const knockoutMargin = 12  // px clearance on each side of the score
 
     ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
-    const textW = ctx.measureText(scoreText).width
+    const metrics = ctx.measureText(scoreText)
+    const textW = metrics.width
+    const lineY = scoreY - metrics.actualBoundingBoxAscent / 2
     const gapLeft  = W / 2 - textW / 2 - knockoutMargin
     const gapRight = W / 2 + textW / 2 + knockoutMargin
 
