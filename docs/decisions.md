@@ -176,6 +176,15 @@ les dernières ms). Voir [`docs/playtests/playtest-4-work.md`](./playtests/playt
 
 **Ligne de seuil et knockout typographique (19 juin 2026) ✅** La ligne pointillée en haut du canvas matérialise le seuil vers le camp adverse — le joueur voit d'un coup d'œil que le haut de son écran pointe vers l'adversaire. Quatre options envisagées pour sa coexistence avec le score : (A) ligne au-dessus du score (trop proche du bord, quasi invisible) ; (B) ligne en dessous (crée un espace mort ambigu au-dessus) ; (C) suppression de la ligne (l'indicateur d'approche suffit mais le repère de terrain disparaît) ; (D) [knockout typographique](./glossaire.md#knockout-typographique) — la ligne s'interrompt autour du score avec 16 px de marge, sans déplacer ni l'un ni l'autre. **Décision : (D).** Score et ligne restent au même Y, la ligne *sort* du score visuellement — cohérence sémantique : le score marque le seuil, la ligne en est le prolongement. Implémentation : `ctx.measureText()` pour la largeur du gap, `actualBoundingBoxAscent` pour centrer la ligne à mi-hauteur des glyphes. Validé.
 
+**Design de l'indicateur d'approche — exploration (19 juin 2026) 🔬**
+L'implémentation actuelle (dot jaune, grandit de 0,2× à 1× BALL_R, opacité 15% → 100%, 400 ms) est conceptuellement inversée : un dot qui grossit lit comme "quelque chose s'accumule", pas "quelque chose arrive". Deux alternatives analysées, aucune implémentée.
+
+*Option A — dot rétrécissant (blanc, 1,5× → 1× BALL_R, opacité 25% → 100%) :* meilleure métaphore countdown (rétrécir = s'approcher). La taille finale = taille réelle de la balle, donc transition spatiale sans couture. Blanc évite la confusion avec la balle jaune. Durée proposée : 800 ms. **Risque principal :** les 800 ms sont liés à DEAD_ZONE_MS — les doubler ralentit le rythme perçu de la partie. **Chemin recommandé :** garder DEAD_ZONE_MS = 400 ms, introduire une constante visuelle séparée `APPROACH_WINDOW_MS = 800` ; le dot démarre l'animation à `arrivalTime − 800 ms`, donc à `progress = 0,5` si le message arrive à 400 ms (taille initiale ~1,25× au lieu de 1,5×). Dissocier visuel et gameplay.
+
+*Option B — implosion + vide (blanc, 1,5× → 0,5×, disparaît 100 ms avant la balle) :* plus cinématique. Le dot se comprime, disparaît, puis la balle surgit dans le vide — saut de taille 0,5× → 1× à travers un gap, lu comme une expansion/explosion. Principe d'anticipation animation classique (squash & stretch, frame avant impact). **Limite structurelle :** l'explosion n'est qu'implicite — la balle apparaît statiquement à taille normale. Pour que l'illusion tienne, la balle doit participer (spawn animation : 1,3× → 1× en ~60 ms). Sans ça, le vide risque de lire comme un glitch, surtout en vision périphérique où le joueur regarde sa raquette. Option incomplète seule, complète avec un spawn effect sur la balle.
+
+**Verdict commun :** l'inversion (rétrécir > grossir) est un progrès certain sur l'existant. Option A est prête à implémenter. Option B appelle un second incrément (spawn balle) — à coupler pour ne pas livrer une expérience à moitié. Aucun playtest dédié conduit ; à valider en phase 2.
+
 **Trajectoire de prédiction (15 juin 2026) : ❌ écarté sur le principe.**
 Le feedback "voir la trajectoire" peut désigner deux choses. La *traînée*
 (positions passées) est du juice neutre — elle renforce la physicalité de la
@@ -692,6 +701,32 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
 
 ---
 
+## D25 — Squash & Stretch ✅
+
+**Contexte.** Q15 — effet visuel "juice" à l'impact. Principe n°2 des 12 principes
+d'animation Disney : la déformation de l'objet communique sa masse et son élasticité.
+
+**Décision.** Animation squash/stretch sur la balle à chaque impact (raquette + murs).
+Purement visuel : le rayon de collision (`BALL_R`) reste inchangé, seul le dessin
+est déformé.
+
+**Paramètres actés.**
+- Durée totale : 150 ms
+- Pic squash (axe d'impact) : 0,65× ; axe perpendiculaire : 1,3×
+- 1 rebond d'élasticité : overshoot à 1,08× (axe impact) puis retour à 1×
+- Courbe : 3 phases linéaires — squash → normal (0–60 ms) · overshoot (60–120 ms) · retour (120–150 ms)
+
+**Axes d'impact.**
+- Raquette (horizontale, impact vertical) : squash Y, stretch X
+- Mur gauche/droite (impact horizontal) : squash X, stretch Y
+- `rotation = 0` dans les deux cas (axes canoniques) — `ctx.ellipse()` sans transformation matricielle
+
+**Ce que ça ne couvre pas.** Spawn animation à l'arrivée de balle depuis la zone
+morte (lié à Option B de D06 — incrément séparé si validé en playtest). Effets de
+trajectoire au gyroscope (D14, phase 3).
+
+---
+
 ## Questions ouvertes (à trancher par prototype/playtest)
 
 > Ajouts post-playtest #4 (15 juin 2026) — voir analyse complète dans
@@ -703,9 +738,7 @@ Installation PWA fonctionnelle sur iOS (apple-touch-icon) et Android Chrome (man
     optionnel. Quelle information minimale suffit ?
 13. ~~**Lisibilité raquettes.**~~ **Acté (19 juin 2026, validé playtest) :** raquette A rose `#ff2d78`, raquette B cyan `#00d4e8` — palette logo D24. Couleurs stables pendant toute la partie (déterminées par le rôle A/B). Contrastes sur fond noir : rose 6,1:1 ; cyan 11,9:1 (tous ≥ 3:1 SC 1.4.11, D21).
 14. ~~**Couleurs Canvas.**~~ **Acté (19 juin 2026, validé playtest) :** balle et indicateur d'approche jaune `#ffe600` (contraste 16,8:1 sur noir). Raquette A rose, raquette B cyan (voir Q13). Fond et lignes inchangés. Voir D22 amendement.
-15. **Effet visuel de rebond.** Squash/stretch de la balle à l'impact (3-4
-    frames). Distinct de D14 (effets de trajectoire au gyroscope). Coût faible,
-    impact "juice" significatif.
+15. ~~**Effet visuel de rebond.**~~ **Acté (19 juin 2026) :** squash/stretch de la balle au rebond raquette et mur (voir D25). Animation 150 ms, 1 rebond d'élasticité.
 16. **Trajectoire de la balle — traînée vs prédiction.** Deux interprétations
     du feedback "voir la trajectoire" : (a) traînée (positions passées, pur
     juice, facile) ; (b) ligne de prédiction future (change la stratégie,

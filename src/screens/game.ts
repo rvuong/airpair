@@ -93,6 +93,29 @@ const PADDLE_B_COLOR = '#00d4e8'  // cyan  — player B
 const BALL_COLOR     = '#ffe600'  // yellow — ball
 
 // ---------------------------------------------------------------------------
+// Squash & stretch (D25)
+// ---------------------------------------------------------------------------
+const SQUASH_MS      = 150   // total animation duration
+const SQUASH_SCALE   = 0.65  // scale on impact axis at peak
+const STRETCH_SCALE  = 1.3   // scale on perpendicular axis at peak
+const OVERSHOOT      = 1.08  // elastic overshoot (1 rebound)
+
+function squashScales(elapsed: number): { sa: number; sb: number } {
+  if (elapsed >= SQUASH_MS) return { sa: 1, sb: 1 }
+  const T1 = 60, T2 = 120
+  if (elapsed < T1) {
+    const p = elapsed / T1
+    return { sa: SQUASH_SCALE + (1 - SQUASH_SCALE) * p, sb: STRETCH_SCALE + (1 - STRETCH_SCALE) * p }
+  } else if (elapsed < T2) {
+    const p = (elapsed - T1) / (T2 - T1)
+    return { sa: 1 + (OVERSHOOT - 1) * p, sb: 1 + (1 / OVERSHOOT - 1) * p }
+  } else {
+    const p = (elapsed - T2) / (SQUASH_MS - T2)
+    return { sa: OVERSHOOT + (1 - OVERSHOOT) * p, sb: 1 / OVERSHOOT + (1 - 1 / OVERSHOOT) * p }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main renderGame
 // ---------------------------------------------------------------------------
 
@@ -196,6 +219,8 @@ export function renderGame(
   const tilt = new TiltController({ deadzone: 1.5, amplitude: 15, exponent: 1.1, alpha: 0.45 })
   let paddleX = W / 2 - paddleWidth / 2
   let serviceSpeedNorm = INITIAL_SPEED_NORM
+  let lastImpact: { time: number; axis: 'x' | 'y' } | null = null
+  let nowMs = 0
   const paddleY = (): number => H - PADDLE_MARGIN
 
   // ---------------------------------------------------------------------------
@@ -270,6 +295,7 @@ export function renderGame(
     state.ballArrivalTime = null
     state.scoringUntil = null
     pendingHit = null
+    lastImpact = null
     if (firstServer === role) {
       state.phase = 'serving'
       placeBallOnPaddle()
@@ -352,6 +378,7 @@ export function renderGame(
 
   function loop(now: number): void {
     if (suspended) return
+    nowMs = now
 
     const dt = lastTime === 0 ? 0 : Math.min((now - lastTime) / 1000, 0.05)
     lastTime = now
@@ -395,10 +422,12 @@ export function renderGame(
       if (ball.x - BALL_R < 0) {
         ball.x = BALL_R
         ball.vx = Math.abs(ball.vx)
+        lastImpact = { time: nowMs, axis: 'x' }
         playWall()
       } else if (ball.x + BALL_R > W) {
         ball.x = W - BALL_R
         ball.vx = -Math.abs(ball.vx)
+        lastImpact = { time: nowMs, axis: 'x' }
         playWall()
       }
 
@@ -423,6 +452,7 @@ export function renderGame(
         ball.vx = newSpeed * Math.sin(angle)
         ball.vy = -Math.abs(newSpeed * Math.cos(angle))
         ball.y = py - BALL_R
+        lastImpact = { time: nowMs, axis: 'y' }
         playHit()
       }
 
@@ -546,11 +576,18 @@ export function renderGame(
     const paddleColor = role === 'A' ? PADDLE_A_COLOR : PADDLE_B_COLOR
     drawRoundedRect(ctx, paddleX, py, paddleWidth, PADDLE_HEIGHT, PADDLE_CORNER, paddleColor)
 
-    // Ball
+    // Ball (with squash & stretch on impact — D25)
     if (state.ball) {
+      let rx = BALL_R
+      let ry = BALL_R
+      if (lastImpact !== null) {
+        const { sa, sb } = squashScales(nowMs - lastImpact.time)
+        if (lastImpact.axis === 'y') { rx = BALL_R * sb; ry = BALL_R * sa }
+        else                          { rx = BALL_R * sa; ry = BALL_R * sb }
+      }
       ctx.fillStyle = BALL_COLOR
       ctx.beginPath()
-      ctx.arc(state.ball.x, state.ball.y, BALL_R, 0, Math.PI * 2)
+      ctx.ellipse(state.ball.x, state.ball.y, rx, ry, 0, 0, Math.PI * 2)
       ctx.fill()
     }
 
@@ -698,6 +735,11 @@ export function renderGame(
   }
 
   function checkGameOverTap(clientX: number, clientY: number): void {
+    // clientX/Y are viewport coords; canvas starts at (rect.left, rect.top)
+    const rect = canvas.getBoundingClientRect()
+    const cx = clientX - rect.left
+    const cy = clientY - rect.top
+
     const revanBtnH = W * 0.13
     const retourBtnH = W * 0.11
     const blockTop = H / 2 - W * 0.25
@@ -707,15 +749,15 @@ export function renderGame(
     const btnX = W / 2 - W * 0.3
     const btnW = W * 0.6
     // Revanche button
-    if (clientY >= revanTop && clientY <= revanTop + revanBtnH &&
-        clientX >= btnX && clientX <= btnX + btnW) {
+    if (cy >= revanTop && cy <= revanTop + revanBtnH &&
+        cx >= btnX && cx <= btnX + btnW) {
       client.relay({ type: 'rematch' } satisfies GameMsg)
       resetGame()
       return
     }
     // Back button
-    if (clientY >= retourTop && clientY <= retourTop + retourBtnH &&
-        clientX >= btnX && clientX <= btnX + btnW) {
+    if (cy >= retourTop && cy <= retourTop + retourBtnH &&
+        cx >= btnX && cx <= btnX + btnW) {
       onBack()
     }
   }
