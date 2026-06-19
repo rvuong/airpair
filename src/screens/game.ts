@@ -86,6 +86,13 @@ function checkWinner(
 }
 
 // ---------------------------------------------------------------------------
+// Theme colours
+// ---------------------------------------------------------------------------
+const PADDLE_A_COLOR = '#ff2d78'  // pink  — player A
+const PADDLE_B_COLOR = '#00d4e8'  // cyan  — player B
+const BALL_COLOR     = '#ffe600'  // yellow — ball
+
+// ---------------------------------------------------------------------------
 // Main renderGame
 // ---------------------------------------------------------------------------
 
@@ -514,11 +521,12 @@ export function renderGame(
     ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, H * 0.055)
 
     // Paddle
-    drawRoundedRect(ctx, paddleX, py, paddleWidth, PADDLE_HEIGHT, PADDLE_CORNER, '#fff')
+    const paddleColor = role === 'A' ? PADDLE_A_COLOR : PADDLE_B_COLOR
+    drawRoundedRect(ctx, paddleX, py, paddleWidth, PADDLE_HEIGHT, PADDLE_CORNER, paddleColor)
 
     // Ball
     if (state.ball) {
-      ctx.fillStyle = '#fff'
+      ctx.fillStyle = BALL_COLOR
       ctx.beginPath()
       ctx.arc(state.ball.x, state.ball.y, BALL_R, 0, Math.PI * 2)
       ctx.fill()
@@ -531,7 +539,7 @@ export function renderGame(
       const ix = (1 - pendingHit.nx) * W
       const ir = BALL_R * (0.2 + 0.8 * progress)
       const alpha = 0.15 + 0.85 * progress
-      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
+      ctx.fillStyle = `rgba(255,230,0,${alpha.toFixed(2)})`
       ctx.beginPath()
       ctx.arc(ix, BALL_R, ir, 0, Math.PI * 2)
       ctx.fill()
