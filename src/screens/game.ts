@@ -154,9 +154,16 @@ export function renderGame(
   let BALL_R = W * BALL_RADIUS_NORM
   let paddleWidth = W * PADDLE_WIDTH_NORM
 
+  function safeAreaTop(): number {
+    // env(safe-area-inset-top) exposed as --sat in :root (index.html).
+    // In PWA standalone + viewport-fit=cover, this equals the status bar height (~44px on iPhone 11).
+    return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sat')) || 0
+  }
+
   function resizeCanvas(): void {
+    const sat = safeAreaTop()
     W = window.innerWidth
-    H = window.innerHeight
+    H = window.innerHeight - sat
     BALL_R = W * BALL_RADIUS_NORM
     paddleWidth = W * PADDLE_WIDTH_NORM
 
@@ -165,6 +172,7 @@ export function renderGame(
     canvas.height = H * dpr
     canvas.style.width = `${W}px`
     canvas.style.height = `${H}px`
+    canvas.style.top = `${sat}px`
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   }
 
