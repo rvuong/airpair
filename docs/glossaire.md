@@ -117,6 +117,10 @@ Protocole de synchronisation d'horloge entre les deux clients, inspiré du Netwo
 
 Bibliothèque JavaScript de décodage de QR codes fonctionnant entièrement côté client, sans API navigateur. Utilisée en fallback quand [BarcodeDetector](#barcodedetector) n'est pas disponible. Voir [D05](./decisions.md).
 
+### Knockout typographique
+
+**Clearance.** Technique consistant à interrompre une ligne horizontale de part et d'autre d'un texte qu'elle traverserait, en laissant une marge de quelques pixels entre le bord du texte et le début/fin de chaque segment. Assure la lisibilité sans repositionner ni la ligne ni le texte — les deux restent sur le même axe Y. Courante en cartographie (labels de routes sur un fond), HUDs de jeux et design éditorial. Dans AirPair : la ligne pointillée du seuil adverse s'interrompt autour du score. Implémentation [Canvas 2D](#canvas-2d) : `ctx.measureText()` mesure la largeur du texte courant, deux segments sont tracés de `0 → centre − textWidth/2 − marge` et de `centre + textWidth/2 + marge → W`.
+
 ### Offset d'horloge
 
 Écart mesuré entre l'horloge locale d'un client et l'horloge de référence (serveur), exprimé en millisecondes. Calculé lors du [handshake NTP](#handshake-ntp) : `offset ≈ (t_retour − t_envoi) / 2 − t_serveur`. Chaque client corrige ses timestamps par cet offset pour que les événements de jeu soient interprétés au bon moment par les deux appareils.

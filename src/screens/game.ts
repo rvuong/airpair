@@ -511,22 +511,33 @@ export function renderGame(
     ctx.fillStyle = '#000'
     ctx.fillRect(0, 0, W, H)
 
-    // Central dashed line (near top — indicates "towards opponent")
+    // Score + dashed line with typographic knockout around it
+    // measureText() requires the font to be set first, so font is set before the line.
+    const scoreText = `${state.myScore} – ${state.opponentScore}`
+    const lineY = H * 0.05
+    const scoreY = H * 0.055
+    const knockoutMargin = 12  // px clearance on each side of the score
+
+    ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
+    const textW = ctx.measureText(scoreText).width
+    const gapLeft  = W / 2 - textW / 2 - knockoutMargin
+    const gapRight = W / 2 + textW / 2 + knockoutMargin
+
     ctx.save()
     ctx.setLineDash([6, 8])
     ctx.strokeStyle = 'rgba(255,255,255,0.15)'
     ctx.lineWidth = 1
     ctx.beginPath()
-    ctx.moveTo(0, H * 0.05)
-    ctx.lineTo(W, H * 0.05)
+    ctx.moveTo(0, lineY)
+    ctx.lineTo(gapLeft, lineY)
+    ctx.moveTo(gapRight, lineY)
+    ctx.lineTo(W, lineY)
     ctx.stroke()
     ctx.restore()
 
-    // Score
     ctx.fillStyle = '#fff'
-    ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
     ctx.textAlign = 'center'
-    ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, H * 0.055)
+    ctx.fillText(scoreText, W / 2, scoreY)
 
     // Paddle
     const paddleColor = role === 'A' ? PADDLE_A_COLOR : PADDLE_B_COLOR
