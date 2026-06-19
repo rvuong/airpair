@@ -174,6 +174,8 @@ trop tardif ("voir d'où arrive la balle sans délai"). Piste : avancer
 l'apparition de l'indicateur dès l'entrée en zone morte (vs seulement dans
 les dernières ms). Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 5.
 
+**Ligne de seuil et knockout typographique (19 juin 2026) ✅** La ligne pointillée en haut du canvas matérialise le seuil vers le camp adverse — le joueur voit d'un coup d'œil que le haut de son écran pointe vers l'adversaire. Quatre options envisagées pour sa coexistence avec le score : (A) ligne au-dessus du score (trop proche du bord, quasi invisible) ; (B) ligne en dessous (crée un espace mort ambigu au-dessus) ; (C) suppression de la ligne (l'indicateur d'approche suffit mais le repère de terrain disparaît) ; (D) [knockout typographique](./glossaire.md#knockout-typographique) — la ligne s'interrompt autour du score avec 16 px de marge, sans déplacer ni l'un ni l'autre. **Décision : (D).** Score et ligne restent au même Y, la ligne *sort* du score visuellement — cohérence sémantique : le score marque le seuil, la ligne en est le prolongement. Implémentation : `ctx.measureText()` pour la largeur du gap, `actualBoundingBoxAscent` pour centrer la ligne à mi-hauteur des glyphes. Validé.
+
 **Trajectoire de prédiction (15 juin 2026) : ❌ écarté sur le principe.**
 Le feedback "voir la trajectoire" peut désigner deux choses. La *traînée*
 (positions passées) est du juice neutre — elle renforce la physicalité de la
