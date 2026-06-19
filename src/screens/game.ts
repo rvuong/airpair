@@ -735,6 +735,11 @@ export function renderGame(
   }
 
   function checkGameOverTap(clientX: number, clientY: number): void {
+    // clientX/Y are viewport coords; canvas starts at (rect.left, rect.top)
+    const rect = canvas.getBoundingClientRect()
+    const cx = clientX - rect.left
+    const cy = clientY - rect.top
+
     const revanBtnH = W * 0.13
     const retourBtnH = W * 0.11
     const blockTop = H / 2 - W * 0.25
@@ -744,15 +749,15 @@ export function renderGame(
     const btnX = W / 2 - W * 0.3
     const btnW = W * 0.6
     // Revanche button
-    if (clientY >= revanTop && clientY <= revanTop + revanBtnH &&
-        clientX >= btnX && clientX <= btnX + btnW) {
+    if (cy >= revanTop && cy <= revanTop + revanBtnH &&
+        cx >= btnX && cx <= btnX + btnW) {
       client.relay({ type: 'rematch' } satisfies GameMsg)
       resetGame()
       return
     }
     // Back button
-    if (clientY >= retourTop && clientY <= retourTop + retourBtnH &&
-        clientX >= btnX && clientX <= btnX + btnW) {
+    if (cy >= retourTop && cy <= retourTop + retourBtnH &&
+        cx >= btnX && cx <= btnX + btnW) {
       onBack()
     }
   }
