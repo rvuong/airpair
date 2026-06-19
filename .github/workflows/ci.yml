@@ -30,3 +30,38 @@ jobs:
             console.log('Bundle gzip:', total, 'octets');
             if (total > 153600) { console.error('FAIL: > 150 Ko'); process.exit(1); }
           "
+
+  deploy-preview:
+    # Job manuel : attend une approbation dans GitHub avant de s'exécuter.
+    # Configurer l'environment "preview" dans Settings → Environments avec un
+    # Required reviewer. Ce job n'est pas un required check pour le merge.
+    name: Deploy Preview (manual)
+    needs: src
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: preview
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+      - run: npm ci
+        working-directory: src
+      - run: npm run build
+        working-directory: src
+        env:
+          BASE_URL: /airpair/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: src/dist
+      - uses: actions/deploy-pages@v5
+        id: deployment
