@@ -93,6 +93,12 @@ const PADDLE_B_COLOR = '#00d4e8'  // cyan  — player B
 const BALL_COLOR     = '#ffe600'  // yellow — ball
 
 // ---------------------------------------------------------------------------
+// Approach indicator + spawn animation (D06)
+// ---------------------------------------------------------------------------
+const APPROACH_GAP_MS = 100  // void between dot disappearance and ball arrival
+const BALL_SPAWN_MS   = 80   // ball scale-up duration on spawn
+
+// ---------------------------------------------------------------------------
 // Squash & stretch (D25)
 // ---------------------------------------------------------------------------
 const SQUASH_MS      = 150   // total animation duration
@@ -220,6 +226,7 @@ export function renderGame(
   let paddleX = W / 2 - paddleWidth / 2
   let serviceSpeedNorm = INITIAL_SPEED_NORM
   let lastImpact: { time: number; axis: 'x' | 'y' } | null = null
+  let ballSpawnTime: number | null = null
   let nowMs = 0
   const paddleY = (): number => H - PADDLE_MARGIN
 
@@ -509,6 +516,7 @@ export function renderGame(
         state.phase = 'playing'
         state.ballArrivalTime = null
         pendingHit = null
+        ballSpawnTime = nowMs
       }
     }
 
@@ -576,14 +584,16 @@ export function renderGame(
     const paddleColor = role === 'A' ? PADDLE_A_COLOR : PADDLE_B_COLOR
     drawRoundedRect(ctx, paddleX, py, paddleWidth, PADDLE_HEIGHT, PADDLE_CORNER, paddleColor)
 
-    // Ball (with squash & stretch on impact — D25)
+    // Ball (with squash & stretch on impact — D25, and spawn scale — D06)
     if (state.ball) {
-      let rx = BALL_R
-      let ry = BALL_R
+      const spawnElapsed = ballSpawnTime !== null ? nowMs - ballSpawnTime : Infinity
+      const ss = spawnElapsed < BALL_SPAWN_MS ? 1.3 - 0.3 * (spawnElapsed / BALL_SPAWN_MS) : 1.0
+      let rx = BALL_R * ss
+      let ry = BALL_R * ss
       if (lastImpact !== null) {
         const { sa, sb } = squashScales(nowMs - lastImpact.time)
-        if (lastImpact.axis === 'y') { rx = BALL_R * sb; ry = BALL_R * sa }
-        else                          { rx = BALL_R * sa; ry = BALL_R * sb }
+        if (lastImpact.axis === 'y') { rx = BALL_R * sb * ss; ry = BALL_R * sa * ss }
+        else                          { rx = BALL_R * sa * ss; ry = BALL_R * sb * ss }
       }
       ctx.fillStyle = BALL_COLOR
       ctx.beginPath()
@@ -591,17 +601,19 @@ export function renderGame(
       ctx.fill()
     }
 
-    // Approach indicator — growing dot at top when ball is heading toward me
+    // Approach indicator — shrinking white dot, disappears 100 ms before ball (D06 option B)
     if (pendingHit !== null && state.ballArrivalTime !== null) {
       const remaining = Math.max(0, state.ballArrivalTime - Date.now())
-      const progress = Math.min(1, 1 - remaining / DEAD_ZONE_MS)
-      const ix = (1 - pendingHit.nx) * W
-      const ir = BALL_R * (0.2 + 0.8 * progress)
-      const alpha = 0.15 + 0.85 * progress
-      ctx.fillStyle = `rgba(255,230,0,${alpha.toFixed(2)})`
-      ctx.beginPath()
-      ctx.arc(ix, BALL_R, ir, 0, Math.PI * 2)
-      ctx.fill()
+      if (remaining > APPROACH_GAP_MS) {
+        const progress = Math.min(1, 1 - (remaining - APPROACH_GAP_MS) / (DEAD_ZONE_MS - APPROACH_GAP_MS))
+        const ix = (1 - pendingHit.nx) * W
+        const ir = BALL_R * (1.5 - progress)
+        const alpha = 0.25 + 0.75 * progress
+        ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`
+        ctx.beginPath()
+        ctx.arc(ix, BALL_R, ir, 0, Math.PI * 2)
+        ctx.fill()
+      }
     }
 
     // Phase overlays
