@@ -81,6 +81,14 @@ export function renderHost(
 
     const iconCanvases: Array<{ themeId: string; el: HTMLCanvasElement }> = []
 
+    const debugEl = document.createElement('p')
+    debugEl.textContent = 'Arcade'
+    debugEl.style.cssText = `
+      font-size:11px;font-family:-apple-system,sans-serif;
+      color:#ffe600;text-align:center;margin:6px 0 0;
+      font-weight:600;letter-spacing:0.5px;
+    `
+
     THEMES.forEach(t => {
       const isUnlocked = unlocked.includes(t.id)
       const item = document.createElement('div')
@@ -96,6 +104,7 @@ export function renderHost(
         width:48px;height:64px;border-radius:6px;box-sizing:border-box;
         outline:${t.id === selectedThemeId ? '2px solid #ffe600' : '2px solid transparent'};
         outline-offset:2px;
+        pointer-events:none;
       `
       const icCtx = ic.getContext('2d')!
       icCtx.scale(DPR, DPR)
@@ -108,15 +117,19 @@ export function renderHost(
         font-size:10px;font-family:-apple-system,sans-serif;
         color:${isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)'};
         text-align:center;max-width:52px;line-height:1.2;
+        pointer-events:none;
       `
 
       if (isUnlocked) {
-        item.addEventListener('click', () => {
+        const selectTheme = (): void => {
           selectedThemeId = t.id
+          debugEl.textContent = t.name
           iconCanvases.forEach(({ themeId, el }) => {
             el.style.outline = themeId === t.id ? '2px solid #ffe600' : '2px solid transparent'
           })
-        })
+        }
+        item.addEventListener('click', selectTheme)
+        item.addEventListener('touchend', (e) => { e.preventDefault(); selectTheme() })
       }
 
       item.appendChild(ic)
@@ -125,6 +138,7 @@ export function renderHost(
     })
 
     screenEl.appendChild(selectorEl)
+    screenEl.appendChild(debugEl)
   }
 
   client.onPeerJoined = async () => {
