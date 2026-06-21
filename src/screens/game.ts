@@ -1,6 +1,7 @@
 import { RoomClient, GameMsg } from '../net/ws'
 import { TiltController, GameState, Phase } from '../game/simulation'
 import { resumeAudio, isMuted, playHit, playWall, playScore, playMiss, playVictory, playDefeat } from '../game/audio'
+import { Theme, getThemeById, unlockNext, drawThemeIcon } from '../game/themes'
 import {
   DEAD_ZONE_MS,
   INITIAL_SPEED_NORM,
@@ -85,12 +86,6 @@ function checkWinner(
   return null
 }
 
-// ---------------------------------------------------------------------------
-// Theme colours
-// ---------------------------------------------------------------------------
-const PADDLE_A_COLOR = '#ff2d78'  // pink  — player A
-const PADDLE_B_COLOR = '#00d4e8'  // cyan  — player B
-const BALL_COLOR     = '#ffe600'  // yellow — ball
 
 // ---------------------------------------------------------------------------
 // Approach indicator + spawn animation (D06)
@@ -130,6 +125,7 @@ export function renderGame(
   client: RoomClient,
   role: 'A' | 'B',
   serverOffset: number,
+  themeId: string,
   onBack: () => void
 ): () => void {
   // Build DOM: canvas + pre-game overlay
@@ -222,6 +218,11 @@ export function renderGame(
     scoringUntil: null,
   }
 
+  // Theme (mutable: B updates it on game_start relay)
+  let theme: Theme = getThemeById(themeId)
+  let unlockedTheme: Theme | null = null
+  let themeAlreadyUnlocked = false
+
   const tilt = new TiltController({ deadzone: 1.5, amplitude: 15, exponent: 1.1, alpha: 0.45 })
   let paddleX = W / 2 - paddleWidth / 2
   let serviceSpeedNorm = INITIAL_SPEED_NORM
@@ -303,6 +304,8 @@ export function renderGame(
     state.scoringUntil = null
     pendingHit = null
     lastImpact = null
+    unlockedTheme = null
+    themeAlreadyUnlocked = false
     if (firstServer === role) {
       state.phase = 'serving'
       placeBallOnPaddle()
@@ -342,7 +345,10 @@ export function renderGame(
         state.phase = 'waiting'
       }
     } else if (msg.type === 'game_start') {
-      if (role === 'B') activateGame()
+      if (role === 'B') {
+        if (msg.themeId) theme = getThemeById(msg.themeId)
+        activateGame()
+      }
     } else if (msg.type === 'rematch') {
       resetGame()
     } else if (msg.type === 'miss') {
@@ -529,7 +535,15 @@ export function renderGame(
         const winner = checkWinner(state.myScore, state.opponentScore)
         if (winner) {
           state.phase = 'game_over'
-          if (winner === 'me') playVictory(); else playDefeat()
+          if (winner === 'me') {
+            playVictory()
+            if (!themeAlreadyUnlocked) {
+              unlockedTheme = unlockNext()
+              themeAlreadyUnlocked = true
+            }
+          } else {
+            playDefeat()
+          }
         } else {
           afterScoring()
         }
@@ -540,14 +554,46 @@ export function renderGame(
   // ---------------------------------------------------------------------------
   // Draw
   // ---------------------------------------------------------------------------
+  function drawCourtLines(): void {
+    const M = 8
+    ctx.save()
+    ctx.strokeStyle = theme.lineColor
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([])
+    ctx.beginPath()
+    ctx.moveTo(M, 0);     ctx.lineTo(M, H - M)
+    ctx.moveTo(W - M, 0); ctx.lineTo(W - M, H - M)
+    ctx.moveTo(M, H - M); ctx.lineTo(W - M, H - M)
+    ctx.moveTo(M, H / 2); ctx.lineTo(W - M, H / 2)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  function drawGazonStripes(): void {
+    ctx.fillStyle = theme.bg
+    ctx.fillRect(0, 0, W, H)
+    const n = 8
+    for (let i = 0; i < n; i++) {
+      ctx.fillStyle = i % 2 === 0 ? '#2d6a2d' : '#3a7a3a'
+      ctx.fillRect(0, i * (H / n), W, Math.ceil(H / n) + 1)
+    }
+  }
+
   function draw(): void {
     const py = paddleY()
 
     ctx.clearRect(0, 0, W, H)
 
     // Background
-    ctx.fillStyle = '#000'
-    ctx.fillRect(0, 0, W, H)
+    if (theme.stripedBg) {
+      drawGazonStripes()
+    } else {
+      ctx.fillStyle = theme.bg
+      ctx.fillRect(0, 0, W, H)
+    }
+
+    // Court lines (won themes only)
+    if (theme.courtLines) drawCourtLines()
 
     // Score + dashed line with typographic knockout around it
     // measureText() requires the font to be set first, so font is set before the line.
@@ -566,7 +612,7 @@ export function renderGame(
 
     ctx.save()
     ctx.setLineDash([6, 8])
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+    ctx.strokeStyle = theme.lineColor
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(0, lineY)
@@ -581,7 +627,7 @@ export function renderGame(
     ctx.fillText(scoreText, W / 2, scoreY)
 
     // Paddle
-    const paddleColor = role === 'A' ? PADDLE_A_COLOR : PADDLE_B_COLOR
+    const paddleColor = role === 'A' ? theme.paddleA : theme.paddleB
     drawRoundedRect(ctx, paddleX, py, paddleWidth, PADDLE_HEIGHT, PADDLE_CORNER, paddleColor)
 
     // Ball (with squash & stretch on impact — D25, and spawn scale — D06)
@@ -595,7 +641,7 @@ export function renderGame(
         if (lastImpact.axis === 'y') { rx = BALL_R * sb * ss; ry = BALL_R * sa * ss }
         else                          { rx = BALL_R * sa * ss; ry = BALL_R * sb * ss }
       }
-      ctx.fillStyle = BALL_COLOR
+      ctx.fillStyle = theme.ball
       ctx.beginPath()
       ctx.ellipse(state.ball.x, state.ball.y, rx, ry, 0, 0, Math.PI * 2)
       ctx.fill()
@@ -654,20 +700,17 @@ export function renderGame(
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
-      // Lay out the whole block and vertically center it in the canvas.
-      // Heights (in W units): title≈0.09, gap=0.06, score≈0.06, gap=0.07,
-      //   revanche btn=0.13, gap=0.04, retour btn=0.11  → total≈0.50W
       const revanBtnH = W * 0.13
       const retourBtnH = W * 0.11
-      const blockH = W * 0.50
+      // When a theme is unlocked, reserve extra vertical space for the badge
+      const badgeH = unlockedTheme ? W * 0.1 + 56 + W * 0.06 : 0
+      const blockH = W * 0.50 + badgeH
       const blockTop = H / 2 - blockH / 2
 
-      const titleY    = blockTop + W * 0.045
-      const scoreY    = titleY   + W * 0.105
-      const revanTop  = scoreY   + W * 0.085
-      const retourTop = revanTop + revanBtnH + W * 0.04
-      const btnX      = W / 2 - W * 0.3
-      const btnW      = W * 0.6
+      const titleY   = blockTop + W * 0.045
+      const scoreY   = titleY   + W * 0.105
+      const btnX     = W / 2 - W * 0.3
+      const btnW     = W * 0.6
 
       const txt = state.myScore > state.opponentScore ? 'Victoire !' : 'Défaite'
       ctx.fillStyle = '#fff'
@@ -677,12 +720,31 @@ export function renderGame(
       ctx.font = `${Math.round(W * 0.06)}px -apple-system, sans-serif`
       ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, scoreY)
 
+      // Theme unlock badge (winner only)
+      let revanTop = scoreY + W * 0.085
+      if (unlockedTheme) {
+        const iconW = 40, iconH = 54
+        const iconX = W / 2 - iconW / 2
+        const iconTop = scoreY + W * 0.07
+        drawThemeIcon(ctx, unlockedTheme, iconX, iconTop, iconW, iconH, false)
+        const badgeTextY = iconTop + iconH + W * 0.05
+        ctx.fillStyle = '#ffe600'
+        ctx.font = `bold ${Math.round(W * 0.053)}px -apple-system, sans-serif`
+        ctx.textBaseline = 'middle'
+        ctx.fillText(`Thème ${unlockedTheme.name} débloqué !`, W / 2, badgeTextY)
+        ctx.textBaseline = 'middle'
+        revanTop = badgeTextY + W * 0.07
+      }
+
+      const retourTop = revanTop + revanBtnH + W * 0.04
+
       // Revanche button (primary)
       ctx.fillStyle = '#fff'
       roundedRectPath(ctx, btnX, revanTop, btnW, revanBtnH, 12)
       ctx.fill()
       ctx.fillStyle = '#000'
       ctx.font = `bold ${Math.round(W * 0.075)}px -apple-system, sans-serif`
+      ctx.textBaseline = 'middle'
       ctx.fillText('Revanche', W / 2, revanTop + revanBtnH / 2)
 
       // Back button (secondary)
@@ -747,27 +809,33 @@ export function renderGame(
   }
 
   function checkGameOverTap(clientX: number, clientY: number): void {
-    // clientX/Y are viewport coords; canvas starts at (rect.left, rect.top)
     const rect = canvas.getBoundingClientRect()
     const cx = clientX - rect.left
     const cy = clientY - rect.top
 
-    const revanBtnH = W * 0.13
+    const revanBtnH  = W * 0.13
     const retourBtnH = W * 0.11
-    const blockTop = H / 2 - W * 0.25
+    const badgeH = unlockedTheme ? W * 0.1 + 56 + W * 0.06 : 0
+    const blockH = W * 0.50 + badgeH
+    const blockTop = H / 2 - blockH / 2
     const scoreY   = blockTop + W * 0.045 + W * 0.105
-    const revanTop = scoreY + W * 0.085
+    let revanTop = scoreY + W * 0.085
+    if (unlockedTheme) {
+      const iconH = 54
+      const iconTop = scoreY + W * 0.07
+      const badgeTextY = iconTop + iconH + W * 0.05
+      revanTop = badgeTextY + W * 0.07
+    }
     const retourTop = revanTop + revanBtnH + W * 0.04
     const btnX = W / 2 - W * 0.3
     const btnW = W * 0.6
-    // Revanche button
+
     if (cy >= revanTop && cy <= revanTop + revanBtnH &&
         cx >= btnX && cx <= btnX + btnW) {
       client.relay({ type: 'rematch' } satisfies GameMsg)
       resetGame()
       return
     }
-    // Back button
     if (cy >= retourTop && cy <= retourTop + retourBtnH &&
         cx >= btnX && cx <= btnX + btnW) {
       onBack()
@@ -792,7 +860,7 @@ export function renderGame(
         const result = await DevOrient.requestPermission()
         dbg.perm = result
         if (result === 'granted') {
-          client.relay({ type: 'game_start' } satisfies GameMsg)
+          client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
           activateGame()
         } else {
           if (permMsg) {
@@ -803,12 +871,12 @@ export function renderGame(
         }
       } catch (err: unknown) {
         dbg.perm = String(err).slice(-50)
-        client.relay({ type: 'game_start' } satisfies GameMsg)
+        client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
         activateGame()
       }
     } else {
       dbg.perm = 'no-api'
-      client.relay({ type: 'game_start' } satisfies GameMsg)
+      client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
       activateGame()
     }
   }

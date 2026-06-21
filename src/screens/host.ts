@@ -3,6 +3,7 @@ import { drawQR } from '../qr/generate'
 import { measureServerOffset } from '../net/sync'
 import { renderCountdown } from './countdown'
 import { resumeAudio } from '../game/audio'
+import { THEMES, getUnlockedIds, drawThemeIcon } from '../game/themes'
 
 /**
  * Renders the host (player A) screen into `container`.
@@ -14,7 +15,7 @@ import { resumeAudio } from '../game/audio'
 export function renderHost(
   container: HTMLElement,
   onBack: () => void,
-  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number) => void
+  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number, themeId: string) => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -27,6 +28,7 @@ export function renderHost(
   const client = new RoomClient()
   let destroyed = false
   let handedOff = false
+  let selectedThemeId = 'arcade'
 
   const statusEl = container.querySelector<HTMLElement>('#host-status')
 
@@ -68,6 +70,61 @@ export function renderHost(
     } catch (err) {
       console.error('[host] QR draw failed:', err)
     }
+
+    // Theme selector — shown while waiting for player B
+    const unlocked = getUnlockedIds()
+    const DPR = window.devicePixelRatio || 1
+    const selectorEl = document.createElement('div')
+    selectorEl.style.cssText = `
+      display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:nowrap;
+    `
+
+    const iconCanvases: Array<{ themeId: string; el: HTMLCanvasElement }> = []
+
+    THEMES.forEach(t => {
+      const isUnlocked = unlocked.includes(t.id)
+      const item = document.createElement('div')
+      item.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:4px;
+        cursor:${isUnlocked ? 'pointer' : 'default'};
+      `
+
+      const ic = document.createElement('canvas')
+      ic.width = Math.round(48 * DPR)
+      ic.height = Math.round(64 * DPR)
+      ic.style.cssText = `
+        width:48px;height:64px;border-radius:6px;box-sizing:border-box;
+        outline:${t.id === selectedThemeId ? '2px solid #ffe600' : '2px solid transparent'};
+        outline-offset:2px;
+      `
+      const icCtx = ic.getContext('2d')!
+      icCtx.scale(DPR, DPR)
+      drawThemeIcon(icCtx, t, 0, 0, 48, 64, !isUnlocked)
+      iconCanvases.push({ themeId: t.id, el: ic })
+
+      const label = document.createElement('span')
+      label.textContent = t.name
+      label.style.cssText = `
+        font-size:10px;font-family:-apple-system,sans-serif;
+        color:${isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)'};
+        text-align:center;max-width:52px;line-height:1.2;
+      `
+
+      if (isUnlocked) {
+        item.addEventListener('click', () => {
+          selectedThemeId = t.id
+          iconCanvases.forEach(({ themeId, el }) => {
+            el.style.outline = themeId === t.id ? '2px solid #ffe600' : '2px solid transparent'
+          })
+        })
+      }
+
+      item.appendChild(ic)
+      item.appendChild(label)
+      selectorEl.appendChild(item)
+    })
+
+    screenEl.appendChild(selectorEl)
   }
 
   client.onPeerJoined = async () => {
@@ -105,7 +162,7 @@ export function renderHost(
 
     client.onCountdown = (tStart: number) => {
       handedOff = true
-      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset))
+      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset, selectedThemeId))
     }
 
     btnLaunch.addEventListener('click', () => {
