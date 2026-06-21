@@ -116,9 +116,9 @@ premier serveur, déploiement GitHub Pages.
 **Serveur WS déployé le 9 juin 2026** : EC2 t4g.nano eu-west-1, `wss://ws.odomate.eu`,
 TLS Let's Encrypt, CI/CD GitHub Actions.
 
-→ Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
+→ Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?" → **Go acté (21 juin 2026) — voir Phase 2.**
 
-### Phase 2 — Sensation ← EN COURS (depuis le 9 juin 2026)
+### Phase 2 — Sensation ✅ (9 juin → 21 juin 2026)
 Playtests 5-10 paires. Tuning : vitesse de balle, taille de raquette, durée de
 zone morte, gain du tilt. Toggles à trancher : replay atténué du son de frappe
 adverse. Si latence du relais gênante : WebRTC DataChannel P2P (serveur =
@@ -154,7 +154,16 @@ Note : vitesse confirmée OK après tests récents — item #2 clos.
 - Fix PWA score rogné (D12) : `env(safe-area-inset-top)` lu en JS pour décaler le canvas sous la barre de statut iOS en mode standalone.
 - Ligne de seuil : [knockout typographique](./docs/glossaire.md#knockout-typographique) — la ligne s'interrompt autour du score (16 px de marge, centrage via `actualBoundingBoxAscent`). Validé (D06).
 
-### Phase 3 — Profondeur (selon résultats)
+**Playtest #5 (21 juin 2026) — dernier playtest phase 2 :**
+Usage réel observé : les joueurs lancent une partie pendant un **temps d'attente ou un temps mort**
+(micro-session spontanée), pas dans un contexte "soirée dédiée" anticipé initialement. Fun confirmé.
+Critère strict "revanche spontanée" non rempli — le format micro-session explique l'absence de revanche
+sans remettre le fun en cause. Correction mergée : fix interférence touch/tilt accidentel + vitesse
+raquette +10% (D03).
+
+→ **Go phase 3. Version `1.0.0`.** Satisfaction réelle validée, usage identifié.
+
+### Phase 3 — Profondeur ← EN COURS (depuis le 21 juin 2026)
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
 (expiration QR, comparaison IP), éventuelle migration AWS.

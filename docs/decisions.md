@@ -762,8 +762,11 @@ trajectoire au gyroscope (D14, phase 3).
 7. ~~Vitesses de balle : les valeurs de D13 post-playtest sont un premier palier.~~
    **Acté (12 juin 2026) :** vitesses doublées (initial 1.20, max 2.20), courbe logarithmique
    (lerp 0.20) — voir D13 amendement 2.
-8. Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
-   spontanément une revanche ?"
+8. ~~Critère go/no-go phase 2 → phase 3 : "les joueurs redemandent-ils
+   spontanément une revanche ?"~~ **Go acté (21 juin 2026) :** critère strict
+   non rempli — usage observé : micro-sessions pendant un temps mort, pas de
+   contexte revanche. Fun confirmé par les joueurs. Satisfaction réelle retenue
+   comme signal suffisant. → Phase 3 / version `1.0.0`.
 9. Validation cross-platform Android : recruter au moins un joueur Android en
    phase 2 (voir D12).
 10. ~~Nom du projet : trancher avant toute diffusion publique.~~ **Acté (10 juin
