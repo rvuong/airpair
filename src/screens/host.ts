@@ -30,7 +30,7 @@ export function renderHost(
   let handedOff = false
   let selectedThemeId = 'arcade'
   let scrollArrowEl: HTMLDivElement | null = null
-  let scrollArrowObserver: IntersectionObserver | null = null
+  let scrollArrowCleanup: (() => void) | null = null
   let scrollArrowStyleEl: HTMLStyleElement | null = null
 
   const statusEl = container.querySelector<HTMLElement>('#host-status')
@@ -158,19 +158,41 @@ export function renderHost(
       display:flex;align-items:center;justify-content:center;
       font-size:18px;color:rgba(255,255,255,0.75);
       animation:scroll-bounce 1.2s ease-in-out infinite;
-      transition:opacity 0.3s;
+      transition:opacity 0.4s;
       pointer-events:none;
+      opacity:0;
     `
     scrollArrowEl.textContent = '↓'
     document.body.appendChild(scrollArrowEl)
 
-    scrollArrowObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (scrollArrowEl) scrollArrowEl.style.opacity = entry.isIntersecting ? '0' : '1'
-      },
-      { threshold: 0.9 }
-    )
-    scrollArrowObserver.observe(debugEl)
+    const checkScroll = (): void => {
+      if (!scrollArrowEl) return
+      if (screenEl.scrollHeight > screenEl.clientHeight + 10) {
+        const atBottom = screenEl.scrollHeight - screenEl.scrollTop - screenEl.clientHeight < 30
+        scrollArrowEl.style.opacity = atBottom ? '0' : '1'
+        return
+      }
+      const winOverflows = document.body.scrollHeight > window.innerHeight + 10
+      const winAtBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30
+      scrollArrowEl.style.opacity = winOverflows && !winAtBottom ? '1' : '0'
+    }
+
+    screenEl.addEventListener('scroll', checkScroll)
+    window.addEventListener('scroll', checkScroll)
+    window.addEventListener('resize', checkScroll)
+
+    // Re-check when onPeerJoined adds new children (launch button, sync status)
+    const mutObs = new MutationObserver(() => { setTimeout(checkScroll, 80) })
+    mutObs.observe(screenEl, { childList: true })
+
+    requestAnimationFrame(() => { requestAnimationFrame(checkScroll) })
+
+    scrollArrowCleanup = () => {
+      screenEl.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('resize', checkScroll)
+      mutObs.disconnect()
+    }
   }
 
   client.onPeerJoined = async () => {
@@ -253,7 +275,7 @@ export function renderHost(
     destroyed = true
     btnBack?.removeEventListener('click', handleBack)
     if (!handedOff) client.disconnect()
-    scrollArrowObserver?.disconnect()
+    scrollArrowCleanup?.()
     scrollArrowEl?.remove()
     scrollArrowStyleEl?.remove()
     container.innerHTML = ''

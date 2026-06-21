@@ -120,10 +120,10 @@ export function drawThemeIcon(
     ctx.lineWidth = 1
     ctx.setLineDash([])
     ctx.beginPath()
-    ctx.moveTo(x + M, y);       ctx.lineTo(x + M, y + h - M)
-    ctx.moveTo(x + w - M, y);   ctx.lineTo(x + w - M, y + h - M)
-    ctx.moveTo(x + M, y + h - M); ctx.lineTo(x + w - M, y + h - M)
-    ctx.moveTo(x + M, y + h / 2); ctx.lineTo(x + w - M, y + h / 2)
+    ctx.moveTo(x + M, y);           ctx.lineTo(x + M, y + h - M)
+    ctx.moveTo(x + w - M, y);       ctx.lineTo(x + w - M, y + h - M)
+    ctx.moveTo(x + M, y + h - M);   ctx.lineTo(x + w - M, y + h - M)
+    ctx.moveTo(x + w / 2, y);       ctx.lineTo(x + w / 2, y + h - M)
     ctx.stroke()
   }
 

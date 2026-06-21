@@ -561,10 +561,10 @@ export function renderGame(
     ctx.lineWidth = 1.5
     ctx.setLineDash([])
     ctx.beginPath()
-    ctx.moveTo(M, 0);     ctx.lineTo(M, H - M)
-    ctx.moveTo(W - M, 0); ctx.lineTo(W - M, H - M)
-    ctx.moveTo(M, H - M); ctx.lineTo(W - M, H - M)
-    ctx.moveTo(M, H / 2); ctx.lineTo(W - M, H / 2)
+    ctx.moveTo(M, 0);         ctx.lineTo(M, H - M)
+    ctx.moveTo(W - M, 0);     ctx.lineTo(W - M, H - M)
+    ctx.moveTo(M, H - M);     ctx.lineTo(W - M, H - M)
+    ctx.moveTo(W / 2, 0);     ctx.lineTo(W / 2, H - M)
     ctx.stroke()
     ctx.restore()
   }
