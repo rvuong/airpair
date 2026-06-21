@@ -3,6 +3,7 @@ import { drawQR } from '../qr/generate'
 import { measureServerOffset } from '../net/sync'
 import { renderCountdown } from './countdown'
 import { resumeAudio } from '../game/audio'
+import { THEMES, getUnlockedIds, drawThemeIcon } from '../game/themes'
 
 /**
  * Renders the host (player A) screen into `container`.
@@ -14,7 +15,7 @@ import { resumeAudio } from '../game/audio'
 export function renderHost(
   container: HTMLElement,
   onBack: () => void,
-  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number) => void
+  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number, themeId: string) => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -27,6 +28,10 @@ export function renderHost(
   const client = new RoomClient()
   let destroyed = false
   let handedOff = false
+  let selectedThemeId = 'arcade'
+  let scrollArrowEl: HTMLDivElement | null = null
+  let scrollArrowCleanup: (() => void) | null = null
+  let scrollArrowStyleEl: HTMLStyleElement | null = null
 
   const statusEl = container.querySelector<HTMLElement>('#host-status')
 
@@ -68,6 +73,116 @@ export function renderHost(
     } catch (err) {
       console.error('[host] QR draw failed:', err)
     }
+
+    // Theme selector — shown while waiting for player B
+    const unlocked = getUnlockedIds()
+    const DPR = window.devicePixelRatio || 1
+    const selectorEl = document.createElement('div')
+    selectorEl.style.cssText = `
+      display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:nowrap;
+    `
+
+    const iconCanvases: Array<{ themeId: string; el: HTMLCanvasElement }> = []
+
+    THEMES.forEach(t => {
+      const isUnlocked = unlocked.includes(t.id)
+      const item = document.createElement('div')
+      item.style.cssText = `
+        display:flex;flex-direction:column;align-items:center;gap:4px;
+        cursor:${isUnlocked ? 'pointer' : 'default'};
+      `
+
+      const ic = document.createElement('canvas')
+      ic.width = Math.round(48 * DPR)
+      ic.height = Math.round(64 * DPR)
+      ic.style.cssText = `
+        width:48px;height:64px;border-radius:6px;box-sizing:border-box;
+        outline:${t.id === selectedThemeId ? '2px solid #ffe600' : '2px solid transparent'};
+        outline-offset:2px;
+        pointer-events:none;
+      `
+      const icCtx = ic.getContext('2d')!
+      icCtx.scale(DPR, DPR)
+      drawThemeIcon(icCtx, t, 0, 0, 48, 64, !isUnlocked)
+      iconCanvases.push({ themeId: t.id, el: ic })
+
+      const label = document.createElement('span')
+      label.textContent = t.name
+      label.style.cssText = `
+        font-size:10px;font-family:-apple-system,sans-serif;
+        color:${isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)'};
+        text-align:center;max-width:52px;line-height:1.2;
+        pointer-events:none;
+      `
+
+      if (isUnlocked) {
+        const selectTheme = (): void => {
+          selectedThemeId = t.id
+          iconCanvases.forEach(({ themeId, el }) => {
+            el.style.outline = themeId === t.id ? '2px solid #ffe600' : '2px solid transparent'
+          })
+        }
+        item.addEventListener('click', selectTheme)
+        item.addEventListener('touchend', (e) => { e.preventDefault(); selectTheme() })
+      }
+
+      item.appendChild(ic)
+      item.appendChild(label)
+      selectorEl.appendChild(item)
+    })
+
+    screenEl.appendChild(selectorEl)
+
+    // Scroll indicator — fixed arrow, disappears when bottom is visible
+    scrollArrowStyleEl = document.createElement('style')
+    scrollArrowStyleEl.textContent =
+      '@keyframes scroll-bounce{0%,100%{transform:translateY(0)}60%{transform:translateY(6px)}}'
+    document.head.appendChild(scrollArrowStyleEl)
+
+    scrollArrowEl = document.createElement('div')
+    scrollArrowEl.style.cssText = `
+      position:fixed;bottom:28px;right:20px;z-index:200;
+      width:38px;height:38px;border-radius:50%;
+      background:rgba(255,255,255,0.12);
+      border:1.5px solid rgba(255,255,255,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;color:rgba(255,255,255,0.75);
+      animation:scroll-bounce 1.2s ease-in-out infinite;
+      transition:opacity 0.4s;
+      pointer-events:none;
+      opacity:0;
+    `
+    scrollArrowEl.textContent = '↓'
+    document.body.appendChild(scrollArrowEl)
+
+    const checkScroll = (): void => {
+      if (!scrollArrowEl) return
+      if (screenEl.scrollHeight > screenEl.clientHeight + 10) {
+        const atBottom = screenEl.scrollHeight - screenEl.scrollTop - screenEl.clientHeight < 30
+        scrollArrowEl.style.opacity = atBottom ? '0' : '1'
+        return
+      }
+      const winOverflows = document.body.scrollHeight > window.innerHeight + 10
+      const winAtBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30
+      scrollArrowEl.style.opacity = winOverflows && !winAtBottom ? '1' : '0'
+    }
+
+    screenEl.addEventListener('scroll', checkScroll)
+    window.addEventListener('scroll', checkScroll)
+    window.addEventListener('resize', checkScroll)
+
+    // Re-check when onPeerJoined adds new children (launch button, sync status)
+    const mutObs = new MutationObserver(() => { setTimeout(checkScroll, 80) })
+    mutObs.observe(screenEl, { childList: true })
+
+    requestAnimationFrame(() => { requestAnimationFrame(checkScroll) })
+
+    scrollArrowCleanup = () => {
+      screenEl.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('scroll', checkScroll)
+      window.removeEventListener('resize', checkScroll)
+      mutObs.disconnect()
+    }
   }
 
   client.onPeerJoined = async () => {
@@ -105,7 +220,7 @@ export function renderHost(
 
     client.onCountdown = (tStart: number) => {
       handedOff = true
-      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset))
+      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset, selectedThemeId))
     }
 
     btnLaunch.addEventListener('click', () => {
@@ -150,6 +265,9 @@ export function renderHost(
     destroyed = true
     btnBack?.removeEventListener('click', handleBack)
     if (!handedOff) client.disconnect()
+    scrollArrowCleanup?.()
+    scrollArrowEl?.remove()
+    scrollArrowStyleEl?.remove()
     container.innerHTML = ''
   }
 }

@@ -556,7 +556,7 @@ IGDA GASIG Visual (igda-gasig.org) · APCA in a Nutshell (apcacontrast.com).
 
 ---
 
-## D22 — Thèmes visuels ⏸ (phase 3)
+## D22 — Thèmes visuels ✅ (phase 3, livré le 21 juin 2026)
 
 **Contexte.** Retour playtest (10 juin 2026) : graphismes austères. Décision :
 ne pas toucher à l'esthétique de base (elle fonctionne), mais prévoir un
@@ -567,36 +567,59 @@ les joueurs.
 le joueur qui rejoint reçoit automatiquement le même thème. Cohérence visuelle
 du terrain = renforcement de la sensation de terrain partagé.
 
-**Thèmes envisagés (liste ouverte) :**
-| Thème | Fond | Bandes | Balle | Notes |
-|---|---|---|---|---|
-| Synthétique (défaut) | Bleu dur | Blanches | Jaune | Actuel épuré |
-| Terre battue | Ocre (type Roland Garros) | Blanches | Jaune | Texture granuleuse optionnelle |
-| Gazon | Vert | Blanches | Jaune | Bandes de tonte en alternance |
-| JO Paris 2024 | Charte JO 2024 (violet/rose/bleu) | Selon charte | Jaune | Droits à vérifier pour usage public |
-
-**Ce qu'un thème couvre :** couleur de fond, couleur des bandes/lignes,
-couleur de la balle, couleur de la raquette. Pas de texture haute résolution
-(contrainte bundle ≤ 150 Ko).
-
-**Ce qu'un thème ne couvre pas (pour l'instant) :** sons, typographie,
-animations.
-
-**Implémentation envisagée :** objet `Theme` passé à l'écran de jeu, choix
-stocké dans la room côté serveur et relayé au joueur B au moment du `game_start`.
-Le thème "Synthétique" (actuel) reste le défaut.
-
 **Note (15 juin 2026) :** le feedback playtest #4 demande une "table". Avant
 d'implémenter quoi que ce soit : AirPair c'est la balle dans *l'air* entre
 deux écrans (D01, D15), pas sur une surface. Une texture de table contredit
 l'intention. Si le problème est un "manque de repère de terrain", la bonne
-réponse est des *lignes de terrain* (ce que ce thème prévoit déjà) — pas une
-surface plane. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 4.
+réponse est des *lignes de terrain* — pas une surface plane. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 4.
 
-**Amendement (19 juin 2026) — palette logo appliquée au Canvas en quick win (Q13/Q14) :** sans attendre le système de thèmes phase 3, la palette D24 a été appliquée directement aux éléments Canvas : raquette A rose `#ff2d78`, raquette B cyan `#00d4e8`, balle et indicateur d'approche jaune `#ffe600`. Fond et lignes inchangés (noir + blanc 15 % opacité). Validé en playtest. Le système de thèmes D22 reste en roadmap phase 3 et viendra par-dessus ces valeurs par défaut.
+**Amendement (19 juin 2026) — palette logo appliquée au Canvas en quick win (Q13/Q14) :** sans attendre le système de thèmes phase 3, la palette D24 a été appliquée directement aux éléments Canvas : raquette A rose `#ff2d78`, raquette B cyan `#00d4e8`, balle et indicateur d'approche jaune `#ffe600`. Fond et lignes inchangés (noir + blanc 15 % opacité). Validé en playtest.
 
-**Statut : roadmap phase 3 — aucune implémentation avant validation du fun
-(critère go/no-go phase 2).**
+**Implémentation (21 juin 2026) ✅**
+
+*5 thèmes, dans l'ordre de déblocage :*
+
+| # | id | Nom | Fond | Raquettes | Balle | Lignes |
+|---|---|---|---|---|---|---|
+| 0 | `arcade` | Arcade | `#000` | rose / cyan | jaune | non |
+| 1 | `synthetique` | Synthétique | `#1a3a6b` | blanches | jaune | oui |
+| 2 | `gazon` | Gazon | `#2d6a2d` | blanches | jaune | oui + bandes |
+| 3 | `terre_battue` | Terre battue | `#c2622d` | blanches | jaune | oui |
+| 4 | `nostalgie_2024` | Nostalgie 2024 | `#1a0e3d` | or `#f4c300` | blanc | oui |
+
+"JO Paris 2024" renommé "Nostalgie 2024" pour éviter tout risque IP, couleurs conservées.
+
+*Lignes de terrain (thèmes 1–4) :* bords gauche/droit, fond de court, ligne
+centrale **verticale** (mi-largeur, du haut jusqu'au fond) — motif demi-terrain
+de ping-pong. Marge 8 px à gauche, droite et bas. La ligne de score (pointillée
+horizontale) utilise `theme.lineColor` pour cohérence chromatique.
+
+*Gazon :* 8 bandes de tonte alternées (`#2d6a2d` / `#3a7a3a`) en fond.
+
+*Ce qu'un thème ne couvre pas (conservé hors scope) :* sons, typographie, animations.
+
+*Progression :* seul Arcade est débloqué par défaut. Chaque victoire débloque
+le thème suivant, persisté en `localStorage` (clé `airpair_unlocked_themes`).
+Thèmes verrouillés affichés en grisé avec 🔒, non cliquables.
+
+*Sélection :* le sélecteur apparaît sur l'écran QR de l'hébergeur pendant
+qu'il attend le joueur B (temps mort = zéro friction ajoutée au chemin critique).
+Icônes 48×64 px, outline jaune `#ffe600` sur la sélection active.
+Indicateur de scroll (flèche `↓` fixe, animation rebond) visible si le contenu
+dépasse la hauteur de l'écran ; disparaît quand le bas est atteint.
+
+*Transmission :* le relay `game_start` inclut `themeId`. B applique le thème
+avant `activateGame()` — le canvas se redessinera avec les bonnes couleurs dès
+l'ouverture.
+
+*Écran de victoire :* si le gagnant débloque un thème, affichage de l'icône
+thématique (40×54 px) + "Thème X débloqué !" en `#ffe600` au-dessus du bouton
+Revanche. Badge affiché une seule fois par partie (`themeAlreadyUnlocked`).
+
+*Fichiers impactés :* `src/game/themes.ts` (interface `Theme`, constantes,
+helpers localStorage, `drawThemeIcon`) · `src/screens/host.ts` (sélecteur,
+flèche scroll) · `src/screens/game.ts` (rendu, relay, unlock) · `src/net/ws.ts`
+(`game_start` variant avec `themeId?`) · `src/main.ts` (`GameParams.themeId`).
 
 ---
 

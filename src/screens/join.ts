@@ -15,7 +15,7 @@ type Tab = 'scanner' | 'code'
 export function renderJoin(
   container: HTMLElement,
   onBack: () => void,
-  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number) => void
+  onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number, themeId: string) => void
 ): () => void {
   container.innerHTML = `
     <div class="screen">
@@ -184,7 +184,7 @@ export function renderJoin(
 
     client.onCountdown = (tStart: number) => {
       handedOff = true
-      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'B', serverOffset))
+      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'B', serverOffset, 'arcade'))
     }
   }
 

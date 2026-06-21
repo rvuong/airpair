@@ -30,7 +30,7 @@ const app: HTMLElement = getAppElement()
 type Destroy = () => void
 let currentDestroy: Destroy | null = null
 
-type GameParams = { client: RoomClient; role: 'A' | 'B'; serverOffset: number }
+type GameParams = { client: RoomClient; role: 'A' | 'B'; serverOffset: number; themeId: string }
 
 function navigate(screen: 'landing' | 'host' | 'join'): void
 function navigate(screen: 'game', params: GameParams): void
@@ -47,18 +47,18 @@ function navigate(screen: 'landing' | 'host' | 'join' | 'game', params?: GamePar
 
     case 'host':
       currentDestroy = renderHost(app, () => navigate('landing'),
-        (c, r, o) => navigate('game', { client: c, role: r, serverOffset: o }))
+        (c, r, o, t) => navigate('game', { client: c, role: r, serverOffset: o, themeId: t }))
       break
 
     case 'join':
       currentDestroy = renderJoin(app, () => navigate('landing'),
-        (c, r, o) => navigate('game', { client: c, role: r, serverOffset: o }))
+        (c, r, o, t) => navigate('game', { client: c, role: r, serverOffset: o, themeId: t }))
       break
 
     case 'game': {
       // params is required for 'game' — enforced by overload signatures
       const p = params as GameParams
-      currentDestroy = renderGame(app, p.client, p.role, p.serverOffset,
+      currentDestroy = renderGame(app, p.client, p.role, p.serverOffset, p.themeId,
         () => navigate('landing'))
       break
     }
