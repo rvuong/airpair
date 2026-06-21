@@ -167,8 +167,14 @@ raquette +10% (D03).
 Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
 juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
 (expiration QR, comparaison IP), éventuelle migration AWS.
-Thèmes visuels choisis par l'hébergeur (D22) : Terre battue · Gazon · Synthétique · JO Paris 2024.
 Musique de fond 8-bit optionnelle (D23) — conditionnel : valider d'abord que les sons de jeu sont bien entendus.
+
+**Thèmes visuels ✅ (D22, 21 juin 2026) :** 5 thèmes déblocables par victoire
+(Arcade → Synthétique → Gazon → Terre battue → Nostalgie 2024), persistés en
+localStorage. Sélecteur sur l'écran QR (hébergeur uniquement). Lignes de
+terrain demi-ping-pong sur les thèmes 1–4. Écran de victoire : badge de
+déblocage (icône + nom). Transmission par relay `game_start`. → branche
+`feat/visual-themes`, PR à merger.
 
 ## Organisation du repo
 
