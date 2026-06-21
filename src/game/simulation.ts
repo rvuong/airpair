@@ -17,6 +17,7 @@ export class TiltController {
   private touchStartX: number | null = null
   private touchCmd = 0
   private usingTouch = false
+  private tiltActive = false
 
   params: TiltParams
 
@@ -29,9 +30,11 @@ export class TiltController {
     this.lastGamma = g
     this.smoothed = 0
     this.rawCmd = 0
+    this.tiltActive = false
   }
 
   onDeviceOrientation(gamma: number): void {
+    this.tiltActive = true
     this.lastGamma = gamma
     const delta = gamma - this.gamma0
     const { deadzone, amplitude, exponent } = this.params
@@ -51,6 +54,7 @@ export class TiltController {
 
   onTouchMove(x: number, w: number): void {
     if (this.touchStartX === null) return
+    if (this.tiltActive) return
     this.touchCmd = Math.max(-1, Math.min(1, (x - this.touchStartX) / (w * 0.4)))
     this.usingTouch = true
   }
