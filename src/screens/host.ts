@@ -84,14 +84,6 @@ export function renderHost(
 
     const iconCanvases: Array<{ themeId: string; el: HTMLCanvasElement }> = []
 
-    const debugEl = document.createElement('p')
-    debugEl.textContent = 'Arcade'
-    debugEl.style.cssText = `
-      font-size:11px;font-family:-apple-system,sans-serif;
-      color:#ffe600;text-align:center;margin:6px 0 0;
-      font-weight:600;letter-spacing:0.5px;
-    `
-
     THEMES.forEach(t => {
       const isUnlocked = unlocked.includes(t.id)
       const item = document.createElement('div')
@@ -126,7 +118,6 @@ export function renderHost(
       if (isUnlocked) {
         const selectTheme = (): void => {
           selectedThemeId = t.id
-          debugEl.textContent = t.name
           iconCanvases.forEach(({ themeId, el }) => {
             el.style.outline = themeId === t.id ? '2px solid #ffe600' : '2px solid transparent'
           })
@@ -141,7 +132,6 @@ export function renderHost(
     })
 
     screenEl.appendChild(selectorEl)
-    screenEl.appendChild(debugEl)
 
     // Scroll indicator — fixed arrow, disappears when bottom is visible
     scrollArrowStyleEl = document.createElement('style')

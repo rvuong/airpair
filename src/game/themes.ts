@@ -64,14 +64,27 @@ export const THEMES: readonly Theme[] = [
   },
 ]
 
+const STORAGE_KEY = 'airpair_unlocked_themes'
+
 export function getUnlockedIds(): string[] {
-  // TODO: restore production progression after playtests — all unlocked for now
-  return THEMES.map(t => t.id)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    const ids: string[] = raw ? (JSON.parse(raw) as string[]) : []
+    if (!ids.includes('arcade')) ids.unshift('arcade')
+    return ids
+  } catch {
+    return ['arcade']
+  }
 }
 
 export function unlockNext(): Theme | null {
-  // TODO: restore production progression after playtests
-  return null
+  const unlocked = getUnlockedIds()
+  const next = THEMES.find(t => !unlocked.includes(t.id))
+  if (!next) return null
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...unlocked, next.id]))
+  } catch { /* ignore */ }
+  return next
 }
 
 export function getThemeById(id: string): Theme {
