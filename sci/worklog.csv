@@ -16,3 +16,6 @@ date,phase,activite,outil,duree_h,tokens,co2e_g_min,co2e_g_max,type_donnee,comme
 2026-06-11,phase1,"Sessions claude.ai web — challenger idées game design + synthèse retours playtests",claude.ai,3.5,,2,60,estimation,"Estimation 3-4h sessions claude.ai web (W24). Tokens non mesurés (hors Claude Code). Fourchette CO2e à calculer via factors.yaml ai_inference."
 2026-06-11,phase1,"Synthèse playtests — rédaction notes et décisions",laptop,2,,2,6,estimation,"Temps humain W24 — durée à préciser."
 2026-06-17,phase1,"Playtest MVP terrain — 1 session",smartphone,2,,0,1,estimation,"1 jour x 2h, ~2 smartphones (W25)."
+2026-06-20,phase1,"Export ccusage W20–W25, complétion worklog W24-W25, création docs/sci-bilan.md (bilan SCI)",claude-code,1,,,,mesure,"Tokens comptés automatiquement via ccusage. CO2e à calculer en fin de phase 1."
+2026-06-21,phase1,"Approach indicator v2 — design (D06 option B) + implémentation + PR",claude.ai,1,,5,50,estimation,"Session intégrant discussion design + revue décisions via claude.ai web. Implémentation Claude Code comptée automatiquement via ccusage W25."
+2026-06-21,phase2,"Playtest #5 + analyse retour + fix touch/tilt + go phase 3",laptop,1,,10,40,estimation,"Playtest terrain #5 + débrief + implémentation fixes iOS tilt/touch. Sessions Claude Code comptabilisées via ccusage W25."
