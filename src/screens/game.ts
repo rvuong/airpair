@@ -408,7 +408,7 @@ export function renderGame(
     ) {
       const cmd = tilt.update()
       dbg.cmd = cmd
-      paddleX += cmd * W * 2.0 * dt
+      paddleX += cmd * W * 2.2 * dt
       paddleX = Math.max(0, Math.min(W - paddleWidth, paddleX))
     }
 

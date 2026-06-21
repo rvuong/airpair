@@ -93,6 +93,13 @@ Ajustements actés (PR fix/ball-size-tilt-precision) :
 - `alpha` : 0.3 → 0.45 (moins de lissage, lag réduit ~80 ms → ~40 ms)
 Déadzone inchangée (1,5°).
 
+**Amendement (21 juin 2026, post-playtest #5) :** bug d'interférence touch/tilt confirmé.
+Un effleurement accidentel de l'écran pendant le jeu au tilt déclenchait `onTouchMove()` qui passait `usingTouch = true` et substituait un `touchCmd` parasite au `rawCmd` du tilt jusqu'au prochain `deviceorientation` (~16 ms). Combiné à la smoothing (alpha=0.45), le spike s'étalait sur plusieurs frames — suffisant pour rater la balle.
+
+**Fix (PR fix/touch-interference-paddle-speed) :** flag `tiltActive` dans `TiltController` — positionné dès le premier `onDeviceOrientation()`, réinitialisé à `calibrate()`. `onTouchMove()` ignore tout drag quand `tiltActive === true`. Le tap sur l'écran pour servir (`touchstart` → `serveBall()`) reste fonctionnel — il ne passe pas par `onTouchMove`.
+
+**Vitesse raquette (même PR) :** multiplicateur `2.0 → 2.2` (+10%, `src/screens/game.ts`). Motivé par le retour playtest #5 : meilleure couverture sans rendre le contrôle nerveux (alpha=0.45 atténue déjà le cmd effectif, qui dépasse rarement 0.7 en jeu normal).
+
 ---
 
 ## D04 — Architecture réseau et synchronisation ✅
@@ -747,7 +754,7 @@ trajectoire au gyroscope (D14, phase 3).
 2. ~~Tuning tilt : alpha 0.3 → 0.5, amplitude 20° → 16°.~~ **Acté (9 juin
    2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
    D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
-   quasi-linéaire. Conflit touch/tilt : à surveiller en playtest.
+   quasi-linéaire. ~~Conflit touch/tilt : à surveiller en playtest.~~ **Résolu (21 juin 2026, voir D03 amendement) :** flag `tiltActive` bloque le drag touch quand le tilt est actif.
 3. ~~Taille de la balle : voir D20.~~ **Acté (19 juin 2026) :** 20 px / `BALL_RADIUS_NORM = 0.0267` validé en playtests.
 4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
 5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
