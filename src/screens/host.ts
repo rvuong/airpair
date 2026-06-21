@@ -29,6 +29,9 @@ export function renderHost(
   let destroyed = false
   let handedOff = false
   let selectedThemeId = 'arcade'
+  let scrollArrowEl: HTMLDivElement | null = null
+  let scrollArrowObserver: IntersectionObserver | null = null
+  let scrollArrowStyleEl: HTMLStyleElement | null = null
 
   const statusEl = container.querySelector<HTMLElement>('#host-status')
 
@@ -139,6 +142,35 @@ export function renderHost(
 
     screenEl.appendChild(selectorEl)
     screenEl.appendChild(debugEl)
+
+    // Scroll indicator — fixed arrow, disappears when bottom is visible
+    scrollArrowStyleEl = document.createElement('style')
+    scrollArrowStyleEl.textContent =
+      '@keyframes scroll-bounce{0%,100%{transform:translateY(0)}60%{transform:translateY(6px)}}'
+    document.head.appendChild(scrollArrowStyleEl)
+
+    scrollArrowEl = document.createElement('div')
+    scrollArrowEl.style.cssText = `
+      position:fixed;bottom:28px;right:20px;z-index:200;
+      width:38px;height:38px;border-radius:50%;
+      background:rgba(255,255,255,0.12);
+      border:1.5px solid rgba(255,255,255,0.3);
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;color:rgba(255,255,255,0.75);
+      animation:scroll-bounce 1.2s ease-in-out infinite;
+      transition:opacity 0.3s;
+      pointer-events:none;
+    `
+    scrollArrowEl.textContent = '↓'
+    document.body.appendChild(scrollArrowEl)
+
+    scrollArrowObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (scrollArrowEl) scrollArrowEl.style.opacity = entry.isIntersecting ? '0' : '1'
+      },
+      { threshold: 0.9 }
+    )
+    scrollArrowObserver.observe(debugEl)
   }
 
   client.onPeerJoined = async () => {
@@ -221,6 +253,9 @@ export function renderHost(
     destroyed = true
     btnBack?.removeEventListener('click', handleBack)
     if (!handedOff) client.disconnect()
+    scrollArrowObserver?.disconnect()
+    scrollArrowEl?.remove()
+    scrollArrowStyleEl?.remove()
     container.innerHTML = ''
   }
 }
