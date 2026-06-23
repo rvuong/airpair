@@ -3,6 +3,10 @@
 /docs/playtests
 /sci/ai-usage/
 /node_modules/
+/proto/
+/server/node_modules/
+/src/dist/
+/src/node_modules/
 .DS_Store
 .env
 .env.local
