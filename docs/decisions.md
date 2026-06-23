@@ -58,7 +58,7 @@ expirant en 30 s, comparaison des IP publiques côté serveur. Non prioritaire.
 
 ---
 
-## D03 — Mode de contrôle de la raquette ✅🔬
+## D03 — Mode de contrôle de la raquette ✅
 
 **Contexte.** Idée initiale : faire "slider" le téléphone latéralement
 (translation). Problème physique fondamental : ni gyroscope ni accéléromètre
@@ -85,6 +85,7 @@ est assumée comme une qualité, "comme dans un sport".
 main pour 3 personnes sur 4 ? Sinon : pivot tactile ou arrêt — c'est le pari
 central du projet. Point critique de tuning : le calibrage du neutre (la tenue
 "confortable" varie selon les joueurs) + re-centrage avant chaque manche.
+**Validé définitivement (22 juin 2026) :** tous les playtests (phase 1 et 2) confirment que le tilt est fun et précis.
 
 **Amendement (9 juin 2026, post-playtest #2) :** tilt perçu comme imprécis.
 Ajustements actés (PR fix/ball-size-tilt-precision) :
@@ -140,6 +141,7 @@ pénible).
 **Décision : (b) pour le MVP — l'option la plus simple, assumée.** Escalade
 vers (a) en phase 2 uniquement si la latence du relais gêne (peu probable
 grâce à la zone morte).
+**Amendement (22 juin 2026) :** latence relais confirmée non problématique après tous les playtests phase 2. Escalade vers WebRTC DataChannel abandonnée définitivement — WebSocket suffit.
 
 **Appairage de session :** le joueur A crée une partie, son téléphone affiche
 un QR contenant l'ID de room, B le scanne. Fallback : code court à taper.
@@ -152,7 +154,7 @@ synchro d'horloge).
 
 ---
 
-## D06 — Affichage de la moitié adverse ✅🔬
+## D06 — Affichage de la moitié adverse ✅
 
 **Contexte.** Chaque joueur ne voit que sa moitié. Faut-il un pointeur
 indiquant la position de la balle quand elle est chez l'adversaire ?
@@ -171,15 +173,9 @@ L'indicateur d'approche donne l'information d'équité ("je pouvais savoir") —
 équivalent de voir la balle en l'air au ping-pong — sans révéler le jeu
 adverse.
 
-**À valider (phase 2).** Garder les deux variantes derrière un toggle et
-trancher en playtest. Le ✅ vaut pour la décision de base (indicateur
-d'approche déployé en MVP) ; le 🔬 vaut pour la comparaison toggle — aucun
-playtest dédié n'a encore été conduit.
+**Acté (22 juin 2026) :** indicateur d'approche seul confirmé suffisant. Pointeur permanent écarté définitivement.
 
-**🔬 En question (15 juin 2026, post-playtest #4) :** indicateur perçu comme
-trop tardif ("voir d'où arrive la balle sans délai"). Piste : avancer
-l'apparition de l'indicateur dès l'entrée en zone morte (vs seulement dans
-les dernières ms). Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 5.
+**✅ Résolu (15 juin 2026 → 22 juin 2026) :** indicateur perçu comme trop tardif (post-playtest #4). Piste : avancer l'apparition dès l'entrée en zone morte — adressé par Option B (implosion + vide, PR #64, `APPROACH_GAP_MS = 100`). Timing validé définitivement. Voir [`docs/playtests/playtest-4-work.md`](./playtests/playtest-4-work.md) item 5.
 
 **Ligne de seuil et knockout typographique (19 juin 2026) ✅** La ligne pointillée en haut du canvas matérialise le seuil vers le camp adverse — le joueur voit d'un coup d'œil que le haut de son écran pointe vers l'adversaire. Quatre options envisagées pour sa coexistence avec le score : (A) ligne au-dessus du score (trop proche du bord, quasi invisible) ; (B) ligne en dessous (crée un espace mort ambigu au-dessus) ; (C) suppression de la ligne (l'indicateur d'approche suffit mais le repère de terrain disparaît) ; (D) [knockout typographique](./glossaire.md#knockout-typographique) — la ligne s'interrompt autour du score avec 16 px de marge, sans déplacer ni l'un ni l'autre. **Décision : (D).** Score et ligne restent au même Y, la ligne *sort* du score visuellement — cohérence sémantique : le score marque le seuil, la ligne en est le prolongement. Implémentation : `ctx.measureText()` pour la largeur du gap, `actualBoundingBoxAscent` pour centrer la ligne à mi-hauteur des glyphes. Validé.
 
@@ -222,9 +218,7 @@ qui porte à volume modéré), point marqué, compte à rebours.
 téléphone joue le son pour lui ; à un mètre, je l'entends naturellement.
 Propriété émergente de la coprésence.
 
-**Reporté en phase 2 :** replay atténué de la frappe adverse sur mon téléphone
-(l'instant exact est connu via l'événement réseau) pour les environnements
-bruyants (bar). Toggle de playtest, pas du MVP.
+**Écarté définitivement (22 juin 2026) :** ~~replay atténué de la frappe adverse sur mon téléphone pour les environnements bruyants (bar)~~. Le son naturel de l'adversaire à un mètre est suffisant — ne pas changer.
 
 **Pièges iOS :** AudioContext à débloquer sur geste utilisateur ; le bouton
 silencieux physique de l'iPhone coupe le Web Audio → avertir l'utilisateur.
@@ -621,9 +615,29 @@ helpers localStorage, `drawThemeIcon`) · `src/screens/host.ts` (sélecteur,
 flèche scroll) · `src/screens/game.ts` (rendu, relay, unlock) · `src/net/ws.ts`
 (`game_start` variant avec `themeId?`) · `src/main.ts` (`GameParams.themeId`).
 
+**Amendement (23 juin 2026) — enrichissement visuel des thèmes (PR feat/theme-visual-enrichment)**
+
+*Layout table unifié (thèmes 1–4) :* la table devient un rectangle délimité, du haut de l'écran jusqu'à 15 px au-dessus du libellé "Tap pour servir". Les lignes de terrain sont repositionnées à l'intérieur de ce rectangle : 10 px depuis gauche, droite et bas de la table (vs marge extérieure de 8 px avant). La ligne centrale verticale descend jusqu'à la ligne du bas. Le fond canvas sous la table est propre à chaque thème (couleur pleine ou dégradé). Propriété ajoutée à l'interface `Theme` : `tableLayout?: boolean`.
+
+*Nostalgie 2024 — enrichissement :*
+- Fond canvas noir (`#000`) ; la table est remplie d'un dégradé linéaire indigo `#16115c` → bordeaux-rose `#7a1050` (66 % bleu / 34 % rose, `tableGradient: { from, to }`).
+- Pictogramme décoratif inspiré des pictogrammes Paris 2024 : 2 raquettes de ping-pong en quinconce (raquette gauche manche vers le haut, droite vers le bas), couleur rose `#e8317a`, opacité 38 %, dessiné sur la table avant les lignes de terrain. Propriété `pictogram: 'table-tennis'`.
+- Libellé "2024" sous les raquettes (35 px de marge), tourné 90° CCW, taille de police = largeur du pictogramme (W/5), positionné par `measureText()` pour garantir l'absence de chevauchement.
+
+*Terre battue — texture grain procédurale :*
+Canvas offscreen (W×H) généré une fois à l'init : 600 stries horizontales (couleurs `#e8904a` / `#7a3810`, opacité 12–34 %, épaisseur variable) + 6 000 points de grain (rayon 0,5–1,7 px, opacité 8–26 %). Rendu par `ctx.drawImage()` à chaque frame — coût quasi nul. Propriété `grainTexture?: boolean` dans `Theme`.
+
+| # | id | Fond canvas | Table | Lignes | Extras |
+|---|---|---|---|---|---|
+| 0 | `arcade` | `#000` | — | non | — |
+| 1 | `synthetique` | `#1a3a6b` | plein | oui, 10 px intérieur | — |
+| 2 | `gazon` | `#2d6a2d` + bandes | plein | oui, 10 px intérieur | bandes de tonte |
+| 3 | `terre_battue` | `#c2622d` | plein | oui, 10 px intérieur | grain offscreen |
+| 4 | `nostalgie_2024` | `#000` | dégradé indigo→rose | oui, 10 px intérieur | pictogramme + "2024" |
+
 ---
 
-## D23 — Musique de fond 8-bit ⏸ (phase 3, conditionnel)
+## D23 — Musique de fond 8-bit ❌
 
 **Contexte.** Retour playtest (10 juin 2026) : "pas de son". Idée proposée :
 musique de fond type chiptune 8-bit, inspiration jeux Atari/arcade années 80.
@@ -666,12 +680,7 @@ activation/désactivation.
 - Génération algorithmique (lib type `jsfxr`, `ZzFX`) : bundle ~2 Ko,
   sons procéduraux à chaque partie.
 
-**Statut : ⏸ phase 3, et conditionnel.** Ne pas implémenter avant :
-1. Confirmation que les sons de jeu existants sont bien entendus (sinon
-   corriger D08 d'abord).
-2. Go/no-go phase 2 (critère "revanche spontanée").
-3. Toggle obligatoire (off par défaut ou on par défaut à valider en
-   playtest).
+**Statut : ❌ écarté définitivement (22 juin 2026).** Les tensions listées (masquage des sons de jeu, contexte social face-à-face, boucle répétitive) l'emportent. Ne pas implémenter.
 
 ---
 
@@ -772,16 +781,15 @@ trajectoire au gyroscope (D14, phase 3).
     juice, facile) ; (b) ligne de prédiction future (change la stratégie,
     intersecte D06). Trancher laquelle implémenter en premier.
 
-1. Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer
-   en playtests phase 2.
+1. ~~Le tilt est-il fun ? (proto 0a — pari central) — validé solo ; à confirmer en playtests phase 2.~~ **Acté (22 juin 2026) :** tous les playtests confirment. Voir D03.
 2. ~~Tuning tilt : alpha 0.3 → 0.5, amplitude 20° → 16°.~~ **Acté (9 juin
    2026, post-playtest #2) :** amplitude 15°, exponent 1.1, alpha 0.45 (voir
    D03 amendement). Sensation "élastique" : abandonnée au profit d'un mapping
    quasi-linéaire. ~~Conflit touch/tilt : à surveiller en playtest.~~ **Résolu (21 juin 2026, voir D03 amendement) :** flag `tiltActive` bloque le drag touch quand le tilt est actif.
 3. ~~Taille de la balle : voir D20.~~ **Acté (19 juin 2026) :** 20 px / `BALL_RADIUS_NORM = 0.0267` validé en playtests.
-4. Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).
-5. Replay atténué du son de frappe adverse (toggle, phase 2 — D08).
-6. WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).
+4. ~~Indicateur d'approche seul vs pointeur permanent (toggle, phase 2 — D06).~~ **Acté (22 juin 2026) :** indicateur d'approche suffisant. Pointeur permanent ❌. Voir D06.
+5. ~~Replay atténué du son de frappe adverse (toggle, phase 2 — D08).~~ **Écarté (22 juin 2026) :** ne pas changer. Voir D08.
+6. ~~WebRTC P2P nécessaire ou WebSocket relais suffisant ? (mesure en phase 2).~~ **Acté (22 juin 2026) :** WebSocket suffisant. WebRTC ❌. Voir D05.
 7. ~~Vitesses de balle : les valeurs de D13 post-playtest sont un premier palier.~~
    **Acté (12 juin 2026) :** vitesses doublées (initial 1.20, max 2.20), courbe logarithmique
    (lerp 0.20) — voir D13 amendement 2.

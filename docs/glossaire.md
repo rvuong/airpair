@@ -205,6 +205,12 @@ Algorithme de compression utilisé pour mesurer le poids réel du [bundle](#bund
 
 Outil open source de la Green Software Foundation permettant de modéliser et calculer le [SCI](#sci) d'une application via un manifest YAML versionné ([`sci/manifest.yaml`](../sci/manifest.yaml)). Une commande unique recalcule le SCI en assemblant les observations mesurées avec les facteurs d'émission définis dans [`sci/factors.yaml`](../sci/factors.yaml). Voir [docs/sci.md](./sci.md).
 
+### Propriété intellectuelle (risque IP)
+
+**IP = Intellectual Property.** Ensemble des droits exclusifs attachés à une création : marques déposées, logos, noms commerciaux, chartes graphiques protégées par le droit d'auteur. Le "risque IP" désigne le danger d'utiliser ces éléments sans autorisation du titulaire des droits — ce qui peut entraîner une mise en demeure ou une action en contrefaçon, même pour un projet non commercial.
+
+Dans AirPair : le thème initialement nommé "JO Paris 2024" a été renommé "Nostalgie 2024" (voir [D22](./decisions.md)) pour éviter d'associer le produit à une marque déposée (les Jeux Olympiques, le comité Paris 2024). L'inspiration graphique (Art Déco, palette or/rose, motifs géométriques) est licite car les idées et styles ne sont pas protégés — seuls les éléments spécifiques déposés le sont (anneaux olympiques, logo officiel, typographie propriétaire). La règle pratique : s'inspirer librement d'un univers visuel, ne jamais reproduire ni nommer un élément enregistré.
+
 ### PUE
 
 **Power Usage Effectiveness.** Rapport entre l'énergie totale consommée par un datacenter et l'énergie effectivement utilisée par les serveurs. Un PUE de 1,2 (AWS eu-west-1) signifie que 20 % de l'énergie est perdue en refroidissement et infrastructure. Multiplie la consommation serveur dans le calcul SCI. Voir [docs/sci.md](./sci.md) B3.
