@@ -65,5 +65,4 @@ function navigate(screen: 'landing' | 'host' | 'join' | 'game', params?: GamePar
   }
 }
 
-// Boot on landing
 navigate('landing')

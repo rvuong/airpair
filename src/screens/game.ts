@@ -223,6 +223,40 @@ export function renderGame(
   let unlockedTheme: Theme | null = null
   let themeAlreadyUnlocked = false
 
+  // Pre-rendered grain texture (offscreen canvas, built once at init)
+  let clayTexture: HTMLCanvasElement | null = null
+  if (theme.grainTexture) {
+    const off = document.createElement('canvas')
+    off.width = W
+    off.height = H
+    const offCtx = off.getContext('2d')!
+    offCtx.fillStyle = theme.bg
+    offCtx.fillRect(0, 0, W, H)
+    offCtx.lineCap = 'round'
+    // Horizontal rake strokes
+    for (let i = 0; i < 600; i++) {
+      const y = Math.random() * H
+      const x = Math.random() * W
+      const len = 15 + Math.random() * 120
+      offCtx.strokeStyle = Math.random() > 0.5 ? '#e8904a' : '#7a3810'
+      offCtx.globalAlpha = 0.12 + Math.random() * 0.22
+      offCtx.lineWidth = 0.8 + Math.random() * 1.0
+      offCtx.beginPath()
+      offCtx.moveTo(x, y)
+      offCtx.lineTo(Math.min(x + len, W), y)
+      offCtx.stroke()
+    }
+    // Grain dots
+    for (let i = 0; i < 6000; i++) {
+      offCtx.fillStyle = Math.random() > 0.4 ? '#e8904a' : '#7a3810'
+      offCtx.globalAlpha = 0.08 + Math.random() * 0.18
+      offCtx.beginPath()
+      offCtx.arc(Math.random() * W, Math.random() * H, 0.5 + Math.random() * 1.2, 0, Math.PI * 2)
+      offCtx.fill()
+    }
+    clayTexture = off
+  }
+
   const tilt = new TiltController({ deadzone: 1.5, amplitude: 15, exponent: 1.1, alpha: 0.45 })
   let paddleX = W / 2 - paddleWidth / 2
   let serviceSpeedNorm = INITIAL_SPEED_NORM
@@ -555,6 +589,26 @@ export function renderGame(
   // Draw
   // ---------------------------------------------------------------------------
   function drawCourtLines(): void {
+    if (theme.tableLayout || theme.tableGradient) {
+      // Court lines inside the table rectangle — 10px from each edge
+      const labelBaselineY = H - PADDLE_MARGIN - PADDLE_HEIGHT / 2 - 16
+      const tb = labelBaselineY - Math.round(W * 0.08) - 15
+      const M = 10
+      const bottomLineY = tb - M
+      ctx.save()
+      ctx.strokeStyle = theme.lineColor
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([])
+      ctx.beginPath()
+      ctx.moveTo(M, 0);            ctx.lineTo(M, bottomLineY)
+      ctx.moveTo(W - M, 0);        ctx.lineTo(W - M, bottomLineY)
+      ctx.moveTo(M, bottomLineY);  ctx.lineTo(W - M, bottomLineY)
+      ctx.moveTo(W / 2, 0);        ctx.lineTo(W / 2, bottomLineY)
+      ctx.stroke()
+      ctx.restore()
+      return
+    }
+
     const M = 8
     ctx.save()
     ctx.strokeStyle = theme.lineColor
@@ -579,18 +633,86 @@ export function renderGame(
     }
   }
 
+  function drawParisPictogram(): void {
+    const S = W / 5
+    const cx = W * 0.79
+    const cy = H * 0.17
+    const R = S * 0.27
+    const mw = S * 0.13
+    const mh = S * 0.38
+    const roseColor = '#e8317a'
+
+    ctx.save()
+    ctx.strokeStyle = roseColor
+    ctx.fillStyle = roseColor
+    ctx.lineWidth = S * 0.055
+    ctx.lineCap = 'round'
+    ctx.globalAlpha = 0.38
+
+    // Raquette gauche (haut-gauche) — manche vers le haut
+    const px1 = cx - S * 0.25
+    const py1 = cy - S * 0.18
+    ctx.beginPath()
+    ctx.arc(px1, py1, R, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.rect(px1 - mw / 2, py1 - R - mh + S * 0.03, mw, mh)
+    ctx.stroke()
+
+    // Raquette droite (bas-droit) — manche vers le bas
+    const px2 = cx + S * 0.25
+    const py2 = cy + S * 0.18
+    ctx.beginPath()
+    ctx.arc(px2, py2, R, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.rect(px2 - mw / 2, py2 + R - S * 0.03, mw, mh)
+    ctx.stroke()
+
+    // "2024" — 10px sous le bas de la raquette droite, tourné 90° vers la gauche
+    const racketBottom = py2 + R + mh
+    ctx.font = `bold ${Math.round(S)}px -apple-system, sans-serif`
+    const textW2024 = ctx.measureText('2024').width
+    ctx.save()
+    ctx.translate(cx, racketBottom + 35 + textW2024 / 2)
+    ctx.rotate(-Math.PI / 2)
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('2024', 0, 0)
+    ctx.restore()
+
+    ctx.restore()
+  }
+
   function draw(): void {
     const py = paddleY()
 
     ctx.clearRect(0, 0, W, H)
 
-    // Background
+    // Background (canvas fill)
     if (theme.stripedBg) {
       drawGazonStripes()
+    } else if (clayTexture) {
+      ctx.drawImage(clayTexture, 0, 0)
     } else {
       ctx.fillStyle = theme.bg
       ctx.fillRect(0, 0, W, H)
     }
+
+    // Table rectangle with gradient (drawn on top of canvas background)
+    if (theme.tableGradient) {
+      const labelBaselineY = H - PADDLE_MARGIN - PADDLE_HEIGHT / 2 - 16
+      const tb = labelBaselineY - Math.round(W * 0.08) - 15
+      const grad = ctx.createLinearGradient(0, 0, 0, tb)
+      grad.addColorStop(0, theme.tableGradient.from)
+      grad.addColorStop(0.66, theme.tableGradient.from)
+      grad.addColorStop(1, theme.tableGradient.to)
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, tb)
+    }
+
+    // Decorative pictogram (above court lines)
+    if (theme.pictogram === 'table-tennis') drawParisPictogram()
 
     // Court lines (won themes only)
     if (theme.courtLines) drawCourtLines()
