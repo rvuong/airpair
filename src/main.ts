@@ -65,11 +65,4 @@ function navigate(screen: 'landing' | 'host' | 'join' | 'game', params?: GamePar
   }
 }
 
-// Dev shortcut: ?debug=game[&theme=nostalgie_2024] — skips lobby, renders court directly
-if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('debug') === 'game') {
-  const themeId = new URLSearchParams(window.location.search).get('theme') ?? 'nostalgie_2024'
-  const mockClient = { onRelay: null, relay: () => {}, disconnect: () => {} } as unknown as RoomClient
-  navigate('game', { client: mockClient, role: 'A', serverOffset: 0, themeId })
-} else {
-  navigate('landing')
-}
+navigate('landing')
