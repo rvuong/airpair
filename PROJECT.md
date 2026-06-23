@@ -24,8 +24,8 @@ l'espace invisible entre les deux téléphones**. Tout le reste est secondaire.
 - Entre les deux écrans : une **zone morte** invisible que la balle met ~400 ms
   à traverser (durée fonction de la vitesse). Source de tension, et tampon qui
   absorbe la latence réseau.
-- Règles type tennis de table : 11 points, 2 points d'écart, service alterné
-  tous les 2 points. La vitesse de balle augmente à chaque échange.
+- Règles type tennis de table : **7 points, marge 2**, service alterné
+  tous les 2 points. La vitesse de balle augmente à chaque échange (courbe logarithmique).
 - Point marqué quand l'adversaire rate la balle.
 
 ## Décisions de design actées
@@ -53,9 +53,10 @@ l'espace invisible entre les deux téléphones**. Tout le reste est secondaire.
 - **Client** : Vite + TypeScript, Canvas 2D, PWA (manifest + service worker
   minimal). Pas de moteur de jeu, pas de WASM (jeu trivialement léger ; toutes
   les API critiques — capteurs, audio, WebSocket, caméra — sont côté JS).
-- **Serveur (phase 1)** : Node + `ws`, ~100 lignes : rooms, relais de messages,
-  handshake de synchronisation d'horloge. Hébergement tier gratuit
-  (Render/Fly.io/Railway) ; migration AWS possible plus tard.
+- **Serveur** : Node + `ws`, ~100 lignes : rooms, relais de messages,
+  handshake de synchronisation d'horloge. Hébergement : **EC2 t4g.nano eu-west-1**,
+  `wss://ws.odomate.eu`, TLS Let's Encrypt, CI/CD GitHub Actions (déployé le 9 juin 2026, D11).
+  WebRTC DataChannel écarté définitivement — WebSocket suffisant (D05).
 - **Hébergement client** : GitHub Pages (HTTPS natif, requis pour capteurs
   et caméra).
 - **Dev local** : Vite en HTTPS sur réseau local (`@vitejs/plugin-basic-ssl`)
@@ -164,10 +165,12 @@ raquette +10% (D03).
 → **Go phase 3. Version `1.0.0`.** Satisfaction réelle validée, usage identifié.
 
 ### Phase 3 — Profondeur ← EN COURS (depuis le 21 juin 2026)
-Effets de balle au gyroscope (coup de poignet = lift/coupé), modes de jeu,
-juice audio-visuel, gestion déconnexions/reprises, garde-fous d'appairage
-(expiration QR, comparaison IP), éventuelle migration AWS.
-Musique de fond 8-bit optionnelle (D23) — conditionnel : valider d'abord que les sons de jeu sont bien entendus.
+Effets de balle au gyroscope (coup de poignet = lift/coupé, D14), modes de jeu,
+gestion déconnexions/reprises, garde-fous d'appairage (expiration QR, comparaison IP).
+
+**Questions ouvertes phase 3 :** onboarding règles (Q12) · traînée de balle vs prédiction (Q16) · validation Android (Q9).
+
+**Écarté définitivement :** musique 8-bit (D23) · replay son adverse (D08) · WebRTC (D05) · pointeur permanent balle adverse (D06).
 
 **Thèmes visuels ✅ (D22, 21 juin 2026) :** 5 thèmes déblocables par victoire
 (Arcade → Synthétique → Gazon → Terre battue → Nostalgie 2024), persistés en

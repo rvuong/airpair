@@ -1,10 +1,10 @@
 # AirPair — contexte projet
 
-**Phase actuelle : 1 MVP ✅ — déployé sur https://rvuong.github.io/airpair/**
-En attente de playtests. Critère go/no-go phase 2 : "les joueurs redemandent-ils spontanément une revanche ?"
-Phase 1 livré : appairage QR · boucle de jeu (score à 7 après playtests) · sons · indicateur d'approche · revanche · deploy GitHub Pages
+**Phase actuelle : 3 Profondeur ← EN COURS — déployé sur https://rvuong.github.io/airpair/ · version 1.0.0**
+Phase 0 ✅ : protos tilt + synchro. Phase 1 ✅ : MVP. Phase 2 ✅ : sensation (6 playtests, go acté 21 juin 2026).
+Phase 3 en cours : thèmes visuels ✅ · effets gyroscope (D14) · onboarding (Q12) · traînée de balle (Q16) · validation Android (Q9).
 
-Phase 0 ✅ : `proto/0a-tilt/` (tilt) · `proto/0b-sync/` (synchro réseau)
+Décisions fermées récemment : tilt fun ✅ · indicateur d'approche suffisant (pointeur ❌) · WebSocket suffisant (WebRTC ❌) · musique 8-bit ❌ · replay son adverse ❌
 
 ## Stack
 Client : Vite + TypeScript, Canvas 2D, PWA
@@ -31,7 +31,7 @@ Nommage : `feat/description`, `fix/description`, `chore/description`
 Exemples : `feat(tilt): add live tuning panel` · `fix(ios): unlock AudioContext on gesture` · `chore(ci): add bundle size check`
 
 **Semver** — version dans `package.json` + tag git `vX.Y.Z`
-- Phase 0 : `0.1.x` (protos) · Phase 1 MVP : `0.2.0` · Go phase 2 : `0.3.0` · Go phase 3 : `1.0.0`
+- Phase 0 : `0.1.x` (protos) · Phase 1 MVP : `0.2.0` · Go phase 2 : `0.3.0` · Go phase 3 : `1.0.0` ✅ (actuel)
 - Patch (`x`) : fix dans la phase · Minor (`y`) : fin de phase ou feature significative
 
 **Création de PR** — via CLI (`gh pr create`) ou interface GitHub, au choix.
