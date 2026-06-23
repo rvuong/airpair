@@ -8,6 +8,10 @@ export interface Theme {
   ball: string
   courtLines: boolean
   stripedBg?: boolean
+  tableLayout?: boolean
+  tableGradient?: { from: string; to: string }
+  grainTexture?: boolean
+  pictogram?: 'table-tennis'
 }
 
 export const THEMES: readonly Theme[] = [
@@ -30,6 +34,7 @@ export const THEMES: readonly Theme[] = [
     paddleB: '#fff',
     ball: '#ffe600',
     courtLines: true,
+    tableLayout: true,
   },
   {
     id: 'gazon',
@@ -41,6 +46,7 @@ export const THEMES: readonly Theme[] = [
     ball: '#ffe600',
     courtLines: true,
     stripedBg: true,
+    tableLayout: true,
   },
   {
     id: 'terre_battue',
@@ -51,16 +57,20 @@ export const THEMES: readonly Theme[] = [
     paddleB: '#fff',
     ball: '#ffe600',
     courtLines: true,
+    tableLayout: true,
+    grainTexture: true,
   },
   {
     id: 'nostalgie_2024',
     name: 'Nostalgie 2024',
-    bg: '#1a0e3d',
+    bg: '#000',
     lineColor: 'rgba(244,195,0,0.4)',
     paddleA: '#f4c300',
     paddleB: '#f4c300',
     ball: '#fff',
     courtLines: true,
+    tableGradient: { from: '#16115c', to: '#7a1050' },
+    pictogram: 'table-tennis',
   },
 ]
 

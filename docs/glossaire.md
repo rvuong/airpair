@@ -99,7 +99,7 @@ Ensemble des fichiers JavaScript et CSS produits par [Vite](#vite) lors du build
 
 ### Canvas 2D
 
-API de dessin HTML5 (`<canvas>`) permettant de rendre des formes, textes et images pixel par pixel via JavaScript. Utilisée pour tout le rendu de jeu dans AirPair (balle, raquettes, scores, indicateurs). Les éléments Canvas ne sont pas dans le DOM : ARIA, focus clavier et reflow ne s'y appliquent pas (voir [D21](./decisions.md)).
+API de dessin HTML5 (`<canvas>`) permettant de rendre des formes, textes et images pixel par pixel via JavaScript. Utilisée pour tout le rendu de jeu dans AirPair (balle, raquettes, scores, indicateurs, thèmes visuels). Chaque frame est entièrement redessinée (~60 fps) : fond, terrain, pictogrammes décoratifs, raquettes, balle, textes d'état — il n'y a pas de scène persistante, tout est recalculé à chaque tick. Les éléments Canvas ne sont pas dans le DOM : ARIA, focus clavier et reflow ne s'y appliquent pas (voir [D21](./decisions.md)). Rendu géré dans `src/screens/game.ts`.
 
 ### deviceorientation
 
