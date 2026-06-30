@@ -1,72 +1,72 @@
-# Contribuer à AirPair
+# Contributing to AirPair
 
-## Pré-requis
+## Prerequisites
 
 - Node.js ≥ 20
-- `npm install` à la racine (client) et dans `server/`
-- Pour tester sur iPhone : HTTPS local via `@vitejs/plugin-basic-ssl` (certificat à accepter une fois sur l'appareil)
+- `npm install` at the root (client) and in `server/`
+- To test on iPhone: local HTTPS via `@vitejs/plugin-basic-ssl` (accept the certificate once on the device)
 
-## Lancer le projet en local
+## Running the project locally
 
 ```bash
 # Client (port 5173, HTTPS)
 npm run dev
 
-# Serveur WebSocket (port 8080)
+# WebSocket server (port 8080)
 cd server && npm run dev
 ```
 
-Le client se connecte par défaut au serveur local. Pour tester avec le serveur de prod (`wss://ws.odomate.eu`), modifier `VITE_WS_URL` dans `.env.local`.
+The client connects to the local server by default. To test against the production server (`wss://ws.odomate.eu`), set `VITE_WS_URL` in `.env.local`.
 
-## Workflow git
+## Git workflow
 
-Trunk-based development — branches courtes, merge via PR, jamais de commit direct sur `main`.
+Trunk-based development — short-lived branches, merge via PR, never commit directly to `main`.
 
 ```
-feat/description   # nouvelle feature
-fix/description    # correctif
+feat/description   # new feature
+fix/description    # bug fix
 chore/description  # tooling, CI, deps
-docs/description   # documentation seule
+docs/description   # documentation only
 ```
 
-Format de commit obligatoire ([Conventional Commits](https://www.conventionalcommits.org/)) :
+Required commit format ([Conventional Commits](https://www.conventionalcommits.org/)):
 
 ```
-type(scope): description courte
+type(scope): short description
 ```
 
-Types : `feat` · `fix` · `chore` · `docs` · `refactor` · `test`
+Types: `feat` · `fix` · `chore` · `docs` · `refactor` · `test`
 
-Exemples : `feat(game): add ball trail effect` · `fix(ios): unlock AudioContext on tap`
+Examples: `feat(game): add ball trail effect` · `fix(ios): unlock AudioContext on tap`
 
-## Documentation obligatoire
+## Required documentation
 
-Toute PR qui modifie un comportement, un paramètre de jeu, ou une décision d'architecture doit inclure une note dans le fichier adéquat — la doc voyage dans le même commit que le code.
+Any PR that modifies a behaviour, a game parameter, or an architecture decision must include a note in the appropriate file — documentation travels in the same commit as the code.
 
-| Changement | Où documenter |
+| Change | Where to document |
 |---|---|
-| Nouvelle décision d'architecture ou de design | Nouvelle entrée dans [docs/decisions.md](./docs/decisions.md) |
-| Tuning d'un paramètre de jeu (vitesse, taille, seuils) | Amendement de la décision concernée dans [docs/decisions.md](./docs/decisions.md) |
-| Résultat de playtest | [PROJECT.md](./PROJECT.md) (section roadmap) + décision(s) concernée(s) |
-| Changement de roadmap ou d'état de phase | [PROJECT.md](./PROJECT.md) |
+| New architecture or design decision | New entry in [docs/decisions.md](./docs/decisions.md) |
+| Game parameter tuning (speed, size, thresholds) | Amendment to the relevant decision in [docs/decisions.md](./docs/decisions.md) |
+| Playtest result | [PROJECT.md](./PROJECT.md) (roadmap section) + relevant decision(s) |
+| Roadmap or phase status change | [PROJECT.md](./PROJECT.md) |
 
-Un incrément sans note d'intention n'est pas mergeable.
+An increment with no statement of intent is not mergeable.
 
-## Créer une PR
+## Creating a PR
 
-Chaque PR doit avoir :
-1. Un titre au format Conventional Commits
-2. Une description : contexte, changements, lien vers [docs/decisions.md](./docs/decisions.md) si applicable
+Each PR must have:
+1. A title in Conventional Commits format
+2. A description: context, changes, link to [docs/decisions.md](./docs/decisions.md) if applicable
 
-## Contraintes absolues à ne pas violer
+## Hard constraints — never violate
 
-- **Simulation déterministe** — zéro streaming de position ; un seul message `{t_frappe, position, vecteur_vitesse}` par frappe
-- **Bundle ≤ 150 Ko gzip** — vérifié en CI à chaque PR
-- **Trafic WS ≤ 20 Ko/partie** — vérifié en CI
-- **Zéro framework UI, zéro moteur de jeu, zéro WASM**
+- **Deterministic simulation** — zero position streaming; one single message `{t_frappe, position, vecteur_vitesse}` per hit
+- **Bundle ≤ 150 KB gzip** — checked in CI on every PR
+- **WS traffic ≤ 20 KB/game** — checked in CI
+- **Zero UI framework, zero game engine, zero WASM**
 
-## Références
+## References
 
-- [PROJECT.md](./PROJECT.md) — intention, roadmap, état courant
-- [docs/decisions.md](./docs/decisions.md) — journal de décisions (le POURQUOI)
-- [docs/glossaire.md](./docs/glossaire.md) — termes spécifiques au projet
+- [PROJECT.md](./PROJECT.md) — intent, roadmap, current state
+- [docs/decisions.md](./docs/decisions.md) — decision log (the WHY)
+- [docs/glossaire.md](./docs/glossaire.md) — project-specific terms
