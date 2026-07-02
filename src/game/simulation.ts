@@ -9,6 +9,8 @@ export interface TiltParams {
   alpha: number
 }
 
+export type ControlMode = 'tilt' | 'touch'
+
 export class TiltController {
   private gamma0 = 0
   private lastGamma = 0
@@ -16,8 +18,7 @@ export class TiltController {
   private rawCmd = 0
   private touchStartX: number | null = null
   private touchCmd = 0
-  private usingTouch = false
-  private tiltActive = false
+  private mode: ControlMode = 'tilt'
 
   params: TiltParams
 
@@ -25,16 +26,22 @@ export class TiltController {
     this.params = { ...params }
   }
 
+  setMode(mode: ControlMode): void {
+    this.mode = mode
+  }
+
+  getMode(): ControlMode {
+    return this.mode
+  }
+
   calibrate(g: number): void {
     this.gamma0 = g
     this.lastGamma = g
     this.smoothed = 0
     this.rawCmd = 0
-    this.tiltActive = false
   }
 
   onDeviceOrientation(gamma: number): void {
-    this.tiltActive = true
     this.lastGamma = gamma
     const delta = gamma - this.gamma0
     const { deadzone, amplitude, exponent } = this.params
@@ -45,7 +52,6 @@ export class TiltController {
       const n = Math.min((abs - deadzone) / (amplitude - deadzone), 1)
       this.rawCmd = Math.sign(delta) * Math.pow(n, exponent)
     }
-    this.usingTouch = false
   }
 
   onTouchStart(x: number): void {
@@ -54,19 +60,17 @@ export class TiltController {
 
   onTouchMove(x: number, w: number): void {
     if (this.touchStartX === null) return
-    if (this.tiltActive) return
+    if (this.mode === 'tilt') return
     this.touchCmd = Math.max(-1, Math.min(1, (x - this.touchStartX) / (w * 0.4)))
-    this.usingTouch = true
   }
 
   onTouchEnd(): void {
     this.touchStartX = null
     this.touchCmd = 0
-    this.usingTouch = false
   }
 
   update(): number {
-    const raw = this.usingTouch ? this.touchCmd : this.rawCmd
+    const raw = this.mode === 'touch' ? this.touchCmd : this.rawCmd
     this.smoothed = this.params.alpha * raw + (1 - this.params.alpha) * this.smoothed
     return this.smoothed
   }

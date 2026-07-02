@@ -141,16 +141,35 @@ export function renderGame(
         color:rgba(255,255,255,0.55);font-size:30px;
         font-family:-apple-system,sans-serif;margin:0;
       ">7 pts · marge 2</p>
-      <button id="start-btn" style="
-        background:#f5f5f5;color:#111;border:none;border-radius:16px;
-        padding:20px 40px;font-size:20px;font-weight:700;
-        font-family:-apple-system,sans-serif;cursor:pointer;
-        -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-      ">Toucher pour commencer</button>
-      <p id="perm-msg" style="
-        display:none;color:#ffcc00;font-size:28px;
-        font-family:-apple-system,sans-serif;text-align:center;padding:0 32px;
-      "></p>
+      <div id="control-choice" style="display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;max-width:340px;">
+        <hr style="width:100%;border:none;border-top:1px solid rgba(255,255,255,0.2);margin:0;" />
+        <p id="instructions" style="
+          color:rgba(255,255,255,0.6);font-size:20px;text-align:center;
+          font-family:-apple-system,sans-serif;margin:0;
+        ">Inclinez votre téléphone pour contrôler la raquette</p>
+        <button id="ready-btn" style="
+          background:#f5f5f5;color:#111;border:none;border-radius:16px;
+          padding:20px 40px;font-size:20px;font-weight:700;
+          font-family:-apple-system,sans-serif;cursor:pointer;
+          -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+        ">Je suis prêt</button>
+        <hr id="sep-bottom" style="width:100%;border:none;border-top:1px solid rgba(255,255,255,0.2);margin:0;" />
+        <p id="touch-line" style="
+          color:rgba(255,255,255,0.45);font-size:20px;text-align:center;
+          font-family:-apple-system,sans-serif;margin:0;
+        ">Si vous préférez jouer au toucher, cliquez
+          <button id="touch-btn" style="
+            background:none;border:none;padding:0;color:#fff;
+            font-size:20px;font-weight:700;text-decoration:underline;
+            font-family:-apple-system,sans-serif;cursor:pointer;
+            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          ">ici</button>
+        </p>
+        <p id="wait-msg" style="
+          display:none;color:rgba(255,255,255,0.55);font-size:20px;text-align:center;
+          font-family:-apple-system,sans-serif;margin:0;
+        "></p>
+      </div>
     </div>
     <div id="landscape-warning" style="
       position:fixed;inset:0;z-index:20;
@@ -165,8 +184,12 @@ export function renderGame(
 
   const canvas = container.querySelector<HTMLCanvasElement>('#game-canvas')!
   const preOverlay = container.querySelector<HTMLElement>('#pre-overlay')
-  const startBtn = container.querySelector<HTMLButtonElement>('#start-btn')
-  const permMsg = container.querySelector<HTMLElement>('#perm-msg')
+  const instructions = container.querySelector<HTMLElement>('#instructions')
+  const readyBtn = container.querySelector<HTMLButtonElement>('#ready-btn')
+  const sepBottom = container.querySelector<HTMLElement>('#sep-bottom')
+  const touchLine = container.querySelector<HTMLElement>('#touch-line')
+  const touchBtn = container.querySelector<HTMLButtonElement>('#touch-btn')
+  const waitMsg = container.querySelector<HTMLElement>('#wait-msg')
   const landscapeWarning = container.querySelector<HTMLElement>('#landscape-warning')
 
   if (!canvas) throw new Error('Missing game canvas')
@@ -218,7 +241,7 @@ export function renderGame(
     scoringUntil: null,
   }
 
-  // Theme (mutable: B updates it on game_start relay)
+  // Theme (mutable: B updates it on player_ready relay from A)
   let theme: Theme = getThemeById(themeId)
   let unlockedTheme: Theme | null = null
   let themeAlreadyUnlocked = false
@@ -286,6 +309,11 @@ export function renderGame(
   let tiltCalibrated = false
   const dbg = { evts: 0, gamma: 0, cmd: 0, perm: '?' }
 
+  // Filet de sécurité : si aucun événement d'orientation réel n'arrive dans ce
+  // délai (pas de gyroscope, navigateur sans support), on bascule sur le
+  // toucher plutôt que de laisser la raquette immobile (D03, amendement).
+  const TILT_FALLBACK_TIMEOUT_MS = 1300
+
   function onOrientation(e: DeviceOrientationEvent): void {
     if (e.gamma === null) return
     dbg.evts++
@@ -301,6 +329,9 @@ export function renderGame(
     if (tiltListening) return
     tiltListening = true
     window.addEventListener('deviceorientation', onOrientation)
+    setTimeout(() => {
+      if (dbg.evts === 0) tilt.setMode('touch')
+    }, TILT_FALLBACK_TIMEOUT_MS)
   }
 
   // ---------------------------------------------------------------------------
@@ -361,6 +392,18 @@ export function renderGame(
   }
 
   // ---------------------------------------------------------------------------
+  // Readiness handshake — la partie ne démarre que lorsque A et B ont chacun
+  // choisi leur mode de contrôle (tilt ou toucher) et se le sont signalé.
+  // ---------------------------------------------------------------------------
+  let localReady = false
+  let peerReady = false
+  const otherRole: 'A' | 'B' = role === 'A' ? 'B' : 'A'
+
+  function tryActivate(): void {
+    if (localReady && peerReady) activateGame()
+  }
+
+  // ---------------------------------------------------------------------------
   // Relay message handling
   // ---------------------------------------------------------------------------
   client.onRelay = (payload: unknown) => {
@@ -378,11 +421,10 @@ export function renderGame(
       if (state.phase === 'dead_zone' || state.phase === 'waiting') {
         state.phase = 'waiting'
       }
-    } else if (msg.type === 'game_start') {
-      if (role === 'B') {
-        if (msg.themeId) theme = getThemeById(msg.themeId)
-        activateGame()
-      }
+    } else if (msg.type === 'player_ready') {
+      if (msg.themeId) theme = getThemeById(msg.themeId)
+      peerReady = true
+      tryActivate()
     } else if (msg.type === 'rematch') {
       resetGame()
     } else if (msg.type === 'miss') {
@@ -970,101 +1012,93 @@ export function renderGame(
   canvas.addEventListener('mousemove', handleMouseMove)
   canvas.addEventListener('click', handleClick)
 
-  // Pre-game overlay — real <button> + click + async/await: the only pattern iOS 13+ accepts
-  const handleStartBtn = async (): Promise<void> => {
+  // Pre-game overlay — real <button> + click + async/await: the only pattern iOS 13+ accepts.
+  // Écran identique pour A et B : chacun choisit son mode de contrôle et le
+  // signale à l'autre via 'player_ready' ; la partie ne démarre (tryActivate)
+  // que lorsque les deux ont choisi.
+  function markLocalReady(activationDelayMs = 0): void {
+    if (localReady) return
+    localReady = true
+    if (readyBtn) readyBtn.disabled = true
+    if (touchBtn) touchBtn.disabled = true
+    client.relay({
+      type: 'player_ready',
+      themeId: role === 'A' ? theme.id : undefined,
+    } satisfies GameMsg)
+    if (!peerReady && waitMsg) {
+      waitMsg.textContent = `Le joueur ${otherRole} se prépare…`
+      waitMsg.style.display = 'block'
+    }
+    // Laisse le temps de lire un message (ex. refus de permission) avant que
+    // tryActivate() ne masque l'overlay, même si l'autre joueur est déjà prêt.
+    if (activationDelayMs > 0) setTimeout(tryActivate, activationDelayMs)
+    else tryActivate()
+  }
+
+  const handleReadyBtn = async (): Promise<void> => {
     resumeAudio()
-    startBtn!.disabled = true
+    if (readyBtn) readyBtn.disabled = true
+    if (touchBtn) touchBtn.disabled = true
     const DevOrient = DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<'granted' | 'denied'>
     }
+    const confirmTilt = (): void => {
+      if (!instructions) return
+      instructions.textContent = 'Prêt — inclinez pour jouer ✓'
+      instructions.style.color = '#4ade80'
+    }
+    let denied = false
     if (typeof DevOrient.requestPermission === 'function') {
       try {
         const result = await DevOrient.requestPermission()
         dbg.perm = result
         if (result === 'granted') {
-          client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
-          activateGame()
+          tilt.setMode('tilt')
+          startTiltListener()
+          confirmTilt()
         } else {
-          if (permMsg) {
-            permMsg.style.display = 'block'
-            permMsg.textContent = 'Permission refusée. Réglages → Safari → Mouvement et orientation → activer, puis recharger.'
+          denied = true
+          tilt.setMode('touch')
+          if (instructions) {
+            instructions.textContent = 'Inclinaison non autorisée — Contrôle au doigt actif'
+            instructions.style.color = '#ffcc00'
           }
-          startBtn!.disabled = false
         }
       } catch (err: unknown) {
         dbg.perm = String(err).slice(-50)
-        client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
-        activateGame()
+        tilt.setMode('tilt')
+        startTiltListener()
+        confirmTilt()
       }
     } else {
       dbg.perm = 'no-api'
-      client.relay({ type: 'game_start', themeId: theme.id } satisfies GameMsg)
-      activateGame()
+      tilt.setMode('tilt')
+      startTiltListener()
+      confirmTilt()
     }
+    sepBottom?.remove()
+    touchLine?.remove()
+    markLocalReady(denied ? 1500 : 0)
   }
 
-  startBtn?.addEventListener('click', handleStartBtn)
+  readyBtn?.addEventListener('click', handleReadyBtn)
 
-  // Player B — adapt overlay, wait for game_start relay from A
-  if (role === 'B') {
-    if (startBtn) startBtn.style.display = 'none'
-
-    const waitMsg = document.createElement('p')
-    waitMsg.textContent = 'En attente du joueur A…'
-    waitMsg.style.cssText = `
-      color:rgba(255,255,255,0.55);font-size:30px;
-      font-family:-apple-system,sans-serif;margin:0;
-    `
-    preOverlay?.appendChild(waitMsg)
-
-    // iOS only — request tilt permission while waiting
-    const DevOrient = DeviceOrientationEvent as unknown as { requestPermission?: unknown }
-    if (typeof DevOrient.requestPermission === 'function') {
-      const tiltBtn = document.createElement('button')
-      tiltBtn.textContent = 'Incliner pour jouer'
-      tiltBtn.style.cssText = `
-        background:rgba(255,255,255,0.15);color:#fff;
-        border:1px solid rgba(255,255,255,0.35);border-radius:10px;
-        padding:12px 24px;font-size:30px;font-family:-apple-system,sans-serif;
-        cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px;
-      `
-      const tiltHint = document.createElement('p')
-      tiltHint.textContent = '(le toucher fonctionne aussi)'
-      tiltHint.style.cssText = `
-        color:rgba(255,255,255,0.35);font-size:22px;
-        font-family:-apple-system,sans-serif;margin:0;
-      `
-      preOverlay?.appendChild(tiltBtn)
-      preOverlay?.appendChild(tiltHint)
-
-      tiltBtn.addEventListener('click', async () => {
-        resumeAudio()
-        tiltBtn.remove()
-        tiltHint.remove()
-        const DoeCtor = DeviceOrientationEvent as unknown as {
-          requestPermission: () => Promise<'granted' | 'denied'>
-        }
-        try {
-          const result = await DoeCtor.requestPermission()
-          dbg.perm = result
-          if (result === 'granted') {
-            startTiltListener()
-          } else {
-            const msg = document.createElement('p')
-            msg.textContent = 'Inclinaison non autorisée — Contrôle au doigt actif'
-            msg.style.cssText = `
-              color:rgba(255,255,255,0.45);font-size:24px;
-              font-family:-apple-system,sans-serif;text-align:center;padding:0 32px;
-            `
-            preOverlay?.appendChild(msg)
-          }
-        } catch (err: unknown) {
-          dbg.perm = String(err).slice(-30)
-          startTiltListener()
-        }
-      })
+  // Choix explicite du toucher — bascule immédiatement, sans jamais solliciter la permission tilt
+  const handleTouchBtn = (): void => {
+    resumeAudio()
+    if (readyBtn) readyBtn.disabled = true
+    if (touchBtn) touchBtn.disabled = true
+    tilt.setMode('touch')
+    if (instructions) {
+      instructions.textContent = 'Contrôle au toucher activé ✓'
+      instructions.style.color = '#4ade80'
     }
+    sepBottom?.remove()
+    touchLine?.remove()
+    markLocalReady()
   }
+
+  touchBtn?.addEventListener('click', handleTouchBtn)
 
   // ---------------------------------------------------------------------------
   // Landscape detection
@@ -1127,7 +1161,8 @@ export function renderGame(
     canvas.removeEventListener('mousemove', handleMouseMove)
     canvas.removeEventListener('click', handleClick)
 
-    startBtn?.removeEventListener('click', handleStartBtn)
+    readyBtn?.removeEventListener('click', handleReadyBtn)
+    touchBtn?.removeEventListener('click', handleTouchBtn)
 
     window.removeEventListener('resize', handleResize)
     document.removeEventListener('visibilitychange', handleVisibilityChange)
