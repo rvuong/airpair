@@ -101,6 +101,36 @@ Un effleurement accidentel de l'écran pendant le jeu au tilt déclenchait `onTo
 
 **Vitesse raquette (même PR) :** multiplicateur `2.0 → 2.2` (+10%, `src/screens/game.ts`). Motivé par le retour playtest #5 : meilleure couverture sans rendre le contrôle nerveux (alpha=0.45 atténue déjà le cmd effectif, qui dépasse rarement 0.7 en jeu normal).
 
+**Amendement (2 juillet 2026, retour playtest phase 3) :** bug d'exclusivité tilt/toucher côté joueur B (et structurellement A). Le flag `tiltActive` de l'amendement du 21 juin ne passait à `true` qu'après le premier `deviceorientation` reçu — entre le clic sur "Incliner pour jouer" (permission accordée) et ce premier événement capteur, le toucher gardait entièrement la main sur la raquette. L'UI l'annonçait même explicitement (`'(le toucher fonctionne aussi)'`), contredisant la décision initiale D03 : tilt par défaut, toucher en fallback strict, jamais les deux à la fois.
+
+**Fix (PR fix/tilt-touch-exclusivity) :** remplacement du couplage réactif `tiltActive`/`usingTouch` par un état explicite `TiltController.mode: 'tilt' | 'touch'`, initialisé à `'tilt'` et modifié uniquement à des points de décision précis :
+- refus de permission côté A ou B → `setMode('touch')` ;
+- filet de sécurité : si aucun `deviceorientation` réel n'est arrivé dans les `TILT_FALLBACK_TIMEOUT_MS` (1300 ms) suivant `startTiltListener()`, bascule silencieuse en toucher — couvre Android (pas d'API `requestPermission`) et le matériel sans gyroscope, cas jusqu'ici couverts par accident (le flag `tiltActive` ne devenait simplement jamais vrai).
+
+La garde `onTouchMove()` (`if (mode === 'tilt') return`) est désormais vraie dès la construction du contrôleur au lieu d'après le premier événement capteur — la garantie anti-interférence de l'amendement du 21 juin est préservée et la fenêtre de course à l'origine du bug est fermée.
+
+**Changement de comportement produit (même PR) :** côté A, un refus de permission bloquait entièrement le démarrage de la partie (bouton réactivé, pas de `activateGame()`). Il démarre désormais quand même, au toucher — symétrique avec le comportement de B.
+
+**Correctif UI, itération 1 (même PR, retour playtest device réel) :** un premier correctif avait remplacé le bouton unique par un libellé "Incliner pour jouer" (sans habillage) + séparateur "----- ou -----" + bouton "Jouer au toucher", décliné identiquement pour A et B. Toujours perçu comme peu clair ("on a l'impression qu'il faut toucher le bouton pour avoir le droit de jouer") — remplacé par l'itération 2 ci-dessous.
+
+**Correctif UI, itération 2 (même PR, abandonnée) :** sas d'attente re-conçu avec un bouton "Démarrer" pour A et une simple ligne d'attente pour B (pas de bouton). Comme B n'avait alors plus aucun geste cliquable lié au tilt sur cet écran, la demande de permission avait été déplacée vers `src/screens/join.ts` (clic "Rejoindre"/"Démarrer la caméra"). Problème découvert au test réel : sur le flux scanner QR, ce clic déclenche à la fois `getUserMedia()` (caméra) et `requestPermission()` (tilt) — iOS empile deux popups natives d'affilée, perçu comme confus et sans lien apparent. Deuxième problème, plus fondamental : cette itération gardait A seul responsable de démarrer la partie (bouton "Démarrer" → relais `game_start` → `activateGame()` des deux côtés) — si A cliquait avant que B ait répondu à sa propre demande de permission, l'overlay de B disparaissait instantanément, lui retirant toute chance de choisir le tilt. Abandonnée au profit de l'itération 3.
+
+**Correctif UI, itération 3 — architecture finale (même PR) :** écran strictement identique pour A et B, plus aucune branche spécifique à un rôle :
+```
+7 pts · marge 2
+────────────────────────────────
+Inclinez votre téléphone pour contrôler la raquette   (texte, devient confirmation après clic)
+[ Je suis prêt ]
+────────────────────────────────
+Si vous préférez jouer au toucher, cliquez [ici]
+
+(si l'autre joueur n'a pas encore choisi :)
+Le joueur A se prépare…  /  Le joueur B se prépare…
+```
+Chaque joueur clique "Je suis prêt" sur son propre écran (ce qui déclenche `requestPermission()` pour lui-même, sur iOS comme sur Android) ou "cliquez ici" pour forcer le toucher sans jamais solliciter la permission. La demande de permission tilt reste donc sur `game.ts`, jamais sur `join.ts` (le détour de l'itération 2 est annulé) — un seul popup natif par joueur, déclenché par son propre geste, sans lien avec la caméra.
+
+**Poignée de main symétrique.** Le message relayé `game_start` (asymétrique, piloté par A) est remplacé par `player_ready` (`net/ws.ts`), envoyé par **chacun** des deux joueurs dès qu'il a fait son choix (tilt ou toucher) — `themeId` n'est inclus que par A, qui est seul à avoir choisi un thème. `game.ts` maintient deux booléens locaux `localReady`/`peerReady` ; `activateGame()` n'est appelé (`tryActivate()`) que lorsque les deux sont vrais, indépendamment de qui clique en premier. Ceci élimine complètement la fenêtre de course : aucun joueur ne peut plus démarrer la partie avant que l'autre ait eu l'occasion de répondre à sa propre demande de permission.
+
 ---
 
 ## D04 — Architecture réseau et synchronisation ✅
