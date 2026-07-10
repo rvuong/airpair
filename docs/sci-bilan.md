@@ -1,70 +1,60 @@
 # AirPair — Bilan Software Carbon Intensity
 
-**Phase 1 · 19 juin 2026 · SCI v1.1 / ISO IEC 21031:2024**
+**Phase 1 · 19 juin 2026 · mise à jour phase 3 · 10 juillet 2026 · SCI v1.1 / ISO IEC 21031:2024**
 
 ---
 
-## Claude Code — consommation par semaine (API Anthropic)
+## Note de correction (10 juillet 2026)
 
-Les tokens ci-dessous proviennent des logs locaux Claude Code (`~/.claude/`), mesurés via `npx ccusage@latest`. Ils représentent les appels à l'**API Anthropic** — centre de coût « développement ». Le coût AWS (EC2 t4g.nano, opérationnel) est traité séparément.
+Le bilan du 19 juin utilisait `ccusage` en mode **global** (toutes sessions Claude Code confondues, tous projets) comme mesure de la consommation "airpair". Or `ccusage` ne sait pas filtrer par projet : sur la période W20-W25, le poste de travail a aussi tourné des sessions Believe et d'autres side-projects (bff-accounts, contracts-account, ce dossier de personal branding, etc.). Le chiffre "442 M tokens bruts" du bilan initial n'était donc pas le coût d'airpair seul.
 
-### Histogramme A — tokens bruts par semaine (millions)
+**Chiffre corrigé**, scope projet (`sci/extract-ai-usage.py`, lecture des logs locaux du dossier `airpair` uniquement, dédup par `requestId`) : **125,6 M tokens bruts cumulés au 19 juin** (au lieu de 442 M) — soit un facteur ~3,5 de surestimation dans le bilan initial.
 
-> 96 % des tokens bruts sont des **lectures de prompt cache** — compute GPU minimal.
+`ccusage` global est abandonné à partir de ce bilan. `extract-ai-usage.py` (scope projet) devient la seule source pour le poste Claude Code — voir la note méthodologique ajoutée dans [`docs/sci.md`](sci.md).
 
-```mermaid
-xychart-beta horizontal
-  title "Tokens Claude Code — total brut par semaine (millions)"
-  x-axis ["W20", "W21", "W22", "W23", "W24", "W25"]
-  y-axis "Millions de tokens" 0 --> 140
-  bar [4.3, 69.3, 54.9, 118.4, 126.1, 69.6]
-```
+**Limite résiduelle connue :** les logs antérieurs au renommage du projet (`pongbros` → `airpair`, acté le 10 juin, voir D15) sont en partie stockés sous l'ancien nom de dossier. Un seul fichier de session concerné a été identifié (10 juin, session déjà trouvée pour l'essentiel côté `airpair`) — impact estimé négligeable. La phase de conception (7-9 juin) reste couverte séparément par l'estimation manuelle `claude.ai` du worklog, non par cette extraction.
 
-### Histogramme B — tokens effectifs hors cache reads (millions)
+## Note sur la volatilité des logs locaux (découverte le 10 juillet 2026)
 
-> Ces tokens représentent le **compute GPU réel** : input frais + output généré + création de cache. Le reste (96 %) est relu depuis la mémoire KV du prompt cache Anthropic à ~10× moins d'énergie.
+Les logs Claude Code par projet (`~/.claude/projects/.../*.jsonl`) ne sont **pas une archive stable** : deux exécutions de `extract-ai-usage.py` à ~20 minutes d'intervalle, dans la même session de travail, ont donné des résultats différents — 45 fichiers / 2 271 requêtes puis 40 fichiers / 1 695 requêtes. Des sessions se sont fait purger localement pendant qu'on mesurait.
 
-```mermaid
-xychart-beta horizontal
-  title "Tokens Claude Code — effectifs hors cache reads (millions)"
-  x-axis ["W20", "W21", "W22", "W23", "W24", "W25"]
-  y-axis "Millions de tokens" 0 --> 7
-  bar [0.10, 2.39, 2.67, 3.96, 5.91, 4.55]
-```
+Conséquence directe pour la méthode : **toute mesure "réelle" de tokens Claude Code est un plancher, pas un total exact**, et le plancher baisse avec le temps si l'export n'est pas archivé rapidement. Les chiffres de ce bilan utilisent la première extraction de la session (la plus complète disponible) ; l'export archivé dans `sci/ai-usage/2026-07-10.json` (capturé après la purge partielle) est donc lui-même un sous-ensemble, et sert de repère plancher pour la suite, pas de vérité complète.
 
-### Tableau détaillé
-
-Mix réseau applicable à Claude Code : **US ~400 gCO₂e/kWh** (serveurs Anthropic, infrastructure AWS us-east).
-
-| Semaine | Phase | Tokens bruts | dont cache reads | Tokens effectifs | Coût éq. API |
-|---------|-------|-------------|-----------------|-----------------|-------------|
-| W20 (12 mai) | exploration | 4,3 M | 4,2 M (97 %) | 0,10 M | $2 |
-| W21 (18–22 mai) | phase 0 | 69,3 M | 66,9 M (97 %) | 2,39 M | $39 |
-| W22 (25–31 mai) | phase 0 | 54,9 M | 52,2 M (95 %) | 2,67 M | $35 |
-| W23 (1–7 juin) | ⚠️ transition | 118,4 M | 114,5 M (97 %) | 3,96 M | $63 |
-| W24 (8–12 juin) | phase 1 | 126,1 M | 120,2 M (95 %) | 5,91 M | $77 |
-| W25 (15–19 juin) | phase 1 | 69,6 M | 65,1 M (94 %) | 4,55 M | $55 |
-| **Total** | | **442 M** | **423 M (96 %)** | **19,58 M** | **$270** |
-
-> **W23 ⚠️** — semaine de transition : conception documentée le 7 juin, mais commits d'implémentation présents dès le 1er. Ratio retenu : 50 % conception / 50 % phase 1.
->
-> **Les $270** sont le coût API Anthropic équivalent à l'abonnement Claude Code — non facturés à l'unité dans le cadre de l'abonnement.
+**Action retenue :** archiver `extract-ai-usage.py --save` plus fréquemment (à chaque session de travail notable, pas seulement en fin de phase) pour limiter la perte future. Documenté dans `docs/sci.md`.
 
 ---
 
-## Centres de coût
+## Claude Code — consommation cumulée (scope projet, corrigé)
 
-| Centre de coût | Nature | Montant phase 1 | Mesure |
-|----------------|--------|----------------|--------|
-| API Anthropic (Claude Code) | Développement | $270 éq. API | Mesuré — `sci/ai-usage/2026-W*.json` |
-| AWS EC2 t4g.nano | Opérationnel | ~$3–4/mois | Estimé — `sci/factors.yaml` |
-| GitHub Actions CI | Développement | < $1 | Estimé |
+Source : `sci/extract-ai-usage.py`, logs locaux du dossier `airpair`, dédupliqués par `requestId`. Coupure au 19 juin (date du bilan initial) pour séparer phase 0/1 (déjà rapportée) de la période phase 2/3 non encore bilanée.
+
+| Période | Phase | Tokens bruts | Input | Output | Cache création | Cache lecture | Effectifs (hors cache lecture) |
+|---|---|---|---|---|---|---|---|
+| ≤ 19 juin | conception → phase 1 | 125,6 M | 18,3 k | 913,5 k | 3,04 M | 121,6 M (96,8 %) | 3,97 M |
+| 20 juin → 10 juillet | phase 2 → phase 3 | 99,7 M | 36,7 k | 541,9 k | 1,83 M | 97,2 M (97,6 %) | 2,41 M |
+| **Total à date** | | **225,3 M** | **55,0 k** | **1,46 M** | **4,87 M** | **218,9 M (97,2 %)** | **6,38 M** |
+
+Le fait marquant de la période phase 2/3 : la quasi-totalité de l'effort (`tokens effectifs`) correspond à une seule tâche — le fix `tilt/touch-exclusivity` du 2 juillet (3 itérations d'UI documentées dans `decisions.md` D03) — le reste de la fenêtre (23 juin → 2 juillet) a été calme.
+
+### CO₂e — méthode
+
+Facteurs `sci/factors.yaml › ai_inference` (aucun facteur officiel publié par Anthropic — fourchette de la littérature, incertitude ~1 ordre de grandeur) :
+- **Raisonnable** : tokens effectifs (hors cache lecture) × facteur output (0,001 - 0,010 gCO₂e / 1k tokens). Le cache lecture est traité comme un coût quasi nul (relecture depuis la mémoire KV, pas de recalcul GPU).
+- **Pire cas** : ajoute le cache lecture au coût plein, traité comme du contexte réinjecté (facteur input haut, 0,003 gCO₂e / 1k tokens) — hypothèse volontairement pessimiste.
+
+*(Révision de méthode vs. le bilan du 19 juin : le calcul du pire cas y appliquait un multiplicateur ad hoc `×6,4` non reproductible sur le total "raisonnable". Ici, formule directe et traçable.)*
+
+| Période | Raisonnable | Pire cas |
+|---|---|---|
+| ≤ 19 juin | 3,97 g – 39,7 g | 404,6 g |
+| 20 juin → 10 juillet | 2,41 g – 24,1 g | 315,8 g |
+| **Total à date** | **6,38 g – 63,8 g** | **720,4 g** |
 
 ---
 
 ## Sessions manuelles (worklog)
 
-Activités hors Claude Code : sessions claude.ai web, temps humain, playtests terrain.
+Activités hors Claude Code : sessions claude.ai web, temps humain, playtests terrain. Source : [`sci/worklog.csv`](../sci/worklog.csv).
 
 | Date | Phase | Activité | Outil | Mix réseau | Durée | CO₂e min | CO₂e max |
 |------|-------|----------|-------|-----------|-------|----------|----------|
@@ -74,36 +64,46 @@ Activités hors Claude Code : sessions claude.ai web, temps humain, playtests te
 | 2026-06-11 | phase 1 | Sessions claude.ai — challenger idées game design | claude.ai | US ~400 g/kWh | 3,5 h | 2 g | 60 g |
 | 2026-06-11 | phase 1 | Synthèse playtests — rédaction notes et décisions | laptop | FR 52 g/kWh | 2 h | 2 g | 6 g |
 | 2026-06-17 | phase 1 | Playtest terrain W25 — 1 session | smartphone | FR 52 g/kWh | 2 h | 0 g | 1 g |
+| 2026-06-21 | phase 1 | Approach indicator v2 — design (D06) + implémentation | claude.ai | US ~400 g/kWh | 1 h | 5 g | 50 g |
+| 2026-06-21 | phase 2 | Playtest #5 + analyse + fix touch/tilt + go phase 3 | laptop | FR 52 g/kWh | 1 h | 10 g | 40 g |
+| 2026-07-02 | phase 3 | Test manuel solo (device réel) — validation UI tilt/touch | smartphone | FR 52 g/kWh | 0,75 h | 0 g | 1 g |
+
+*Les sessions Claude Code (rédaction, fixes, implémentation) ne figurent pas dans ce tableau — comptées automatiquement, voir section précédente.*
+
+**Totaux par outil :**
+
+| Outil | CO₂e min | CO₂e max |
+|---|---|---|
+| claude.ai web | 12 g | 185 g |
+| laptop (temps humain) | 14 g | 76 g |
+| smartphones (playtests/tests) | 1 g | 4 g |
 
 ---
 
-## CO₂e — empreinte estimée
+## CO₂e — empreinte estimée totale
 
-**Valeurs cumulées sur l'ensemble de la période W20–W25** (toutes sessions confondues, pas par semaine ni par jour).
+**Valeurs cumulées, conception → phase 3 (à date, 10 juillet 2026).**
 
-| Composant | Mix réseau | Hypothèse | Fourchette basse | Fourchette haute |
-|-----------|-----------|-----------|-----------------|-----------------|
-| Claude Code (API Anthropic) | US ~400 g/kWh | Cache reads à 10 % du coût d'un token frais | 20 g | 210 g |
-| claude.ai web (sessions manuelles) | US ~400 g/kWh | Estimation par nb d'échanges | 7 g | 135 g |
-| Laptop (sessions manuelles) | FR 52 g/kWh | Puissance × durée × mix FR | 4 g | 36 g |
-| Smartphones (playtests) | FR 52 g/kWh | Puissance active × durée × mix FR | 1 g | 3 g |
-| **Total — fourchette raisonnable** | | | **32 g** | **384 g** |
-| Claude Code — pire cas | US ~400 g/kWh | Cache reads au coût plein (×10 vs raisonnable) | — | ~1 350 g |
-| **Total — pire cas** | | | — | **~1 500 g** |
+| Composant | Hypothèse | Fourchette basse | Fourchette haute |
+|-----------|-----------|-----------------|-----------------|
+| Claude Code (scope projet, corrigé) | Cache lecture ≈ coût nul | 6 g | 64 g |
+| claude.ai web (sessions manuelles) | Estimation par nb d'échanges | 12 g | 185 g |
+| Laptop (sessions manuelles) | Puissance × durée × mix FR | 14 g | 76 g |
+| Smartphones (playtests/tests) | Puissance active × durée × mix FR | 1 g | 4 g |
+| **Total — fourchette raisonnable** | | **33 g** | **329 g** |
+| Claude Code — pire cas (cache lecture à coût plein) | | — | 720 g |
+| **Total — pire cas** | | — | **~985 g** |
 
-**Pourquoi deux scénarios Claude Code ?**
-Les 423 M tokens de cache reads ont un coût énergétique inconnu — Anthropic ne publie aucun facteur officiel. L'hypothèse raisonnable suppose qu'un token relu depuis le cache coûte ~10 % d'un token calculé (cohérent avec la littérature sur les KV caches). L'hypothèse pire cas suppose le coût plein, soit ×10 supérieur — d'où 210 g × ~6,4 ≈ 1 350 g. Ce n'est pas ×12 : le facteur 12 correspond au ratio de la fourchette totale raisonnable (384/32).
+Le total raisonnable (33-329 g) est proche du chiffre du 19 juin (32-384 g) malgré la correction de méthode — la baisse du poste Claude Code (20-210g → 6-64g) est en grande partie compensée par l'ajout des sessions manuelles phase 1/2 non encore bilanées au 19 juin (approach indicator, playtest #5). Ce n'est pas une coïncidence rassurante : c'est le signe que le poste Claude Code n'était de toute façon pas dominant dans le total, contrairement à ce que la lecture brute du chiffre "442 M tokens" du 19 juin laissait penser.
 
-> Calcul officiel prévu en fin de phase 1 avec `sci/factors.yaml › ai_inference`.
+### Équivalents CO₂e — fourchette raisonnable cumulée (33–329 g)
 
-### Équivalents CO₂e — fourchette raisonnable cumulée (32–384 g)
-
-| | Fourchette raisonnable | Pire cas (~1 500 g) |
+| | Fourchette raisonnable | Pire cas (~985 g) |
 |-|----------------------|---------------------|
-| 🚗 Voiture essence | 160 m – 1,9 km | 7,5 km |
-| ☕ Café en dosette | 1 – 10 capsules | 38 capsules |
-| 🥩 Viande rouge (bœuf) | 1 – 14 g de bœuf | 56 g de bœuf |
-| 📺 Vidéo YouTube (HD, WiFi) | 50 min – 11 h | ~42 h |
+| 🚗 Voiture essence | 165 m – 1,6 km | 4,9 km |
+| ☕ Café en dosette | 1 – 8 capsules | 25 capsules |
+| 🥩 Viande rouge (bœuf) | 1 – 12 g de bœuf | 36 g de bœuf |
+| 📺 Vidéo YouTube (HD, WiFi) | 55 min – 9 h | ~27 h |
 
 *Sources : ADEME — 200 gCO₂e/km (voiture moyenne essence), 40 gCO₂e/capsule (café), 27 kgCO₂e/kg (bœuf France). IEA 2020 — 36 gCO₂e/h (streaming HD WiFi, mix mondial).*
 
@@ -111,7 +111,8 @@ Les 423 M tokens de cache reads ont un coût énergétique inconnu — Anthropic
 
 ## Méthode et sources
 
-- **Méthodologie SCI** : [`docs/sci.md`](sci.md)
+- **Méthodologie SCI** : [`docs/sci.md`](sci.md) — voir note méthodologique sur `ccusage` global vs. scope projet, et sur la volatilité des logs locaux.
 - **Facteurs d'émission** (gelés phase 1) : [`sci/factors.yaml`](../sci/factors.yaml) v1.0.0 — 2026-06-11
-- **Données Claude Code** : `sci/ai-usage/2026-W*.json` — export `npx ccusage@latest daily --json`
+- **Données Claude Code (scope projet)** : `sci/ai-usage/2026-07-10.json` — export `python3 sci/extract-ai-usage.py --save`. Les exports hebdomadaires `ccusage` (`2026-W20.json` … `2026-W25.json`) restent archivés à titre historique mais ne sont plus utilisés pour le calcul (contamination multi-projets).
 - **Sessions manuelles** : `sci/worklog.csv`
+- **Volet B (exploitation)** : toujours non mesuré — aucune release en production avec joueurs réels au-delà des playtests terrain à ce stade. Prévu à la prochaine release majeure (cf. calendrier de mesure, `sci.md`).
