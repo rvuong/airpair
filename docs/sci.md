@@ -50,12 +50,18 @@ Formule : **SCI = (E × I + M) par R**
 | Poste de dev (énergie) | Wattmètre de prise (~15 €) sur la multiprise du poste, relevé kWh par session de travail ; à défaut `powermetrics` (macOS) ou estimation P_moyenne × heures loguées | mesuré ou estimé |
 | Temps de dev | Journal simple (date, durée, phase, type) dans [`sci/worklog.csv`](../sci/worklog.csv). Inclut : conception (sessions de design, y compris avec IA), développement, mesure SCI elle-même, et rédaction de la documentation/communication (série LinkedIn) | mesuré |
 | CI/CD | Minutes GitHub Actions (API) × puissance estimée d'un runner (~12 W attribués) × I datacenter | estimé |
-| Assistant IA — Claude Code | Extraction par projet : `python3 sci/extract-ai-usage.py` (lit les logs locaux `~/.claude/projects/-home-remyvuong-projects-personal-airpair/*.jsonl`, déduplication par `requestId`). Vue globale toutes sessions : `npx ccusage@latest daily --json` (ne supporte pas de filtre par projet). Export archivé dans [`sci/ai-usage/`](../sci/ai-usage/). Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
+| Assistant IA — Claude Code | Extraction par projet : `python3 sci/extract-ai-usage.py --save` (lit les logs locaux `~/.claude/projects/-home-remyvuong-projects-personal-airpair/*.jsonl`, déduplication par `requestId`). **Seule source retenue depuis le 10 juillet 2026** — voir note ci-dessous. Export archivé dans [`sci/ai-usage/`](../sci/ai-usage/). Conversion : tokens × facteur d'émission en FOURCHETTE basse/haute (sources citées dans factors.yaml — pas de facteur officiel publié, ~un ordre de grandeur d'incertitude) | tokens mesurés, CO₂e estimé en fourchette |
 | Assistant IA — conception (claude.ai) | Pas de compteur exposé : estimation manuelle (nb d'échanges × longueur moyenne), consignée au worklog | estimé |
 | Embodied matériel dev | Empreinte fabrication du laptop (fiche constructeur / API Boavizta) × (heures projet / durée de vie totale estimée en heures) | estimé |
 
 Sortie : `kgCO₂e total de réalisation`, ventilé par poste et par phase
 (0, 1, 2, 3), mis à jour à chaque fin de phase.
+
+### Note méthodologique — Claude Code (corrigée le 10 juillet 2026)
+
+**`ccusage` en mode global est abandonné pour ce projet.** `npx ccusage@latest daily --json` ne filtre pas par projet : dès qu'un autre projet Claude Code tourne en parallèle (travail Believe, autres side-projects), le chiffre global surestime massivement le coût airpair — constaté ×3,5 sur la période W20-W25 du bilan initial (442 M tokens rapportés vs. 125,6 M réellement scope-projet). Seul `extract-ai-usage.py` (lecture du dossier de logs spécifique au projet) est utilisé désormais.
+
+**Les logs locaux ne sont pas une archive stable.** Deux extractions à ~20 minutes d'intervalle ont donné des totaux différents (des fichiers de session ont disparu entre les deux). Toute mesure de tokens Claude Code via les logs locaux est donc un **plancher au moment de la mesure**, pas un total garanti exact rétrospectivement. Conséquence pratique : archiver `extract-ai-usage.py --save` fréquemment (à chaque session de travail notable, pas seulement en fin de phase), sous peine de perdre définitivement une partie de l'historique. Voir `docs/sci-bilan.md` (note du 10 juillet 2026) pour le détail de cette découverte.
 
 ## Volet B — SCI d'exploitation
 
