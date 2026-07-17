@@ -116,3 +116,19 @@ Le total raisonnable (33-329 g) est proche du chiffre du 19 juin (32-384 g) malg
 - **Données Claude Code (scope projet)** : `sci/ai-usage/2026-07-10.json` — export `python3 sci/extract-ai-usage.py --save`. Les exports hebdomadaires `ccusage` (`2026-W20.json` … `2026-W25.json`) restent archivés à titre historique mais ne sont plus utilisés pour le calcul (contamination multi-projets).
 - **Sessions manuelles** : `sci/worklog.csv`
 - **Volet B (exploitation)** : toujours non mesuré — aucune release en production avec joueurs réels au-delà des playtests terrain à ce stade. Prévu à la prochaine release majeure (cf. calendrier de mesure, `sci.md`).
+
+---
+
+## Point hebdo — rattrapage W26–W29 (17 juillet 2026)
+
+Les exports hebdomadaires s'arrêtaient à W25 (générés le 19 juin). Rattrapage effectué avec la méthode corrigée (scope projet, `requestId`), via un nouveau script [`sci/extract-weekly-usage.py`](../sci/extract-weekly-usage.py) (`--save`) qui découpe les logs locaux par semaine ISO — les fichiers `sci/ai-usage/2026-W26…W29.json` restent locaux (dossier gitignoré).
+
+| Semaine | Tokens bruts | CO₂e raisonnable |
+|---------|-------------|------------------|
+| W26 (22–28 juin) | 13,9 M | 0,35–3,5 g |
+| W27 (29 juin–5 juil) | 42,3 M | 0,69–6,9 g |
+| W28 (6–12 juil) | 1,7 M | 0,25–2,5 g |
+| W29 (13–19 juil) | 6,7 M | 0,30–3,0 g |
+| **Total W26–W29** | **64,6 M** | **1,6–16 g** (pire cas ~194 g) |
+
+L'essentiel se concentre sur W26–W27 (fix tilt/touch-exclusivity du 2 juillet, cf. D03) ; phase 3 quasi en pause depuis le 10 juillet. Deux entrées `worklog.csv` (30 juin, 2 juillet) complétées à cette occasion par extraction fine `requestId` depuis l'export W27. Restent en `A_COMPLETER` : les postes de conception sans wattmètre (impact < 100 g) et la session phase 0 sous l'ancien dossier `pongbros`.
