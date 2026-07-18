@@ -1,4 +1,5 @@
 import { RoomClient, GameMsg } from '../net/ws'
+import { renderCountdown } from './countdown'
 import { TiltController, GameState, Phase } from '../game/simulation'
 import { resumeAudio, isMuted, playHit, playWall, playScore, playMiss, playVictory, playDefeat } from '../game/audio'
 import { Theme, getThemeById, unlockNext, drawThemeIcon } from '../game/themes'
@@ -131,45 +132,20 @@ export function renderGame(
   // Build DOM: canvas + pre-game overlay
   container.innerHTML = `
     <canvas id="game-canvas" style="position:fixed;top:0;left:0;touch-action:none;"></canvas>
-    <div id="pre-overlay" style="
-      position:fixed;inset:0;z-index:10;
-      background:rgba(0,0,0,0.85);
-      display:flex;align-items:center;justify-content:center;
-      flex-direction:column;gap:20px;
-    ">
-      <p style="
-        color:rgba(255,255,255,0.55);font-size:30px;
-        font-family:-apple-system,sans-serif;margin:0;
-      ">7 pts · marge 2</p>
-      <div id="control-choice" style="display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;max-width:340px;">
-        <hr style="width:100%;border:none;border-top:1px solid rgba(255,255,255,0.2);margin:0;" />
-        <p id="instructions" style="
-          color:rgba(255,255,255,0.6);font-size:20px;text-align:center;
-          font-family:-apple-system,sans-serif;margin:0;
-        ">Inclinez votre téléphone pour contrôler la raquette</p>
-        <button id="ready-btn" style="
-          background:#f5f5f5;color:#111;border:none;border-radius:16px;
-          padding:20px 40px;font-size:20px;font-weight:700;
-          font-family:-apple-system,sans-serif;cursor:pointer;
-          -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-        ">Je suis prêt</button>
-        <hr id="sep-bottom" style="width:100%;border:none;border-top:1px solid rgba(255,255,255,0.2);margin:0;" />
-        <p id="touch-line" style="
-          color:rgba(255,255,255,0.45);font-size:20px;text-align:center;
-          font-family:-apple-system,sans-serif;margin:0;
-        ">Si vous préférez jouer au toucher, cliquez
-          <button id="touch-btn" style="
-            background:none;border:none;padding:0;color:#fff;
-            font-size:20px;font-weight:700;text-decoration:underline;
-            font-family:-apple-system,sans-serif;cursor:pointer;
-            -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-          ">ici</button>
+    <div id="pre-overlay" class="sas-overlay">
+      <p class="sas-info">7 pts · marge 2</p>
+      <div id="control-choice" class="sas-controls">
+        <hr class="sas-sep" />
+        <p id="instructions" class="sas-instructions">Inclinez votre téléphone pour contrôler la raquette</p>
+        <button id="ready-btn" class="sas-ready-btn">JE SUIS PRÊT</button>
+        <hr class="sas-sep" />
+        <p id="touch-line" class="sas-touch-line">Si vous préférez jouer au toucher, cliquez
+          <button id="touch-btn" class="sas-touch-btn">ici</button>
         </p>
-        <p id="wait-msg" style="
-          display:none;color:rgba(255,255,255,0.55);font-size:20px;text-align:center;
-          font-family:-apple-system,sans-serif;margin:0;
-        "></p>
       </div>
+      <p id="ready-status" class="sas-status" style="display:none;"></p>
+      <p id="ready-method" class="sas-method" style="display:none;"></p>
+      <p id="wait-msg" class="sas-wait" style="display:none;"></p>
     </div>
     <div id="landscape-warning" style="
       position:fixed;inset:0;z-index:20;
@@ -184,11 +160,11 @@ export function renderGame(
 
   const canvas = container.querySelector<HTMLCanvasElement>('#game-canvas')!
   const preOverlay = container.querySelector<HTMLElement>('#pre-overlay')
-  const instructions = container.querySelector<HTMLElement>('#instructions')
+  const controlChoice = container.querySelector<HTMLElement>('#control-choice')
   const readyBtn = container.querySelector<HTMLButtonElement>('#ready-btn')
-  const sepBottom = container.querySelector<HTMLElement>('#sep-bottom')
-  const touchLine = container.querySelector<HTMLElement>('#touch-line')
   const touchBtn = container.querySelector<HTMLButtonElement>('#touch-btn')
+  const readyStatus = container.querySelector<HTMLElement>('#ready-status')
+  const readyMethod = container.querySelector<HTMLElement>('#ready-method')
   const waitMsg = container.querySelector<HTMLElement>('#wait-msg')
   const landscapeWarning = container.querySelector<HTMLElement>('#landscape-warning')
 
@@ -397,10 +373,35 @@ export function renderGame(
   // ---------------------------------------------------------------------------
   let localReady = false
   let peerReady = false
-  const otherRole: 'A' | 'B' = role === 'A' ? 'B' : 'A'
+  let startRequested = false
+  let countdownShown = false
+  let destroyCountdown: (() => void) | null = null
 
+  // Convergence du handshake : quand A et B ont chacun choisi leur contrôle,
+  // A déclenche le countdown serveur ; les deux attendent le message 'countdown'
+  // puis démarrent via activateGame(). Le countdown a migré ici depuis la
+  // connexion (spec §5) — jamais de démarrage manuel côté hôte (D03).
   function tryActivate(): void {
-    if (localReady && peerReady) activateGame()
+    if (!(localReady && peerReady)) return
+    if (role === 'A' && !startRequested) {
+      startRequested = true
+      client.startCountdown()
+    }
+  }
+
+  client.onCountdown = (tStart: number) => {
+    if (countdownShown) return
+    countdownShown = true
+    if (preOverlay) preOverlay.style.display = 'none'
+    const cdOverlay = document.createElement('div')
+    cdOverlay.className = 'countdown-overlay'
+    container.appendChild(cdOverlay)
+    destroyCountdown = renderCountdown(cdOverlay, tStart, serverOffset, () => {
+      destroyCountdown?.()
+      destroyCountdown = null
+      cdOverlay.remove()
+      activateGame()
+    })
   }
 
   // ---------------------------------------------------------------------------
@@ -1026,13 +1027,27 @@ export function renderGame(
       themeId: role === 'A' ? theme.id : undefined,
     } satisfies GameMsg)
     if (!peerReady && waitMsg) {
-      waitMsg.textContent = `Le joueur ${otherRole} se prépare…`
+      waitMsg.textContent = 'Ton adversaire se prépare…'
       waitMsg.style.display = 'block'
     }
     // Laisse le temps de lire un message (ex. refus de permission) avant que
-    // tryActivate() ne masque l'overlay, même si l'autre joueur est déjà prêt.
+    // tryActivate() ne déclenche le countdown, même si l'autre est déjà prêt.
     if (activationDelayMs > 0) setTimeout(tryActivate, activationDelayMs)
     else tryActivate()
+  }
+
+  // État "prêt" (spec §4 état 2) : statut principal "✓ Prêt" (vert) puis la
+  // méthode choisie en secondaire. Ne nomme jamais A/B (charte §1.1).
+  function enterReadyState(methodLabel: string): void {
+    if (controlChoice) controlChoice.style.display = 'none'
+    if (readyStatus) {
+      readyStatus.textContent = '✓ Prêt'
+      readyStatus.style.display = 'block'
+    }
+    if (readyMethod) {
+      readyMethod.textContent = methodLabel
+      readyMethod.style.display = 'block'
+    }
   }
 
   const handleReadyBtn = async (): Promise<void> => {
@@ -1042,11 +1057,7 @@ export function renderGame(
     const DevOrient = DeviceOrientationEvent as unknown as {
       requestPermission?: () => Promise<'granted' | 'denied'>
     }
-    const confirmTilt = (): void => {
-      if (!instructions) return
-      instructions.textContent = 'Prêt — inclinez pour jouer ✓'
-      instructions.style.color = '#4ade80'
-    }
+    let method = 'Tilt activé'
     let denied = false
     if (typeof DevOrient.requestPermission === 'function') {
       try {
@@ -1055,29 +1066,22 @@ export function renderGame(
         if (result === 'granted') {
           tilt.setMode('tilt')
           startTiltListener()
-          confirmTilt()
         } else {
           denied = true
           tilt.setMode('touch')
-          if (instructions) {
-            instructions.textContent = 'Inclinaison non autorisée — Contrôle au doigt actif'
-            instructions.style.color = '#ffcc00'
-          }
+          method = 'Inclinaison refusée — contrôle au toucher'
         }
       } catch (err: unknown) {
         dbg.perm = String(err).slice(-50)
         tilt.setMode('tilt')
         startTiltListener()
-        confirmTilt()
       }
     } else {
       dbg.perm = 'no-api'
       tilt.setMode('tilt')
       startTiltListener()
-      confirmTilt()
     }
-    sepBottom?.remove()
-    touchLine?.remove()
+    enterReadyState(method)
     markLocalReady(denied ? 1500 : 0)
   }
 
@@ -1089,12 +1093,7 @@ export function renderGame(
     if (readyBtn) readyBtn.disabled = true
     if (touchBtn) touchBtn.disabled = true
     tilt.setMode('touch')
-    if (instructions) {
-      instructions.textContent = 'Contrôle au toucher activé ✓'
-      instructions.style.color = '#4ade80'
-    }
-    sepBottom?.remove()
-    touchLine?.remove()
+    enterReadyState('Contrôle : toucher')
     markLocalReady()
   }
 
@@ -1154,6 +1153,7 @@ export function renderGame(
   // ---------------------------------------------------------------------------
   return () => {
     cancelAnimationFrame(rafId)
+    destroyCountdown?.()
 
     canvas.removeEventListener('touchstart', handleTouchStart)
     canvas.removeEventListener('touchmove', handleTouchMove)

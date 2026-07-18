@@ -508,6 +508,110 @@
         touch-action: manipulation;
       }
 
+      /* Sas de jeu (pré-overlay) — choix du contrôle puis état "prêt" */
+      .sas-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        padding: 24px;
+      }
+
+      .sas-info {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: var(--font-size-body);
+      }
+
+      .sas-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+        width: 100%;
+        max-width: var(--frame-content-width);
+      }
+
+      .sas-sep {
+        width: 100%;
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        margin: 0;
+      }
+
+      .sas-instructions {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: var(--font-size-body);
+        text-align: center;
+      }
+
+      .sas-ready-btn {
+        width: 100%;
+        background: var(--accent-yellow-action);
+        color: #1a1400;
+        border: none;
+        border-radius: var(--radius-btn);
+        padding: 18px 32px;
+        font-size: var(--font-size-cta);
+        font-weight: 700;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      .sas-touch-line {
+        color: var(--text-secondary);
+        font-size: var(--font-size-secondary);
+        text-align: center;
+      }
+
+      .sas-touch-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        color: #fff;
+        font-size: var(--font-size-secondary);
+        font-weight: 700;
+        text-decoration: underline;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      /* État "prêt" : statut principal (vert) puis méthode (secondaire) */
+      .sas-status {
+        color: var(--accent-green-success);
+        font-size: var(--font-size-body);
+        font-weight: 700;
+      }
+
+      .sas-method {
+        color: var(--text-secondary);
+        font-size: var(--font-size-secondary);
+        text-align: center;
+      }
+
+      .sas-wait {
+        color: var(--text-secondary);
+        font-size: var(--font-size-secondary);
+        text-align: center;
+      }
+
+      /* Overlay du countdown 3-2-1 (au-dessus du canvas, ne le détruit pas) */
+      .countdown-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 15;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
       /* Tab bar for join screen */
       .tab-bar {
         display: flex;
