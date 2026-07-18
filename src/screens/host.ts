@@ -1,15 +1,16 @@
 import { RoomClient } from '../net/ws'
 import { drawQR } from '../qr/generate'
 import { measureServerOffset } from '../net/sync'
-import { renderCountdown } from './countdown'
-import { resumeAudio } from '../game/audio'
-import { THEMES, getUnlockedIds, drawThemeIcon } from '../game/themes'
+import { THEMES, getUnlockedIds, getLastThemeId, setLastThemeId } from '../game/themes'
+import { renderPreparation, TRANSITION_DELAY_MS } from './transition'
 
 /**
  * Renders the host (player A) screen into `container`.
  * Connects to the WebSocket server, requests a room, displays QR + code.
+ * When the opponent connects, transitions automatically (no manual launch
+ * button — D03) to the game sas via `onReady`. The countdown 3-2-1 no longer
+ * happens here: it moved into the game sas after the tilt/touch handshake (§5).
  * Calls `onBack` when the user taps the back button.
- * Calls `onReady` after the countdown completes.
  * Returns a `destroy` function for cleanup.
  */
 export function renderHost(
@@ -18,216 +19,164 @@ export function renderHost(
   onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number, themeId: string) => void
 ): () => void {
   container.innerHTML = `
-    <div class="screen">
-      <button class="btn-back" id="btn-back">← Retour</button>
-      <h2 class="screen-title">Nouvelle partie</h2>
-      <p id="host-status" class="status-msg">Connexion en cours…</p>
+    <div class="screen screen-host">
+      <div class="topbar">
+        <button class="btn-back" id="btn-back">← Accueil</button>
+        <button class="icon-btn" id="btn-theme" aria-label="Choisir le thème">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="2" fill="#00d4e8"/>
+            <rect x="13" y="3" width="8" height="8" rx="2" fill="#ff2d78"/>
+            <rect x="8" y="13" width="8" height="8" rx="2" fill="#ffe44d"/>
+          </svg>
+        </button>
+      </div>
+      <div class="host-body">
+        <p id="host-status" class="host-wait">Connexion en cours…</p>
+      </div>
     </div>
   `
 
   const client = new RoomClient()
   let destroyed = false
   let handedOff = false
-  let selectedThemeId = 'arcade'
-  let scrollArrowEl: HTMLDivElement | null = null
-  let scrollArrowCleanup: (() => void) | null = null
-  let scrollArrowStyleEl: HTMLStyleElement | null = null
+  let selectedThemeId = getLastThemeId()
 
-  const statusEl = container.querySelector<HTMLElement>('#host-status')
+  let themeMenuEl: HTMLElement | null = null
+  // Garde-fou (spec §2) : si le sélecteur de thème est ouvert quand l'adversaire
+  // se connecte, la transition automatique attend sa fermeture.
+  let resumeAfterMenuClose: (() => void) | null = null
+
+  const btnBack = container.querySelector<HTMLButtonElement>('#btn-back')
+  const btnTheme = container.querySelector<HTMLButtonElement>('#btn-theme')
 
   const setStatus = (text: string, cls?: 'success' | 'error'): void => {
-    if (!statusEl) return
-    statusEl.textContent = text
-    statusEl.className = 'status-msg' + (cls ? ` ${cls}` : '')
+    const el = container.querySelector<HTMLElement>('#host-status')
+    if (!el) return
+    el.textContent = text
+    el.className = 'host-wait' + (cls ? ` ${cls}` : '')
   }
 
-  client.onCreated = async (roomId: string) => {
-    if (destroyed) return
+  // ---------------------------------------------------------------------------
+  // Sélecteur de thème (dropdown ancré à l'icône)
+  // ---------------------------------------------------------------------------
 
-    const screenEl = container.querySelector<HTMLElement>('.screen')
+  const onDocClick = (e: MouseEvent): void => {
+    if (!themeMenuEl) return
+    const target = e.target as Node
+    const onButton = btnTheme?.contains(target) ?? false
+    if (!themeMenuEl.contains(target) && !onButton) closeThemeMenu()
+  }
+
+  function selectTheme(id: string): void {
+    selectedThemeId = id
+    setLastThemeId(id)
+    closeThemeMenu()
+  }
+
+  function openThemeMenu(): void {
+    if (themeMenuEl) return
+    const screenEl = container.querySelector<HTMLElement>('.screen-host')
     if (!screenEl) return
 
-    // Build room UI: QR + code text + waiting message
-    const qrCanvas = document.createElement('canvas')
-    const qrWrapper = document.createElement('div')
-    qrWrapper.className = 'qr-wrapper'
-    qrWrapper.appendChild(qrCanvas)
-
-    const codeEl = document.createElement('p')
-    codeEl.className = 'room-code'
-    codeEl.textContent = roomId
-
-    const waitEl = document.createElement('p')
-    waitEl.id = 'host-wait'
-    waitEl.className = 'status-msg'
-    waitEl.textContent = 'En attente du joueur B…'
-
-    // Remove the loading status paragraph, insert new elements
-    statusEl?.remove()
-    screenEl.appendChild(qrWrapper)
-    screenEl.appendChild(codeEl)
-    screenEl.appendChild(waitEl)
-
-    try {
-      await drawQR(qrCanvas, roomId)
-    } catch (err) {
-      console.error('[host] QR draw failed:', err)
-    }
-
-    // Theme selector — shown while waiting for player B
     const unlocked = getUnlockedIds()
-    const DPR = window.devicePixelRatio || 1
-    const selectorEl = document.createElement('div')
-    selectorEl.style.cssText = `
-      display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:nowrap;
-    `
-
-    const iconCanvases: Array<{ themeId: string; el: HTMLCanvasElement }> = []
+    const menu = document.createElement('div')
+    menu.className = 'theme-menu'
 
     THEMES.forEach(t => {
       const isUnlocked = unlocked.includes(t.id)
-      const item = document.createElement('div')
-      item.style.cssText = `
-        display:flex;flex-direction:column;align-items:center;gap:4px;
-        cursor:${isUnlocked ? 'pointer' : 'default'};
-      `
+      const isActive = t.id === selectedThemeId
+      const item = document.createElement('button')
+      item.className = 'theme-item' + (isActive ? ' active' : '') + (isUnlocked ? '' : ' locked')
 
-      const ic = document.createElement('canvas')
-      ic.width = Math.round(48 * DPR)
-      ic.height = Math.round(64 * DPR)
-      ic.style.cssText = `
-        width:48px;height:64px;border-radius:6px;box-sizing:border-box;
-        outline:${t.id === selectedThemeId ? '2px solid #ffe600' : '2px solid transparent'};
-        outline-offset:2px;
-        pointer-events:none;
-      `
-      const icCtx = ic.getContext('2d')!
-      icCtx.scale(DPR, DPR)
-      drawThemeIcon(icCtx, t, 0, 0, 48, 64, !isUnlocked)
-      iconCanvases.push({ themeId: t.id, el: ic })
+      const marker = document.createElement('span')
+      marker.className = 'theme-marker'
+      // 🔒 est un placeholder de wireframe (charte §2.5 : à redessiner avant prod)
+      marker.textContent = isActive ? '✓' : isUnlocked ? '' : '🔒'
 
-      const label = document.createElement('span')
-      label.textContent = t.name
-      label.style.cssText = `
-        font-size:10px;font-family:-apple-system,sans-serif;
-        color:${isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)'};
-        text-align:center;max-width:52px;line-height:1.2;
-        pointer-events:none;
-      `
+      const name = document.createElement('span')
+      name.textContent = t.name
+
+      item.appendChild(marker)
+      item.appendChild(name)
 
       if (isUnlocked) {
-        const selectTheme = (): void => {
-          selectedThemeId = t.id
-          iconCanvases.forEach(({ themeId, el }) => {
-            el.style.outline = themeId === t.id ? '2px solid #ffe600' : '2px solid transparent'
-          })
-        }
-        item.addEventListener('click', selectTheme)
-        item.addEventListener('touchend', (e) => { e.preventDefault(); selectTheme() })
+        item.addEventListener('click', (e) => { e.stopPropagation(); selectTheme(t.id) })
       }
-
-      item.appendChild(ic)
-      item.appendChild(label)
-      selectorEl.appendChild(item)
+      menu.appendChild(item)
     })
 
-    screenEl.appendChild(selectorEl)
+    screenEl.appendChild(menu)
+    themeMenuEl = menu
+    // Différé pour ne pas capter le clic d'ouverture lui-même
+    setTimeout(() => document.addEventListener('click', onDocClick), 0)
+  }
 
-    // Scroll indicator — fixed arrow, disappears when bottom is visible
-    scrollArrowStyleEl = document.createElement('style')
-    scrollArrowStyleEl.textContent =
-      '@keyframes scroll-bounce{0%,100%{transform:translateY(0)}60%{transform:translateY(6px)}}'
-    document.head.appendChild(scrollArrowStyleEl)
+  function closeThemeMenu(): void {
+    if (!themeMenuEl) return
+    themeMenuEl.remove()
+    themeMenuEl = null
+    document.removeEventListener('click', onDocClick)
+    const resume = resumeAfterMenuClose
+    resumeAfterMenuClose = null
+    resume?.()
+  }
 
-    scrollArrowEl = document.createElement('div')
-    scrollArrowEl.style.cssText = `
-      position:fixed;bottom:28px;right:20px;z-index:200;
-      width:38px;height:38px;border-radius:50%;
-      background:rgba(255,255,255,0.12);
-      border:1.5px solid rgba(255,255,255,0.3);
-      display:flex;align-items:center;justify-content:center;
-      font-size:18px;color:rgba(255,255,255,0.75);
-      animation:scroll-bounce 1.2s ease-in-out infinite;
-      transition:opacity 0.4s;
-      pointer-events:none;
-      opacity:0;
+  function toggleThemeMenu(): void {
+    if (themeMenuEl) closeThemeMenu()
+    else openThemeMenu()
+  }
+
+  function waitForMenuClosed(): Promise<void> {
+    if (!themeMenuEl) return Promise.resolve()
+    return new Promise<void>((resolve) => { resumeAfterMenuClose = resolve })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Événements serveur
+  // ---------------------------------------------------------------------------
+
+  client.onCreated = async (roomId: string) => {
+    if (destroyed) return
+    const body = container.querySelector<HTMLElement>('.host-body')
+    if (!body) return
+
+    body.innerHTML = `
+      <div class="qr-card">
+        <div class="qr-wrapper"><canvas id="qr-canvas"></canvas></div>
+        <p class="room-code">${roomId}</p>
+      </div>
+      <p id="host-status" class="host-wait">En attente de ton adversaire…</p>
     `
-    scrollArrowEl.textContent = '↓'
-    document.body.appendChild(scrollArrowEl)
 
-    const checkScroll = (): void => {
-      if (!scrollArrowEl) return
-      if (screenEl.scrollHeight > screenEl.clientHeight + 10) {
-        const atBottom = screenEl.scrollHeight - screenEl.scrollTop - screenEl.clientHeight < 30
-        scrollArrowEl.style.opacity = atBottom ? '0' : '1'
-        return
+    const qrCanvas = body.querySelector<HTMLCanvasElement>('#qr-canvas')
+    if (qrCanvas) {
+      try {
+        await drawQR(qrCanvas, roomId)
+      } catch (err) {
+        console.error('[host] QR draw failed:', err)
       }
-      const winOverflows = document.body.scrollHeight > window.innerHeight + 10
-      const winAtBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30
-      scrollArrowEl.style.opacity = winOverflows && !winAtBottom ? '1' : '0'
-    }
-
-    screenEl.addEventListener('scroll', checkScroll)
-    window.addEventListener('scroll', checkScroll)
-    window.addEventListener('resize', checkScroll)
-
-    // Re-check when onPeerJoined adds new children (launch button, sync status)
-    const mutObs = new MutationObserver(() => { setTimeout(checkScroll, 80) })
-    mutObs.observe(screenEl, { childList: true })
-
-    requestAnimationFrame(() => { requestAnimationFrame(checkScroll) })
-
-    scrollArrowCleanup = () => {
-      screenEl.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('resize', checkScroll)
-      mutObs.disconnect()
     }
   }
 
   client.onPeerJoined = async () => {
     if (destroyed) return
 
-    const waitEl = container.querySelector<HTMLElement>('#host-wait')
-    if (waitEl) {
-      waitEl.textContent = 'Joueur B connecté ✓'
-      waitEl.className = 'status-msg success'
-    }
-
-    const screenEl = container.querySelector<HTMLElement>('.screen')
-    if (!screenEl) return
-
-    // Add network sync status
-    const syncEl = document.createElement('p')
-    syncEl.id = 'sync-status'
-    syncEl.className = 'status-msg'
-    syncEl.textContent = 'Mesure du réseau…'
-    screenEl.appendChild(syncEl)
+    setStatus('Ton adversaire a rejoint la partie', 'success')
 
     const serverOffset = await measureServerOffset(client)
-
     if (destroyed) return
 
-    syncEl.textContent = 'Réseau OK ✓'
-    syncEl.className = 'status-msg success'
+    // Ne jamais arracher l'utilisateur d'un choix de thème en cours (spec §2)
+    await waitForMenuClosed()
+    if (destroyed) return
 
-    // Add launch button
-    const btnLaunch = document.createElement('button')
-    btnLaunch.className = 'btn btn-primary'
-    btnLaunch.id = 'btn-launch'
-    btnLaunch.textContent = 'Lancer ▶'
-    screenEl.appendChild(btnLaunch)
+    renderPreparation(container, { status: 'Préparation de la partie…' })
 
-    client.onCountdown = (tStart: number) => {
+    window.setTimeout(() => {
+      if (destroyed) return
       handedOff = true
-      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'A', serverOffset, selectedThemeId))
-    }
-
-    btnLaunch.addEventListener('click', () => {
-      resumeAudio()
-      btnLaunch.disabled = true
-      client.startCountdown()
-    })
+      onReady(client, 'A', serverOffset, selectedThemeId)
+    }, TRANSITION_DELAY_MS)
   }
 
   client.onError = (message: string) => {
@@ -237,21 +186,23 @@ export function renderHost(
 
   client.onClose = () => {
     if (destroyed) return
-    const waitEl = container.querySelector<HTMLElement>('#host-wait')
-    if (waitEl) {
-      waitEl.textContent = 'Connexion perdue.'
-      waitEl.className = 'status-msg error'
-    } else {
-      setStatus('Connexion perdue.', 'error')
-    }
+    setStatus('Connexion perdue.', 'error')
   }
 
-  // Back button
-  const btnBack = container.querySelector<HTMLButtonElement>('#btn-back')
+  // ---------------------------------------------------------------------------
+  // Événements UI
+  // ---------------------------------------------------------------------------
+
   const handleBack = (): void => onBack()
   btnBack?.addEventListener('click', handleBack)
 
-  // Connect and create room
+  const handleTheme = (e: MouseEvent): void => { e.stopPropagation(); toggleThemeMenu() }
+  btnTheme?.addEventListener('click', handleTheme)
+
+  // ---------------------------------------------------------------------------
+  // Connexion + création de room
+  // ---------------------------------------------------------------------------
+
   client
     .connect()
     .then(() => {
@@ -263,11 +214,10 @@ export function renderHost(
 
   return () => {
     destroyed = true
+    closeThemeMenu()
     btnBack?.removeEventListener('click', handleBack)
+    btnTheme?.removeEventListener('click', handleTheme)
     if (!handedOff) client.disconnect()
-    scrollArrowCleanup?.()
-    scrollArrowEl?.remove()
-    scrollArrowStyleEl?.remove()
     container.innerHTML = ''
   }
 }

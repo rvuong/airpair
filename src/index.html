@@ -29,6 +29,7 @@
         --font-size-secondary: 0.875rem;      /* 14px @ 390px */
         --font-size-status-success: 0.875rem; /* 14px @ 390px */
         --font-size-link: 0.875rem;           /* 14px @ 390px */
+        --font-size-code: 1.5rem;             /* 24px @ 390px — code de partie (légende QR) */
 
         --radius-btn: 12px;
         --radius-panel-bottom: 8px;
@@ -180,6 +181,7 @@
       .input-text::placeholder {
         color: #555;
         letter-spacing: 0.1em;
+        text-transform: none;
       }
 
       /* Layout helpers */
@@ -237,11 +239,273 @@
         justify-content: center;
       }
 
+      /* Code de partie — légende du QR (host). Couleur de rôle A (magenta),
+         cohérente avec le Canvas (charte §1.3). */
       .room-code {
-        font-size: var(--font-size-display);
+        font-size: var(--font-size-code);
         font-weight: 800;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.18em;
         font-variant-numeric: tabular-nums;
+        color: var(--accent-role-a);
+      }
+
+      /* Barre du haut (host/join) : retour à gauche, action à droite */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        flex: none;
+      }
+
+      .icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.375rem;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      /* Host — QR + code centrés, texte d'attente en dessous */
+      .screen-host {
+        justify-content: flex-start;
+        gap: 0;
+        padding-top: 0;
+        position: relative;
+      }
+
+      .host-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 44px;
+        width: 100%;
+        min-height: 0;
+      }
+
+      /* Carte englobant QR + code (charte : cadre discret pour l'unité visuelle) */
+      .qr-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        border-radius: 16px;
+      }
+
+      .host-wait {
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
+        text-align: center;
+      }
+
+      .host-wait.success {
+        color: var(--accent-green-success);
+        font-weight: 700;
+      }
+
+      /* Sélecteur de thème — dropdown ancré à l'icône (charte §3.5/§3.6/§3.7) */
+      .theme-menu {
+        position: absolute;
+        top: 44px;
+        right: 0;
+        min-width: 200px;
+        background: #10101f;
+        border-radius: 0 0 var(--radius-panel-bottom) var(--radius-panel-bottom);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        z-index: 100;
+      }
+
+      .theme-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        border-left: 3px solid transparent;
+        border-top: 1px solid rgba(255, 255, 255, 0.09);
+        background: transparent;
+        color: #fff;
+        font-size: var(--font-size-body);
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      .theme-item:first-child {
+        border-top: none;
+      }
+
+      .theme-item.active {
+        border-left-color: var(--accent-yellow-action);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .theme-item.locked {
+        color: var(--text-secondary);
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      .theme-item .theme-marker {
+        width: 1em;
+        flex: none;
+        text-align: center;
+      }
+
+      /* Loader générique */
+      .spinner {
+        width: 1.1em;
+        height: 1.1em;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        border-top-color: #fff;
+        border-radius: 50%;
+        display: inline-block;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* État transitoire "Préparation" (host/join) — centré verticalement */
+      .screen-transition {
+        justify-content: center;
+      }
+
+      .transition-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        text-align: center;
+      }
+
+      .transition-confirm {
+        font-size: var(--font-size-status-success);
+        font-weight: 700;
+        color: var(--accent-green-success);
+      }
+
+      .transition-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
+      }
+
+      /* CTA plein couleur de rôle B (invité) — texte sombre pour le contraste
+         (à revalider WCAG, cf. plan "points ouverts") */
+      .btn-role-b {
+        background: var(--accent-role-b);
+        color: #062028;
+      }
+
+      /* Join — CTA scanner dominant + fallback code, centrés verticalement */
+      .screen-join {
+        justify-content: flex-start;
+        gap: 0;
+        padding-top: 0;
+      }
+
+      .join-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        min-height: 0;
+      }
+
+      .join-sep {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        color: var(--text-secondary);
+        font-size: var(--font-size-secondary);
+      }
+
+      .join-sep::before,
+      .join-sep::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      /* Join — état scan plein cadre + viseur */
+      .scan-view {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .scan-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+        z-index: 0;
+      }
+
+      /* Viseur : le box-shadow assombrit tout sauf la fenêtre 200×200 */
+      .scan-viewfinder {
+        position: relative;
+        z-index: 1;
+        width: 200px;
+        height: 200px;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+      }
+
+      .scan-hint {
+        position: relative;
+        z-index: 1;
+        color: #fff;
+        font-size: var(--font-size-body);
+        text-align: center;
+      }
+
+      /* Lien secondaire (fallback) */
+      .link-btn {
+        position: relative;
+        z-index: 1;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: var(--font-size-link);
+        text-decoration: underline;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
       }
 
       /* Tab bar for join screen */

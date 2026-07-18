@@ -75,6 +75,21 @@ export const THEMES: readonly Theme[] = [
 ]
 
 const STORAGE_KEY = 'airpair_unlocked_themes'
+const LAST_THEME_KEY = 'airpair_last_theme'
+
+/** Dernier thème choisi par ce joueur, réutilisé comme présélection (D22 amendé).
+ *  Retombe sur 'arcade' si absent ou plus déverrouillé. */
+export function getLastThemeId(): string {
+  try {
+    const id = localStorage.getItem(LAST_THEME_KEY)
+    if (id && getUnlockedIds().includes(id)) return id
+  } catch { /* ignore */ }
+  return 'arcade'
+}
+
+export function setLastThemeId(id: string): void {
+  try { localStorage.setItem(LAST_THEME_KEY, id) } catch { /* ignore */ }
+}
 
 export function getUnlockedIds(): string[] {
   try {
