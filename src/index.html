@@ -13,6 +13,28 @@
     <style>
       :root {
         --sat: env(safe-area-inset-top, 0px);
+
+        /* Design tokens — cf. docs/ux-charte-principes.md §3 */
+        --bg-primary: #080818;
+        --accent-role-a: #ff2d78;         /* hôte — identique au Canvas de jeu (D22) */
+        --accent-role-b: #00d4e8;         /* invité — identique au Canvas de jeu */
+        --accent-yellow-action: #ffe44d;  /* action neutre : « prêt », countdown, revanche */
+        --accent-green-success: #39ff14;  /* succès uniquement */
+        --text-secondary: #9aa0b0;        /* gris moyen — contraste à revérifier WCAG sur bg (D21) */
+
+        /* Tailles typographiques — charte §3.3, rem relatifs à la racine clamp() */
+        --font-size-display: 2.25rem;         /* 36px @ 390px */
+        --font-size-cta: 1rem;                /* 16px @ 390px */
+        --font-size-body: 1.125rem;           /* 18px @ 390px */
+        --font-size-secondary: 0.875rem;      /* 14px @ 390px */
+        --font-size-status-success: 0.875rem; /* 14px @ 390px */
+        --font-size-link: 0.875rem;           /* 14px @ 390px */
+
+        --radius-btn: 12px;
+        --radius-panel-bottom: 8px;
+        --frame-margin: 24px;
+        --frame-content-width: 342px;
+        --landing-cap-height: 64px; /* hauteur miroir header (logo) / footer */
       }
 
       *, *::before, *::after {
@@ -21,12 +43,17 @@
         padding: 0;
       }
 
+      html {
+        /* base ~16px @ 390px de large, bornée pour rester lisible partout —
+           charte §2.8 ; tous les text-* ci-dessous sont exprimés en rem */
+        font-size: clamp(14px, 4.1vw, 19px);
+      }
+
       html, body {
         height: 100%;
-        background: #111;
+        background: var(--bg-primary);
         color: #fff;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-        font-size: 16px;
         overscroll-behavior: none;
         touch-action: none;
         -webkit-text-size-adjust: 100%;
@@ -48,7 +75,7 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
-        background: #111;
+        background: var(--bg-primary);
         color: #fff;
         font-size: 1.25rem;
         font-weight: 600;
@@ -70,12 +97,12 @@
       .btn {
         display: block;
         width: 100%;
-        max-width: 320px;
+        max-width: var(--frame-content-width);
         min-height: 3em;
         padding: 0.75em 1.33em;
         border: none;
-        border-radius: 12px;
-        font-size: 1.125rem;
+        border-radius: var(--radius-btn);
+        font-size: var(--font-size-cta);
         font-weight: 700;
         cursor: pointer;
         transition: opacity 0.15s ease;
@@ -98,13 +125,20 @@
         border: 1px solid #444;
       }
 
+      /* CTA neutre outline (charte §1.3 : aucune couleur de rôle avant attribution) */
+      .btn-outline {
+        background: transparent;
+        color: #fff;
+        border: 1.5px solid rgba(255, 255, 255, 0.4);
+      }
+
       .btn-tab {
         flex: 1;
         min-height: 2.5em;
         padding: 0.5em 0.85em;
         border: none;
         border-radius: 8px;
-        font-size: 1.875rem;
+        font-size: var(--font-size-cta);
         font-weight: 600;
         cursor: pointer;
         transition: background 0.15s ease;
@@ -123,11 +157,11 @@
       .input-text {
         display: block;
         width: 100%;
-        max-width: 320px;
+        max-width: var(--frame-content-width);
         min-height: 56px;
         padding: 14px 16px;
         border: 1px solid #444;
-        border-radius: 12px;
+        border-radius: var(--radius-btn);
         background: #1a1a1a;
         color: #fff;
         font-size: 1.5rem;
@@ -164,27 +198,28 @@
       }
 
       .screen-title {
-        font-size: 2rem;
+        font-size: var(--font-size-display);
         font-weight: 800;
         letter-spacing: -0.02em;
         margin-bottom: 8px;
       }
 
       .screen-subtitle {
-        font-size: 2rem;
-        color: #888;
+        font-size: var(--font-size-secondary);
+        line-height: 1.5;
+        color: var(--text-secondary);
         text-align: center;
         max-width: 280px;
       }
 
       .status-msg {
-        font-size: 1.875rem;
-        color: #aaa;
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
         text-align: center;
       }
 
       .status-msg.success {
-        color: #4ade80;
+        color: var(--accent-green-success);
         font-weight: 600;
       }
 
@@ -203,7 +238,7 @@
       }
 
       .room-code {
-        font-size: 2.5rem;
+        font-size: var(--font-size-display);
         font-weight: 800;
         letter-spacing: 0.2em;
         font-variant-numeric: tabular-nums;
@@ -213,7 +248,7 @@
       .tab-bar {
         display: flex;
         width: 100%;
-        max-width: 320px;
+        max-width: var(--frame-content-width);
         background: #1a1a1a;
         border-radius: 10px;
         padding: 4px;
@@ -224,8 +259,8 @@
       .video-container {
         position: relative;
         width: 100%;
-        max-width: 320px;
-        border-radius: 12px;
+        max-width: var(--frame-content-width);
+        border-radius: var(--radius-btn);
         overflow: hidden;
         background: #000;
         aspect-ratio: 1;
@@ -260,8 +295,8 @@
         align-self: flex-start;
         background: none;
         border: none;
-        color: #888;
-        font-size: 1.875rem;
+        color: var(--text-secondary);
+        font-size: var(--font-size-body);
         cursor: pointer;
         padding: 8px 0;
         -webkit-tap-highlight-color: transparent;
@@ -287,16 +322,101 @@
 
       .countdown-number.go {
         font-size: 4rem;
-        color: #4ade80;
+        color: var(--accent-green-success);
         letter-spacing: 0.15em;
       }
 
       /* Logo */
       .logo {
         width: 100%;
-        max-width: 220px;
+        max-width: 240px;
         height: auto;
         display: block;
+      }
+
+      /* Landing — en-tête en haut, groupe de CTA centré verticalement */
+      .screen-landing {
+        justify-content: flex-start;
+        gap: 0;
+        padding-top: 16px;
+        padding-bottom: 16px;
+      }
+
+      /* Header : logo seul, hauteur fixe */
+      .landing-header {
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: var(--landing-cap-height);
+        margin-top: 24px;
+      }
+
+      /* Corps : zone centrale entre header et footer. Les CTA y sont centrés
+         verticalement ; la tagline est en position absolue pour ne pas décaler
+         ce centrage. */
+      .landing-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        min-height: 0;
+      }
+
+      .landing-tagline {
+        flex: none;
+        margin-top: 24px;
+        font-size: calc(var(--font-size-secondary) * 2);
+        line-height: 1.6;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+
+      /* Centre le bloc CTA dans l'espace restant SOUS la tagline (dans le flux) :
+         évite tout chevauchement sur écran court (iPhone SE) */
+      .landing-cta-center {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 0;
+      }
+
+      .landing-cta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+        width: 100%;
+      }
+
+      /* Footer : miroir du header (même hauteur) → zone centrale centrée à l'écran */
+      .landing-footer {
+        flex: none;
+        height: var(--landing-cap-height);
+        margin-bottom: 24px;
+      }
+
+      .cta-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .screen-landing .btn-outline {
+        font-size: var(--font-size-body);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        min-height: 3.4em;
+      }
+
+      .cta-caption {
+        font-size: var(--font-size-secondary);
+        color: var(--text-secondary);
+        text-align: center;
       }
 
       @keyframes pulse-in {
