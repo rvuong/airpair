@@ -179,6 +179,16 @@ terrain demi-ping-pong sur les thèmes 1–4. Écran de victoire : badge de
 déblocage (icône + nom). Transmission par relay `game_start`. → branche
 `feat/visual-themes`, PR à merger.
 
+**Refonte UX des écrans hors-jeu ✅ (D26, 20 juillet 2026) :** landing, host,
+join, sas de préparation et fin de partie repris depuis une session de
+wireframing. Design tokens centralisés + racine `clamp()` (tailles en `rem`),
+couleurs de rôle cohérentes avec le Canvas, plus de nomenclature A/B à l'écran.
+Suppression du bouton de lancement hôte et countdown 3-2-1 déplacé après le
+handshake `player_ready` (anti-D03). Fin de partie migrée en module DOM
+(`end.ts`) avec revanche symétrique `rematch_ready` (D19 amendé). Contrastes
+WCAG AA vérifiés (D21 amendé). Aucune évolution serveur. Onboarding règles (Q12)
+non traité au-delà du minimum existant. → 4 lots empilés, PR vers `main`.
+
 ## Organisation du repo
 
 - [PROJECT.md](./PROJECT.md) : ce fichier — intention, décisions, roadmap. Source de vérité

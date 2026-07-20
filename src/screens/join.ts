@@ -1,14 +1,16 @@
-import { RoomClient } from '../net/ws.ts'
-import { startScan } from '../qr/scan.ts'
-import { measureServerOffset } from '../net/sync.ts'
-import { renderCountdown } from './countdown.ts'
+import { RoomClient } from '../net/ws'
+import { startScan } from '../qr/scan'
+import { measureServerOffset } from '../net/sync'
 import { resumeAudio } from '../game/audio'
-
-type Tab = 'scanner' | 'code'
+import { renderPreparation, TRANSITION_DELAY_MS } from './transition'
 
 /**
  * Renders the join (player B) screen into `container`.
- * Two tabs: scanner (camera QR) and code (manual input).
+ * État 1 : CTA scanner dominant + fallback saisie du code.
+ * État 2 : scan caméra plein cadre + viseur, fallback code toujours visible.
+ * État 3 : préparation (miroir de host), puis navigation directe vers le sas.
+ * Le countdown 3-2-1 ne se joue plus ici — il a migré dans le sas `game.ts` (§5).
+ * La permission caméra ne se demande qu'au clic sur "SCANNER" (D03, §2.3).
  * Calls `onBack` when the user taps the back button.
  * Returns a `destroy` function for cleanup.
  */
@@ -17,88 +19,15 @@ export function renderJoin(
   onBack: () => void,
   onReady: (client: RoomClient, role: 'A' | 'B', serverOffset: number, themeId: string) => void
 ): () => void {
-  container.innerHTML = `
-    <div class="screen">
-      <button class="btn-back" id="btn-back">← Retour</button>
-      <h2 class="screen-title">Rejoindre une partie</h2>
-
-      <div class="tab-bar" role="tablist">
-        <button class="btn-tab active" id="tab-scanner" role="tab" aria-selected="true">Scanner</button>
-        <button class="btn-tab" id="tab-code" role="tab" aria-selected="false">Code</button>
-      </div>
-
-      <!-- Scanner tab panel -->
-      <div id="panel-scanner">
-        <div class="video-container">
-          <video id="scan-video" autoplay playsinline muted></video>
-          <div class="scan-overlay">
-            <div class="scan-reticle"></div>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="btn-start-camera">Démarrer la caméra</button>
-        <p class="status-msg" id="scan-status"></p>
-      </div>
-
-      <!-- Code tab panel -->
-      <div id="panel-code" style="display:none; flex-direction:column; align-items:center; gap:20px; width:100%;">
-        <input
-          class="input-text"
-          id="room-code-input"
-          type="text"
-          inputmode="text"
-          maxlength="6"
-          placeholder="A3F7K9"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="characters"
-          spellcheck="false"
-        />
-        <button class="btn btn-primary" id="btn-join-code">Rejoindre</button>
-        <p class="status-msg error" id="code-error" style="display:none;"></p>
-      </div>
-
-      <p class="status-msg success" id="join-success" style="display:none;">Connecté ✓</p>
-    </div>
-  `
-
   const client = new RoomClient()
   let destroyed = false
   let handedOff = false
   let stopScan: (() => void) | null = null
   let videoStream: MediaStream | null = null
-  let activeTab: Tab = 'scanner'
-
-  // DOM refs
-  const btnBack = container.querySelector<HTMLButtonElement>('#btn-back')
-  const tabScanner = container.querySelector<HTMLButtonElement>('#tab-scanner')
-  const tabCode = container.querySelector<HTMLButtonElement>('#tab-code')
-  const panelScanner = container.querySelector<HTMLElement>('#panel-scanner')
-  const panelCode = container.querySelector<HTMLElement>('#panel-code')
-  const btnStartCamera = container.querySelector<HTMLButtonElement>('#btn-start-camera')
-  const video = container.querySelector<HTMLVideoElement>('#scan-video')
-  const scanStatus = container.querySelector<HTMLElement>('#scan-status')
-  const roomCodeInput = container.querySelector<HTMLInputElement>('#room-code-input')
-  const btnJoinCode = container.querySelector<HTMLButtonElement>('#btn-join-code')
-  const codeError = container.querySelector<HTMLElement>('#code-error')
-  const joinSuccess = container.querySelector<HTMLElement>('#join-success')
 
   // ---------------------------------------------------------------------------
-  // Helpers
+  // Caméra
   // ---------------------------------------------------------------------------
-
-  function setCodeError(msg: string): void {
-    if (!codeError) return
-    codeError.textContent = msg
-    codeError.style.display = msg ? '' : 'none'
-  }
-
-  function setScanStatus(msg: string): void {
-    if (scanStatus) scanStatus.textContent = msg
-  }
-
-  function showSuccess(): void {
-    if (joinSuccess) joinSuccess.style.display = ''
-  }
 
   function stopCamera(): void {
     stopScan?.()
@@ -107,210 +36,189 @@ export function renderJoin(
       videoStream.getTracks().forEach((t) => t.stop())
       videoStream = null
     }
-    if (video) {
-      video.srcObject = null
-    }
   }
 
   // ---------------------------------------------------------------------------
-  // Tab switching
+  // État 1 — Rejoindre (CTA scanner + fallback code)
   // ---------------------------------------------------------------------------
 
-  function switchTab(tab: Tab): void {
-    activeTab = tab
-    if (tab === 'scanner') {
-      panelScanner && (panelScanner.style.display = '')
-      panelCode && (panelCode.style.display = 'none')
-      tabScanner?.classList.add('active')
-      tabCode?.classList.remove('active')
-      tabScanner?.setAttribute('aria-selected', 'true')
-      tabCode?.setAttribute('aria-selected', 'false')
-    } else {
-      panelScanner && (panelScanner.style.display = 'none')
-      panelCode && (panelCode.style.display = 'flex')
-      tabCode?.classList.add('active')
-      tabScanner?.classList.remove('active')
-      tabCode?.setAttribute('aria-selected', 'true')
-      tabScanner?.setAttribute('aria-selected', 'false')
-      // Stop camera if it was running
-      stopCamera()
+  function showForm(error?: string): void {
+    stopCamera()
+    container.innerHTML = `
+      <div class="screen screen-join">
+        <div class="topbar">
+          <button class="btn-back" id="btn-back">← Accueil</button>
+        </div>
+        <div class="join-body">
+          <button class="btn btn-role-b" id="btn-scan">SCANNER LE QR-CODE</button>
+          <div class="join-sep">ou</div>
+          <input
+            class="input-text"
+            id="room-code-input"
+            type="text"
+            inputmode="text"
+            maxlength="6"
+            placeholder="Entrer le code"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+          />
+          <p class="status-msg error" id="code-error"${error ? '' : ' style="display:none;"'}>${error ?? ''}</p>
+        </div>
+      </div>
+    `
+
+    container.querySelector<HTMLButtonElement>('#btn-back')
+      ?.addEventListener('click', onBack)
+
+    container.querySelector<HTMLButtonElement>('#btn-scan')
+      ?.addEventListener('click', () => { resumeAudio(); showScan() })
+
+    const input = container.querySelector<HTMLInputElement>('#room-code-input')
+    input?.addEventListener('input', () => {
+      input.value = input.value.toUpperCase()
+      setCodeError('')
+      if (input.value.trim().length === 6) submitCode(input.value)
+    })
+    input?.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') submitCode(input.value)
+    })
+  }
+
+  function setCodeError(msg: string): void {
+    const el = container.querySelector<HTMLElement>('#code-error')
+    if (!el) return
+    el.textContent = msg
+    el.style.display = msg ? '' : 'none'
+  }
+
+  function submitCode(raw: string): void {
+    const value = raw.trim().toUpperCase()
+    if (value.length !== 6) {
+      setCodeError('Le code doit faire 6 caractères.')
+      return
     }
+    resumeAudio()
+    setCodeError('')
+    connectAndJoin(value)
   }
 
   // ---------------------------------------------------------------------------
-  // WebSocket setup
+  // État 2 — Scan caméra
+  // ---------------------------------------------------------------------------
+
+  function showScan(): void {
+    container.innerHTML = `
+      <div class="screen screen-join">
+        <div class="topbar">
+          <button class="btn-back" id="btn-back">← Accueil</button>
+        </div>
+        <div class="scan-view">
+          <video class="scan-video" id="scan-video" autoplay playsinline muted></video>
+          <div class="scan-viewfinder"></div>
+          <p class="scan-hint" id="scan-hint">Visez le code de ton adversaire</p>
+          <button class="link-btn" id="btn-fallback">Saisir le code à la place</button>
+        </div>
+      </div>
+    `
+
+    container.querySelector<HTMLButtonElement>('#btn-back')
+      ?.addEventListener('click', onBack)
+    container.querySelector<HTMLButtonElement>('#btn-fallback')
+      ?.addEventListener('click', () => showForm())
+
+    startCamera()
+  }
+
+  function setScanHint(msg: string): void {
+    const el = container.querySelector<HTMLElement>('#scan-hint')
+    if (el) el.textContent = msg
+  }
+
+  function startCamera(): void {
+    const video = container.querySelector<HTMLVideoElement>('#scan-video')
+    if (!video) return
+    // getUserMedia doit rester dans le handler de geste (iOS Safari)
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'environment' } })
+      .then((stream) => {
+        if (destroyed || !container.contains(video)) {
+          stream.getTracks().forEach((t) => t.stop())
+          return
+        }
+        videoStream = stream
+        video.srcObject = stream
+        video.play().catch(() => { /* iOS peut throw hors gesture — ignore */ })
+
+        stopScan = startScan(video, (roomId) => {
+          if (destroyed) return
+          setScanHint('Code détecté, connexion…')
+          stopCamera()
+          connectAndJoin(roomId)
+        })
+      })
+      .catch(() => {
+        if (!destroyed) showForm("Impossible d'accéder à la caméra. Saisis le code.")
+      })
+  }
+
+  // ---------------------------------------------------------------------------
+  // WebSocket
   // ---------------------------------------------------------------------------
 
   function connectAndJoin(roomId: string): void {
     client
       .connect()
-      .then(() => {
-        if (!destroyed) client.join(roomId)
-      })
-      .catch(() => {
-        if (!destroyed) {
-          if (activeTab === 'code') {
-            setCodeError('Impossible de contacter le serveur.')
-            if (btnJoinCode) btnJoinCode.disabled = false
-          } else {
-            setScanStatus('Impossible de contacter le serveur.')
-          }
-        }
-      })
+      .then(() => { if (!destroyed) client.join(roomId) })
+      .catch(() => { if (!destroyed) showForm('Impossible de contacter le serveur.') })
   }
 
   client.onJoined = async () => {
     if (destroyed) return
     stopCamera()
-    showSuccess()
-    setScanStatus('')
-    setCodeError('')
-
-    const screenEl = container.querySelector<HTMLElement>('.screen')
-    if (!screenEl) return
-
-    // Add sync status
-    const syncEl = document.createElement('p')
-    syncEl.id = 'sync-status'
-    syncEl.className = 'status-msg'
-    syncEl.textContent = 'Synchronisation…'
-    screenEl.appendChild(syncEl)
+    renderPreparation(container, { confirm: 'Connecté', status: 'Préparation de la partie…' })
 
     const serverOffset = await measureServerOffset(client)
-
     if (destroyed) return
 
-    syncEl.textContent = 'En attente du lancement…'
-
-    client.onCountdown = (tStart: number) => {
+    window.setTimeout(() => {
+      if (destroyed) return
       handedOff = true
-      renderCountdown(container, tStart, serverOffset, () => onReady(client, 'B', serverOffset, 'arcade'))
-    }
+      // themeId 'arcade' provisoire — le vrai thème (choisi par l'hôte) est
+      // adopté dans le sas via le player_ready de A (§5).
+      onReady(client, 'B', serverOffset, 'arcade')
+    }, TRANSITION_DELAY_MS)
   }
 
   client.onError = (message: string) => {
     if (destroyed) return
     let text: string
     if (message === 'room_not_found') {
-      text = 'Room introuvable, vérifiez le code'
+      text = 'Room introuvable, vérifie le code'
     } else if (message === 'room_full') {
       text = 'Room déjà complète'
     } else if (message === 'peer_disconnected') {
-      text = 'Pair déconnecté, rechargez la page'
+      text = 'Adversaire déconnecté, recharge la page'
     } else {
       text = `Erreur : ${message}`
     }
-    if (activeTab === 'code') {
-      setCodeError(text)
-      if (btnJoinCode) btnJoinCode.disabled = false
-    } else {
-      setScanStatus(text)
-      // Re-enable camera button so user can retry
-      if (btnStartCamera) btnStartCamera.disabled = false
-    }
+    showForm(text)
   }
 
   client.onClose = () => {
     if (destroyed) return
-    const text = 'Connexion perdue, rechargez la page'
-    if (activeTab === 'code') {
-      setCodeError(text)
-    } else {
-      setScanStatus(text)
-    }
+    showForm('Connexion perdue, recharge la page')
   }
 
   // ---------------------------------------------------------------------------
-  // Camera / QR scan
+  // Init + destroy
   // ---------------------------------------------------------------------------
 
-  function startCamera(): void {
-    if (!video) return
-    // getUserMedia must be called in a user gesture handler (iOS Safari requirement)
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: 'environment' } })
-      .then((stream) => {
-        if (destroyed) {
-          stream.getTracks().forEach((t) => t.stop())
-          return
-        }
-        videoStream = stream
-        video.srcObject = stream
-        video.play().catch(() => {
-          // play() may throw on iOS if not in gesture context — ignore
-        })
-        setScanStatus('Pointez vers le QR code…')
-        if (btnStartCamera) btnStartCamera.style.display = 'none'
-
-        stopScan = startScan(video, (roomId) => {
-          if (destroyed) return
-          setScanStatus('QR détecté, connexion…')
-          stopCamera()
-          connectAndJoin(roomId)
-        })
-      })
-      .catch(() => {
-        if (!destroyed) {
-          setScanStatus("Impossible d'accéder à la caméra. Utilisez l'onglet Code.")
-          if (btnStartCamera) btnStartCamera.disabled = false
-        }
-      })
-
-    if (btnStartCamera) btnStartCamera.disabled = true
-  }
-
-  // ---------------------------------------------------------------------------
-  // Code input join
-  // ---------------------------------------------------------------------------
-
-  function joinByCode(): void {
-    const value = roomCodeInput?.value.trim().toUpperCase() ?? ''
-    if (value.length === 0) {
-      setCodeError('Entrez un code de room.')
-      return
-    }
-    if (value.length !== 6) {
-      setCodeError('Le code doit faire 6 caractères.')
-      return
-    }
-    setCodeError('')
-    if (btnJoinCode) btnJoinCode.disabled = true
-    connectAndJoin(value)
-  }
-
-  // ---------------------------------------------------------------------------
-  // Event listeners
-  // ---------------------------------------------------------------------------
-
-  const handleBack = (): void => onBack()
-  btnBack?.addEventListener('click', handleBack)
-
-  tabScanner?.addEventListener('click', () => switchTab('scanner'))
-  tabCode?.addEventListener('click', () => switchTab('code'))
-
-  // Camera button — getUserMedia inside user gesture handler (iOS Safari)
-  btnStartCamera?.addEventListener('click', () => { resumeAudio(); startCamera() })
-
-  btnJoinCode?.addEventListener('click', () => { resumeAudio(); joinByCode() })
-
-  roomCodeInput?.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.key === 'Enter') joinByCode()
-  })
-
-  roomCodeInput?.addEventListener('input', () => {
-    if (roomCodeInput) {
-      roomCodeInput.value = roomCodeInput.value.toUpperCase()
-    }
-    setCodeError('')
-  })
-
-  // ---------------------------------------------------------------------------
-  // Destroy
-  // ---------------------------------------------------------------------------
+  showForm()
 
   return () => {
     destroyed = true
-    btnBack?.removeEventListener('click', handleBack)
     stopCamera()
     if (!handedOff) client.disconnect()
     container.innerHTML = ''
