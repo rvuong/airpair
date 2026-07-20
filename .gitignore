@@ -1,6 +1,7 @@
 /dist/
 /docs/episodes/
 /docs/playtests
+/docs/wireframes/
 /sci/ai-usage/
 /node_modules/
 /proto/
@@ -12,3 +13,4 @@
 .env.local
 *.local
 *.pem
+github-token.md
