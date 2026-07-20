@@ -612,6 +612,80 @@
         background: rgba(0, 0, 0, 0.6);
       }
 
+      /* CTA plein jaune (action neutre : REVANCHE / ACCEPTER) — texte sombre */
+      .btn-action {
+        background: var(--accent-yellow-action);
+        color: #1a1400;
+      }
+
+      /* Fin de partie (spec §5) — overlay DOM au-dessus du canvas */
+      .end-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 12;
+        background: rgba(0, 0, 0, 0.82);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        padding: 24px;
+      }
+
+      .end-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .end-title {
+        font-size: var(--font-size-display);
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+
+      .end-title.win {
+        color: var(--accent-green-success);
+      }
+
+      .end-title.lose {
+        color: #fff; /* défaite neutre, jamais alarmante (charte §1.7) */
+      }
+
+      .end-unlock {
+        font-size: var(--font-size-secondary);
+        color: var(--accent-yellow-action);
+      }
+
+      .end-score {
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .end-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        width: 100%;
+        max-width: var(--frame-content-width);
+      }
+
+      .end-status {
+        font-size: var(--font-size-body);
+        color: var(--text-secondary);
+        text-align: center;
+      }
+
+      .end-received {
+        font-size: var(--font-size-body);
+        color: #fff;
+        text-align: center;
+      }
+
       /* Tab bar for join screen */
       .tab-bar {
         display: flex;

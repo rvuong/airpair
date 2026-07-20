@@ -1,8 +1,9 @@
 import { RoomClient, GameMsg } from '../net/ws'
 import { renderCountdown } from './countdown'
+import { renderEnd, EndController } from './end'
 import { TiltController, GameState, Phase } from '../game/simulation'
 import { resumeAudio, isMuted, playHit, playWall, playScore, playMiss, playVictory, playDefeat } from '../game/audio'
-import { Theme, getThemeById, unlockNext, drawThemeIcon } from '../game/themes'
+import { Theme, getThemeById, unlockNext } from '../game/themes'
 import {
   DEAD_ZONE_MS,
   INITIAL_SPEED_NORM,
@@ -45,27 +46,6 @@ function drawRoundedRect(
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
   ctx.fill()
-}
-
-function roundedRectPath(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-): void {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.lineTo(x + w - r, y)
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r)
-  ctx.lineTo(x + w, y + h - r)
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  ctx.lineTo(x + r, y + h)
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r)
-  ctx.lineTo(x, y + r)
-  ctx.quadraticCurveTo(x, y, x + r, y)
-  ctx.closePath()
 }
 
 function determineServer(
@@ -355,6 +335,42 @@ export function renderGame(
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Fin de partie + revanche symétrique (spec §5)
+  // ---------------------------------------------------------------------------
+  function showEndScreen(): void {
+    localRematchReady = false
+    peerRematchReady = false
+    endController = renderEnd(
+      container,
+      {
+        won: state.myScore > state.opponentScore,
+        myScore: state.myScore,
+        opponentScore: state.opponentScore,
+        unlockedThemeName: unlockedTheme ? unlockedTheme.name : null,
+      },
+      { onRematch: requestRematch, onNewGame: onBack }
+    )
+  }
+
+  // Le local clique REVANCHE/ACCEPTER : signale son intention ; le redémarrage
+  // n'a lieu (tryRematch) que lorsque les deux ont cliqué — jamais unilatéral
+  // (évite de recréer le bug D03 sur la revanche).
+  function requestRematch(): void {
+    if (localRematchReady) return
+    localRematchReady = true
+    client.relay({ type: 'rematch_ready' } satisfies GameMsg)
+    if (peerRematchReady) tryRematch()
+    else endController?.showRematchSent()
+  }
+
+  function tryRematch(): void {
+    if (!(localRematchReady && peerRematchReady)) return
+    endController?.destroy()
+    endController = null
+    resetGame()
+  }
+
   function afterScoring(): void {
     serviceSpeedNorm = serviceSpeedNorm + (MAX_SPEED_NORM - serviceSpeedNorm) * SPEED_LERP
     const iServe = determineServer(state.myScore, state.opponentScore, role)
@@ -376,6 +392,12 @@ export function renderGame(
   let startRequested = false
   let countdownShown = false
   let destroyCountdown: (() => void) | null = null
+
+  // Revanche : poignée de main symétrique (charte §1.6). Chacun envoie son
+  // 'rematch_ready' ; la partie ne redémarre que lorsque les deux l'ont envoyé.
+  let localRematchReady = false
+  let peerRematchReady = false
+  let endController: EndController | null = null
 
   // Convergence du handshake : quand A et B ont chacun choisi leur contrôle,
   // A déclenche le countdown serveur ; les deux attendent le message 'countdown'
@@ -426,8 +448,10 @@ export function renderGame(
       if (msg.themeId) theme = getThemeById(msg.themeId)
       peerReady = true
       tryActivate()
-    } else if (msg.type === 'rematch') {
-      resetGame()
+    } else if (msg.type === 'rematch_ready') {
+      peerRematchReady = true
+      if (localRematchReady) tryRematch()
+      else endController?.showRematchReceived()
     } else if (msg.type === 'miss') {
       if (msg.scorer === role) {
         state.myScore++
@@ -621,6 +645,7 @@ export function renderGame(
           } else {
             playDefeat()
           }
+          showEndScreen()
         } else {
           afterScoring()
         }
@@ -858,71 +883,8 @@ export function renderGame(
       ctx.fillText('Son coupé', W - 10, H * 0.055)
     }
 
-    if (phase === 'game_over') {
-      ctx.fillStyle = 'rgba(0,0,0,0.7)'
-      ctx.fillRect(0, 0, W, H)
-
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-
-      const revanBtnH = W * 0.13
-      const retourBtnH = W * 0.11
-      // When a theme is unlocked, reserve extra vertical space for the badge
-      const badgeH = unlockedTheme ? W * 0.1 + 56 + W * 0.06 : 0
-      const blockH = W * 0.50 + badgeH
-      const blockTop = H / 2 - blockH / 2
-
-      const titleY   = blockTop + W * 0.045
-      const scoreY   = titleY   + W * 0.105
-      const btnX     = W / 2 - W * 0.3
-      const btnW     = W * 0.6
-
-      const txt = state.myScore > state.opponentScore ? 'Victoire !' : 'Défaite'
-      ctx.fillStyle = '#fff'
-      ctx.font = `bold ${Math.round(W * 0.09)}px -apple-system, sans-serif`
-      ctx.fillText(txt, W / 2, titleY)
-
-      ctx.font = `${Math.round(W * 0.06)}px -apple-system, sans-serif`
-      ctx.fillText(`${state.myScore} – ${state.opponentScore}`, W / 2, scoreY)
-
-      // Theme unlock badge (winner only)
-      let revanTop = scoreY + W * 0.085
-      if (unlockedTheme) {
-        const iconW = 40, iconH = 54
-        const iconX = W / 2 - iconW / 2
-        const iconTop = scoreY + W * 0.07
-        drawThemeIcon(ctx, unlockedTheme, iconX, iconTop, iconW, iconH, false)
-        const badgeTextY = iconTop + iconH + W * 0.05
-        ctx.fillStyle = '#ffe600'
-        ctx.font = `bold ${Math.round(W * 0.053)}px -apple-system, sans-serif`
-        ctx.textBaseline = 'middle'
-        ctx.fillText(`Thème ${unlockedTheme.name} débloqué !`, W / 2, badgeTextY)
-        ctx.textBaseline = 'middle'
-        revanTop = badgeTextY + W * 0.07
-      }
-
-      const retourTop = revanTop + revanBtnH + W * 0.04
-
-      // Revanche button (primary)
-      ctx.fillStyle = '#fff'
-      roundedRectPath(ctx, btnX, revanTop, btnW, revanBtnH, 12)
-      ctx.fill()
-      ctx.fillStyle = '#000'
-      ctx.font = `bold ${Math.round(W * 0.075)}px -apple-system, sans-serif`
-      ctx.textBaseline = 'middle'
-      ctx.fillText('Revanche', W / 2, revanTop + revanBtnH / 2)
-
-      // Back button (secondary)
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'
-      ctx.lineWidth = 1.5
-      roundedRectPath(ctx, btnX, retourTop, btnW, retourBtnH, 12)
-      ctx.stroke()
-      ctx.fillStyle = 'rgba(255,255,255,0.7)'
-      ctx.font = `${Math.round(W * 0.065)}px -apple-system, sans-serif`
-      ctx.fillText('Retour', W / 2, retourTop + retourBtnH / 2)
-
-      ctx.textBaseline = 'alphabetic'
-    }
+    // L'écran de fin (game_over) est désormais un overlay DOM (voir end.ts),
+    // plus un dessin canvas — le canvas garde juste le dernier état figé dessous.
   }
 
   // ---------------------------------------------------------------------------
@@ -943,9 +905,6 @@ export function renderGame(
 
     if (state.phase === 'serving') {
       serveBall()
-    } else if (state.phase === 'game_over') {
-      e.preventDefault()  // suppress the synthetic click that would fire serveBall()
-      checkGameOverTap(touch.clientX, touch.clientY)
     }
   }
 
@@ -965,45 +924,9 @@ export function renderGame(
     paddleX = Math.max(0, Math.min(W - paddleWidth, e.clientX - paddleWidth / 2))
   }
 
-  function handleClick(e: MouseEvent): void {
+  function handleClick(): void {
     if (state.phase === 'serving') {
       serveBall()
-    } else if (state.phase === 'game_over') {
-      checkGameOverTap(e.clientX, e.clientY)
-    }
-  }
-
-  function checkGameOverTap(clientX: number, clientY: number): void {
-    const rect = canvas.getBoundingClientRect()
-    const cx = clientX - rect.left
-    const cy = clientY - rect.top
-
-    const revanBtnH  = W * 0.13
-    const retourBtnH = W * 0.11
-    const badgeH = unlockedTheme ? W * 0.1 + 56 + W * 0.06 : 0
-    const blockH = W * 0.50 + badgeH
-    const blockTop = H / 2 - blockH / 2
-    const scoreY   = blockTop + W * 0.045 + W * 0.105
-    let revanTop = scoreY + W * 0.085
-    if (unlockedTheme) {
-      const iconH = 54
-      const iconTop = scoreY + W * 0.07
-      const badgeTextY = iconTop + iconH + W * 0.05
-      revanTop = badgeTextY + W * 0.07
-    }
-    const retourTop = revanTop + revanBtnH + W * 0.04
-    const btnX = W / 2 - W * 0.3
-    const btnW = W * 0.6
-
-    if (cy >= revanTop && cy <= revanTop + revanBtnH &&
-        cx >= btnX && cx <= btnX + btnW) {
-      client.relay({ type: 'rematch' } satisfies GameMsg)
-      resetGame()
-      return
-    }
-    if (cy >= retourTop && cy <= retourTop + retourBtnH &&
-        cx >= btnX && cx <= btnX + btnW) {
-      onBack()
     }
   }
 
@@ -1154,6 +1077,7 @@ export function renderGame(
   return () => {
     cancelAnimationFrame(rafId)
     destroyCountdown?.()
+    endController?.destroy()
 
     canvas.removeEventListener('touchstart', handleTouchStart)
     canvas.removeEventListener('touchmove', handleTouchMove)

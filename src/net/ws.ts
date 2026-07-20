@@ -3,7 +3,7 @@
 export type GameMsg =
   | { type: 'hit'; t_exit: number; nx: number; nvx: number; nvy: number }
   | { type: 'miss'; scorer: 'A' | 'B' }
-  | { type: 'rematch' }
+  | { type: 'rematch_ready' }
   | { type: 'player_ready'; themeId?: string }
 
 // ---- Message types (server → client) ----
