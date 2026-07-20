@@ -508,6 +508,16 @@ joueur qui vient de perdre a "la balle" psychologiquement. La mise en œuvre
 est triviale (bit `firstServer` qui flip). L'absence de relance facile était
 le principal frein au critère go/no-go "redemander une revanche".
 
+**Amendement (20 juillet 2026, refonte UX — voir D26).** La revanche n'avait
+jamais formalisé le cas où un seul joueur clique : risque de recréer le bug
+D03 (redémarrage unilatéral sans laisser l'autre répondre). Mécanique désormais
+**symétrique**, calquée sur `player_ready` : chaque joueur envoie son propre
+`rematch_ready` ; la partie ne redémarre que lorsque les deux l'ont envoyé.
+Libellés `REVANCHE` (premier à cliquer) puis `ACCEPTER` (celui qui répond) —
+courtoisie d'affichage côté client, pas de système demande/accepte serveur
+(même message relayé). Écran de fin migré du Canvas vers un module DOM
+(`src/screens/end.ts`).
+
 ---
 
 ## D20 — Taille de la balle ✅
@@ -577,6 +587,19 @@ validation du fun.
 **Sources.** WCAG 2.1 SC 1.4.3/1.4.6/1.4.11/1.4.1 (w3.org) ·
 Game Accessibility Guidelines full list (gameaccessibilityguidelines.com) ·
 IGDA GASIG Visual (igda-gasig.org) · APCA in a Nutshell (apcacontrast.com).
+
+**Amendement (20 juillet 2026, refonte UX hors-jeu — voir D26).** Les écrans
+hors-jeu passent en DOM avec des tokens de couleur centralisés. Vérification
+des ratios (calcul WCAG relative-luminance) sur toutes les combinaisons de la
+charte :
+- `text-secondary` #9aa0b0 / fond #080818 : **7,59:1** (≥ 4,5 AA ✓)
+- texte sombre / bouton cyan `accent-role-b` : **9,30:1** ✓
+- texte sombre / bouton jaune `accent-yellow-action` : **14,39:1** ✓
+- code magenta `accent-role-a` / fond : **5,57:1** (≥ 3, texte ≥ 24 px gras ✓)
+- vert `accent-green-success` (VICTOIRE / ✓ Prêt) / fond : **14,64:1** ✓
+
+Tous les libellés hors-jeu satisfont AA (SC 1.4.3). Le volet Canvas (HUD,
+rgba semi-transparents en jeu) reste couvert par le plan de phase ci-dessus.
 
 ---
 
@@ -791,6 +814,45 @@ est déformé.
 **Ce que ça ne couvre pas.** Spawn animation à l'arrivée de balle depuis la zone
 morte (lié à Option B de D06 — incrément séparé si validé en playtest). Effets de
 trajectoire au gyroscope (D14, phase 3).
+
+---
+
+## D26 — Refonte UX des écrans hors-jeu ✅ (phase 3, 20 juillet 2026)
+
+**Contexte.** Les écrans hors-jeu (landing, host, join, sas de préparation,
+fin de partie) avaient dérivé : libellés ambigus, incohérences de couleur
+entre le Canvas et le hors-jeu, tailles de texte figées en px, bouton de
+lancement manuel côté hôte (rejouait le piège D03), revanche unilatérale non
+formalisée. Une session de wireframing Figma a produit un cadrage complet.
+
+**Décision.** Refonte pilotée par trois documents :
+- [`docs/ux-redesign-spec.md`](ux-redesign-spec.md) — détail par écran ;
+- [`docs/ux-charte-principes.md`](ux-charte-principes.md) — règles transversales ;
+- [`docs/ux-fix-plan.md`](ux-fix-plan.md) — plan de correction, référencé à la ligne.
+
+Principes structurants (voir charte) :
+- **La couleur encode un rôle** (A = magenta, B = cyan, identiques au Canvas
+  D22), jamais une fonction générique ; elle n'apparaît qu'une fois le rôle
+  attribué (landing neutre). Seule exception assumée : le vert de succès.
+- **Jamais la nomenclature A/B à l'écran** — toujours « ton adversaire ».
+- **Nommer l'intention, pas la destination** (« Nouvelle partie » vs « Retour »).
+- **Aucun démarrage manuel à deux joueurs** : toute transition partagée passe
+  par la convergence de deux signaux indépendants (`player_ready`,
+  `rematch_ready`) — généralise le correctif D03 (voir D19).
+- **Tokens graphiques centralisés** + racine `clamp()` : tailles en `rem`
+  relatives, plus de px figés (rendu homogène sur tout smartphone).
+- **Une seule permission système par geste** (caméra au scan, tilt au « prêt »).
+
+**Mise en œuvre.** Livrée en 4 lots : (1) design tokens + landing ; (2) host +
+join ; (3) sas + retour du countdown 3-2-1 **après** `player_ready` (déplacé de
+la connexion vers le sas) ; (4) fin de partie DOM (`src/screens/end.ts`) +
+revanche symétrique. **Aucune évolution serveur** : le relais est agnostique du
+contenu (`rematch_ready`/`player_ready` passent par `relay`), `start_countdown`
+préexistant. Contrastes vérifiés (voir amendement D21).
+
+**Pourquoi.** Cohérence visuelle avec l'identité (D24) et le Canvas (D22),
+lisibilité (D21), et surtout suppression des deux fenêtres de course de type
+D03 (bouton de lancement hôte + revanche unilatérale).
 
 ---
 
