@@ -98,6 +98,22 @@ function squashScales(elapsed: number): { sa: number; sb: number } {
 }
 
 // ---------------------------------------------------------------------------
+// Capture harness options (dev tool — see runCapture)
+// ---------------------------------------------------------------------------
+export interface CaptureOptions {
+  scenario: 'approach'          // only scenario for now (D06 approach → spawn)
+  mode?: 'triptych' | 'frames' | 'seq'  // default: triptych
+  t?: number                    // single-frame virtual time (ms from window start)
+  frames?: number[]             // explicit keyframes (ms), overrides defaults
+  step?: number                 // seq/simulation step in ms (default 2)
+  labels?: boolean              // draw captions under panels (triptych)
+  width?: number                // panel width in px (default 620)
+  height?: number               // panel height in px (default 1040)
+  nx?: number                   // ball entry x (0..1); default 0.80 (clears the score)
+  clean?: boolean               // hide the "Adversaire…" overlay; default true
+}
+
+// ---------------------------------------------------------------------------
 // Main renderGame
 // ---------------------------------------------------------------------------
 
@@ -107,7 +123,8 @@ export function renderGame(
   role: 'A' | 'B',
   serverOffset: number,
   themeId: string,
-  onBack: () => void
+  onBack: () => void,
+  capture?: CaptureOptions
 ): () => void {
   // Build DOM: canvas + pre-game overlay
   container.innerHTML = `
@@ -242,6 +259,18 @@ export function renderGame(
   let lastImpact: { time: number; axis: 'x' | 'y' } | null = null
   let ballSpawnTime: number | null = null
   let nowMs = 0
+  // Injectable clock. Normal play reads the wall clock; the capture harness
+  // (see runCapture below) overrides it to drive animations frame-by-frame.
+  let clockOverride: number | null = null
+  const clock = (): number => (clockOverride !== null ? clockOverride : Date.now())
+  // True while the capture harness is running: suppresses UI artefacts that are
+  // irrelevant to a screenshot (e.g. the "Son coupé" warning, since the capture
+  // harness never initialises audio).
+  let capturing = false
+  // When true, the capture also hides the "Adversaire…" waiting overlay so the
+  // three panels stay visually consistent (it would otherwise show on the
+  // waiting frames but not on the spawn frame).
+  let captureClean = false
   const paddleY = (): number => H - PADDLE_MARGIN
 
   // ---------------------------------------------------------------------------
@@ -459,13 +488,18 @@ export function renderGame(
         state.opponentScore++
       }
       state.phase = 'scoring'
-      state.scoringUntil = Date.now() + POINT_PAUSE_MS
+      state.scoringUntil = clock() + POINT_PAUSE_MS
       if (msg.scorer === role) playScore(); else playMiss()
     }
   }
 
   // Pending incoming hit parameters
   let pendingHit: { nx: number; nvx: number; nvy: number } | null = null
+
+  // Capture harness (dev tool). Bypasses network, tilt, wake lock and the
+  // real-time rAF loop: it drives draw() with an injectable virtual clock so
+  // the D06 approach → spawn animation can be captured frame-perfect.
+  if (capture) return runCapture(capture)
 
   // ---------------------------------------------------------------------------
   // Pre-game overlay handler
@@ -572,7 +606,7 @@ export function renderGame(
 
       // Ball exits top — send hit relay
       if (ball.y + BALL_R < 0) {
-        const t_exit = Date.now() + serverOffset
+        const t_exit = clock() + serverOffset
         const nx = ball.x / W
         const nvx = ball.vx / W
         const nvy = Math.abs(ball.vy) / H
@@ -592,7 +626,7 @@ export function renderGame(
 
         state.opponentScore++
         state.phase = 'scoring'
-        state.scoringUntil = Date.now() + POINT_PAUSE_MS
+        state.scoringUntil = clock() + POINT_PAUSE_MS
         state.ball = null
         playMiss()
       }
@@ -610,7 +644,7 @@ export function renderGame(
 
     // Waiting — check if ball arrival time has come
     if (state.phase === 'waiting' && state.ballArrivalTime !== null && pendingHit !== null) {
-      if (Date.now() >= state.ballArrivalTime) {
+      if (clock() >= state.ballArrivalTime) {
         const { nx, nvx, nvy } = pendingHit
         const speed = nvy * H
 
@@ -629,7 +663,7 @@ export function renderGame(
 
     // Scoring pause
     if (state.phase === 'scoring' && state.scoringUntil !== null) {
-      if (Date.now() >= state.scoringUntil) {
+      if (clock() >= state.scoringUntil) {
         state.scoringUntil = null
 
         // Check win
@@ -839,7 +873,7 @@ export function renderGame(
 
     // Approach indicator — shrinking white dot, disappears 100 ms before ball (D06 option B)
     if (pendingHit !== null && state.ballArrivalTime !== null) {
-      const remaining = Math.max(0, state.ballArrivalTime - Date.now())
+      const remaining = Math.max(0, state.ballArrivalTime - clock())
       if (remaining > APPROACH_GAP_MS) {
         const progress = Math.min(1, 1 - (remaining - APPROACH_GAP_MS) / (DEAD_ZONE_MS - APPROACH_GAP_MS))
         const ix = (1 - pendingHit.nx) * W
@@ -855,7 +889,7 @@ export function renderGame(
     // Phase overlays
     const phase: Phase = state.phase
 
-    if (phase === 'waiting' || phase === 'dead_zone') {
+    if ((phase === 'waiting' || phase === 'dead_zone') && !captureClean) {
       ctx.fillStyle = 'rgba(255,255,255,0.4)'
       ctx.font = `${Math.round(W * 0.08)}px -apple-system, sans-serif`
       ctx.textAlign = 'center'
@@ -876,7 +910,7 @@ export function renderGame(
     }
 
     // Mute switch warning (iOS silent mode cuts Web Audio)
-    if (isMuted() && phase !== 'pre_game') {
+    if (!capturing && isMuted() && phase !== 'pre_game') {
       ctx.fillStyle = 'rgba(255,200,0,0.85)'
       ctx.font = `${Math.round(W * 0.066)}px -apple-system, sans-serif`
       ctx.textAlign = 'right'
@@ -1065,6 +1099,146 @@ export function renderGame(
   }
 
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // ---------------------------------------------------------------------------
+  // Capture harness (dev tool). Drives draw() with a virtual clock to capture
+  // the D06 approach → spawn animation frame-perfect. Reuses update()/draw() as
+  // in real play, so what's captured is exactly what a player sees.
+  // URLs: ?capture=approach            → triptych PNG (approach / void / BLAM)
+  //       ?capture=approach&mode=frames → the 3 keyframes as separate PNGs
+  //       ?capture=approach&t=150       → a single frame at 150 ms
+  //       ?capture=approach&mode=seq    → every frame of the sequence
+  // ---------------------------------------------------------------------------
+  function runCapture(opts: CaptureOptions): () => void {
+    capturing = true
+    captureClean = opts.clean !== false   // default: hide the waiting overlay
+    const entryNx = opts.nx ?? 0.80        // off-centre so the ball clears the score
+    if (preOverlay) preOverlay.style.display = 'none'
+    if (landscapeWarning) landscapeWarning.style.display = 'none'
+    document.body.style.background = '#0a0a0a'
+
+    // Fixed portrait panel, dpr = 1 for crisp, reproducible pixels
+    const PW = opts.width ?? 620
+    const PH = opts.height ?? 1040
+    W = PW
+    H = PH
+    BALL_R = W * BALL_RADIUS_NORM
+    paddleWidth = W * PADDLE_WIDTH_NORM
+    paddleX = W / 2 - paddleWidth / 2
+    canvas.width = PW
+    canvas.height = PH
+    canvas.style.position = 'static'
+    canvas.style.width = `${PW}px`
+    canvas.style.height = `${PH}px`
+    canvas.style.margin = '0 auto'
+    canvas.style.display = 'block'
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+    const WINDOW_START = 100000                      // arbitrary virtual origin (ms)
+    const ARRIVAL = WINDOW_START + DEAD_ZONE_MS
+    const END = DEAD_ZONE_MS + BALL_SPAWN_MS + 40     // last useful frame (ms from start)
+    const stepMs = opts.step ?? 2
+
+    // Waiting state, ball incoming from the top (opponent side, D06).
+    function seed(): void {
+      state.phase = 'waiting'
+      state.ball = null
+      state.myScore = 3
+      state.opponentScore = 2
+      state.ballArrivalTime = ARRIVAL
+      pendingHit = { nx: entryNx, nvx: 0.12, nvy: 0.92 }
+      ballSpawnTime = null
+      lastImpact = null
+      clockOverride = WINDOW_START
+      nowMs = WINDOW_START
+    }
+
+    // Render one deterministic frame at virtual time `vt` (ms from window start).
+    // Walks the clock from 0 so the waiting→spawn transition fires on time and
+    // ballSpawnTime lands on ARRIVAL (correct spawn scale). dt = 0 → no drift.
+    function renderFrame(vt: number): void {
+      seed()
+      for (let t = 0; t <= vt + 1e-6; t += stepMs) {
+        clockOverride = WINDOW_START + t
+        nowMs = clockOverride
+        update(0)
+      }
+      clockOverride = WINDOW_START + vt
+      nowMs = clockOverride
+      update(0)
+      draw()
+    }
+
+    function download(dataUrl: string, name: string): void {
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = name
+      a.click()
+    }
+
+    // Default keyframes: mid-approach dot / the void / the BLAM
+    const keyframes = opts.frames ?? [
+      DEAD_ZONE_MS - 250,   // dot ~1.0x, semi-transparent
+      DEAD_ZONE_MS - 50,    // dot gone, ball absent (the void)
+      DEAD_ZONE_MS + 10,    // ball surging at ~1.26x (BLAM)
+    ]
+    const captions = ['Approche', 'Le vide', 'BLAM']
+
+    if (opts.mode === 'seq') {
+      let i = 0
+      for (let vt = 0; vt <= END + 1e-6; vt += stepMs) {
+        renderFrame(vt)
+        download(canvas.toDataURL('image/png'),
+          `ep08-seq-${String(i).padStart(3, '0')}-t${Math.round(vt)}.png`)
+        i++
+      }
+      return () => { container.innerHTML = '' }
+    }
+
+    if (opts.t !== undefined) {
+      renderFrame(opts.t)
+      download(canvas.toDataURL('image/png'), `ep08-frame-t${Math.round(opts.t)}.png`)
+      return () => { container.innerHTML = '' }
+    }
+
+    if (opts.mode === 'frames') {
+      keyframes.forEach((vt, i) => {
+        renderFrame(vt)
+        download(canvas.toDataURL('image/png'), `ep08-frame-${i + 1}-t${Math.round(vt)}.png`)
+      })
+      return () => { container.innerHTML = '' }
+    }
+
+    // Default: compose the three keyframes into one horizontal triptych.
+    const GAP = 10
+    const CAPTION_H = opts.labels ? 64 : 0
+    const strip = document.createElement('canvas')
+    strip.width = PW * keyframes.length + GAP * (keyframes.length - 1)
+    strip.height = PH + CAPTION_H
+    const sctx = strip.getContext('2d')!
+    sctx.fillStyle = '#0a0a0a'
+    sctx.fillRect(0, 0, strip.width, strip.height)
+    keyframes.forEach((vt, i) => {
+      renderFrame(vt)
+      const x = i * (PW + GAP)
+      sctx.drawImage(canvas, x, 0)
+      if (opts.labels) {
+        sctx.fillStyle = '#fff'
+        sctx.font = '28px -apple-system, sans-serif'
+        sctx.textAlign = 'center'
+        sctx.fillText(captions[i] ?? '', x + PW / 2, PH + CAPTION_H - 22)
+      }
+    })
+    canvas.style.display = 'none'
+    strip.style.maxWidth = '100%'
+    strip.style.height = 'auto'
+    strip.style.display = 'block'
+    strip.style.margin = '0 auto'
+    container.appendChild(strip)
+    download(strip.toDataURL('image/png'), 'ep08-approche-triptyque.png')
+
+    return () => { container.innerHTML = '' }
+  }
 
   // ---------------------------------------------------------------------------
   // Start loop
