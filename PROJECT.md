@@ -170,6 +170,16 @@ gestion déconnexions/reprises, garde-fous d'appairage (expiration QR, comparais
 
 **Questions ouvertes phase 3 :** onboarding règles (Q12) · traînée de balle vs prédiction (Q16) · validation Android (Q9).
 
+**Incident serveur WS du 19 juillet 2026 — remédiation en attente (D27) :** QR code
+indisponible (EC2 `impaired` après 39 jours d'uptime). La ré-analyse du 30 juillet
+écarte le cadrage initial « OOM à absorber » : aucune métrique RAM n'existe sur
+l'instance, et `server/server.ts` présente quatre rétentions lisibles (aucun heartbeat
+`ping`/`pong`, `clientToRoom.delete(peer)` manquant, sockets non fermés sur les chemins
+d'erreur, aucun plafond). Ordre acté : forensique → mesure → correctifs serveur → build
+hors prod → filets (swap, `max_memory_restart`, alarme). Les correctifs serveur
+recoupent « gestion déconnexions/reprises » et « garde-fous d'appairage » ci-dessus.
+→ [docs/runbook-ws-server-resilience.md](./docs/runbook-ws-server-resilience.md).
+
 **Écarté définitivement :** musique 8-bit (D23) · replay son adverse (D08) · WebRTC (D05) · pointeur permanent balle adverse (D06).
 
 **Thèmes visuels ✅ (D22, 21 juin 2026) :** 5 thèmes déblocables par victoire
@@ -202,7 +212,9 @@ non traité au-delà du minimum existant. → 4 lots empilés, PR vers `main`.
   [docs/sci.md](./docs/sci.md) (mesure environnementale),
   [docs/glossaire.md](./docs/glossaire.md) (terminologie),
   [docs/capture-harness.md](./docs/capture-harness.md) (outil dev : captures
-  frame-perfect de l'animation d'approche, pour les visuels de la série LinkedIn).
+  frame-perfect de l'animation d'approche, pour les visuels de la série LinkedIn),
+  [docs/runbook-ws-server-resilience.md](./docs/runbook-ws-server-resilience.md)
+  (runbook ops : résilience du serveur WS, incident du 19 juillet 2026).
 - [CONTRIBUTING.md](./CONTRIBUTING.md) : guide de contribution (workflow git, format commits, règles doc).
 - Prototypes phase 0 dans [proto/0a-tilt/](./proto/0a-tilt/) et [proto/0b-sync/](./proto/0b-sync/) (code jetable,
   séparé du futur code MVP).

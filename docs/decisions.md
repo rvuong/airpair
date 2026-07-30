@@ -856,6 +856,94 @@ D03 (bouton de lancement hôte + revanche unilatérale).
 
 ---
 
+## D27 — Résilience et observabilité du serveur WS 🔬 (phase 3, incident du 19 juillet 2026)
+
+**Contexte.** Le 19 juillet 2026, le jeu déployé n'affiche plus de QR code : le QR
+n'est rendu qu'après réponse du serveur (`client.onCreated`, `src/screens/host.ts`),
+donc serveur injoignable = jeu totalement inutilisable. L'EC2 était `running` mais
+**Instance status = `impaired`** (OS figé, ports 22/80/443 en timeout). Fix immédiat :
+`stop` → `start`. Un premier runbook rédigé le jour même
+([`docs/runbook-ws-server-resilience.md`](runbook-ws-server-resilience.md)) attribue
+l'incident à un **OOM probable** sur les 512 Mo de la `t4g.nano` et propose swap +
+`max_memory_restart` pm2 + alarme CloudWatch.
+
+**Ré-analyse du 30 juillet 2026.** Le cadrage initial ne résiste pas à l'examen du
+code et des dates. Un relais de 162 lignes tenant deux `Map` de quelques rooms ne
+consomme pas 512 Mo en régime normal (un Node qui fait tourner ça idle autour de 50 Mo).
+La vraie question n'est pas « comment absorber la saturation » mais « pourquoi 512 Mo
+sont atteints ».
+
+*Ce que les dates disent.* Dernier déploiement serveur : **10 juin**. Incident :
+**19 juillet**. 39 jours. Le process tournait sans interruption depuis plus d'un mois.
+→ Le pic de déploiement est **écarté comme déclencheur de cet incident**. Il reste un
+risque latent réel et documenté : `deploy-server.yml` compile sur l'instance de prod
+(`npm ci`, `npm install --save-dev typescript`, `npx tsc` — un `tsc` culmine à
+150–300 Mo de RSS), sans stopper l'app avant (`pm2 reload` vient après).
+
+*Ce que le code dit* (`server/server.ts`) — rétentions lisibles indépendamment de la
+cause du 19 juillet :
+- **Aucun heartbeat.** Ni `ping`/`pong` serveur, ni flag `isAlive`, ni timeout.
+  `serverPing` côté client ne sert qu'à la synchro d'horloge au démarrage (D04).
+  Or `ws` ne détecte pas les connexions TCP semi-ouvertes sans heartbeat : un
+  téléphone qui entre dans un tunnel, dont l'app est tuée, ou qui bascule 4G↔WiFi
+  ne déclenche jamais `close`. La cible du jeu étant exclusivement mobile, **c'est
+  le cas nominal, pas le cas rare.** Sockets et rooms restent en mémoire indéfiniment.
+- **Fuite déterministe à chaque partie terminée** (`server.ts:110-111`) :
+  `handleDisconnect` supprime la room et l'entrée du socket qui part, mais jamais
+  `clientToRoom.delete(peer)`. L'entrée du pair survit, pointant vers une room
+  disparue. La `Map` étant clé-sur-WebSocket (référence forte), ni le socket ni ses
+  buffers ne sont collectables.
+- **Sockets jamais fermés sur les chemins d'erreur** (`server.ts:51-59`, `126`, `147`) :
+  `room_not_found`, `room_full`, `invalid_json`, `unknown_type` répondent et laissent
+  la connexion ouverte, non enregistrée, pour toujours. Aucun `ws.close()`. Le port
+  443 étant public, tout scanner Internet laisse un socket pendant.
+- **Aucun plafond** : ni nombre de rooms, ni connexions par IP, ni rate limit.
+
+*Ce qui manque surtout.* **EC2 ne publie aucune métrique RAM par défaut.**
+« Cause probable : OOM » est une déduction à partir de `impaired`, pas un diagnostic.
+La courbe mémoire du process est inconnue, y compris au moment de la panne. Une
+hypothèse concurrente n'a jamais été écartée : chaque `[CONNECT]`/`[CREATE]`/`[JOIN]`/
+`[DISCONNECT]` part dans les logs pm2 et aucun `pm2-logrotate` n'est configuré — un `/`
+saturé sur le volume de 8 Go produit exactement le même `impaired`.
+
+**Décision.** Réordonner la remédiation, et **reclasser swap et `max_memory_restart`
+comme filets et non comme corrections** :
+
+0. **Forensique d'abord** (gratuit) : `journalctl -k | grep -i "out of memory"`,
+   `dmesg -T | grep -i oom` (l'OOM-killer a-t-il tiré, et sur quel process ?),
+   `df -h` (écarter le disque plein). Réserve : le `stop`/`start` est passé et le
+   journal ne survit au reboot que si `/var/log/journal` existe — la preuve peut
+   être perdue, auquel cas on instrumente et on attend la prochaine occurrence.
+1. **Mesurer** : pm2 connaît déjà le RSS par process — un cron qui append
+   `pm2 jlist` dans un fichier suffit (0 €). Une courbe sur quelques jours départage
+   « fuite lente » de « pic ponctuel » sans ambiguïté.
+2. **Corriger les rétentions** : heartbeat `ping`/`pong` avec terminaison des sockets
+   morts, `ws.close()` sur tous les chemins d'erreur, `clientToRoom.delete(peer)`,
+   plafonds rooms / connexions par IP. ~30 lignes dans un fichier de 162. Recoupe
+   deux items déjà inscrits en phase 3 (gestion déconnexions/reprises, garde-fous
+   d'appairage).
+3. **Sortir la compilation de la prod** : builder dans GitHub Actions, expédier
+   `dist/`. Supprime le pic de déploiement (latent, mais il tombera au mauvais moment).
+4. **Alors seulement** swap 1 Go + `max_memory_restart` + alarme CloudWatch
+   `StatusCheckFailed_Instance` → reboot, comme filets assumés sur une cause traitée.
+
+**Pourquoi.** Appliqués avant le diagnostic, les deux « correctifs » gratuits
+détruisent le signal qu'on cherche : le swap transforme un OOM en thrashing (l'OS
+survit, dégradé, et le symptôme disparaît) ; `max_memory_restart 250M` sur un process
+qui fuit signifie « redémarre toutes les N semaines sans jamais comprendre » — il
+convertit une panne franche et visible en redémarrage silencieux récurrent, plus
+confortable et bien plus difficile à diagnostiquer ensuite. Ce sont de bons filets
+**après** la cause, pas à sa place. Le principe général : sur une infra à 3,40 €/mois
+sans aucune métrique, la première dépense utile est l'observabilité, pas la capacité.
+
+**Ce que ça ne couvre pas.** L'attribution de l'incident du 19 juillet reste une
+**hypothèse** jusqu'à l'étape 0 — ne pas reproduire l'erreur du runbook initial en
+affirmant une cause probable comme acquise. Les quatre rétentions ci-dessus sont en
+revanche lisibles dans le code quelle qu'ait été la cause. Procédures détaillées,
+vérifications et rollbacks : voir le runbook.
+
+---
+
 ## Questions ouvertes (à trancher par prototype/playtest)
 
 > Ajouts post-playtest #4 (15 juin 2026) — voir analyse complète dans
