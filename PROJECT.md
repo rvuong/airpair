@@ -200,7 +200,9 @@ non traité au-delà du minimum existant. → 4 lots empilés, PR vers `main`.
 - Specs détaillées dans des fichiers dédiés au fil de l'eau :
   docs/architecture.md, docs/netcode.md, docs/game-design.md (à venir),
   [docs/sci.md](./docs/sci.md) (mesure environnementale),
-  [docs/glossaire.md](./docs/glossaire.md) (terminologie).
+  [docs/glossaire.md](./docs/glossaire.md) (terminologie),
+  [docs/capture-harness.md](./docs/capture-harness.md) (outil dev : captures
+  frame-perfect de l'animation d'approche, pour les visuels de la série LinkedIn).
 - [CONTRIBUTING.md](./CONTRIBUTING.md) : guide de contribution (workflow git, format commits, règles doc).
 - Prototypes phase 0 dans [proto/0a-tilt/](./proto/0a-tilt/) et [proto/0b-sync/](./proto/0b-sync/) (code jetable,
   séparé du futur code MVP).
