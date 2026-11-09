@@ -33,8 +33,12 @@ log "swap active: $(swapon --show=SIZE --noheadings | head -1)"
 
 # 3. Let the kernel kill a runaway process early rather than thrash until the OS hangs.
 if ! command -v earlyoom >/dev/null 2>&1; then
-  apt-get update -qq
-  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq earlyoom >/dev/null
+  # A freeze can interrupt unattended-upgrades mid-install: finish it first.
+  # Lock timeout covers unattended-upgrades running right after boot.
+  export DEBIAN_FRONTEND=noninteractive
+  dpkg --configure -a --force-confdef --force-confold
+  apt-get -o DPkg::Lock::Timeout=300 update -qq
+  apt-get -o DPkg::Lock::Timeout=300 install -y -qq earlyoom >/dev/null
 fi
 cat > /etc/default/earlyoom <<'EOF'
 EARLYOOM_ARGS="-m 5 -s 10 --avoid '(^|/)(nginx|sshd|systemd)$' -r 3600"
