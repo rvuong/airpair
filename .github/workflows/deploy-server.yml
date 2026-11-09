@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+      - 'scripts/server/**'
       - '.github/workflows/deploy-server.yml'
   workflow_dispatch:
 
@@ -32,13 +33,17 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
+            # Host hardening first: frees memory and adds swap before npm/tsc (D11)
+            sudo PM2_BIN="$(command -v pm2)" bash scripts/server/harden.sh
+
             # Install deps + compile
             cd server
             npm ci --omit=dev
             npm install --save-dev typescript @types/node @types/ws
             npx tsc
 
-            # Graceful reload (zero downtime), start on first deploy
-            pm2 reload airpair-server --update-env \
-              || pm2 start dist/server.js --name airpair-server
+            # (Re)start from the ecosystem file so pm2 options (memory cap) always apply.
+            # ~1 s of downtime per deploy, accepted: deploys are rare and rooms are short-lived.
+            pm2 delete airpair-server >/dev/null 2>&1 || true
+            pm2 start ecosystem.config.cjs
             pm2 save

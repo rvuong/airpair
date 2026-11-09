@@ -309,6 +309,31 @@ Actions `deploy-server.yml` — SSH + git pull + tsc + pm2 reload.
 **Dev local :** Vite en HTTPS sur réseau local (`@vitejs/plugin-basic-ssl`),
 certificat à accepter sur l'iPhone — itération sans déploiement.
 
+**Amendement novembre 2026 — incidents OOM et durcissement.** Trois pannes
+silencieuses en quatre mois (19 juillet ; 11 août → 23 septembre ; 4 octobre →
+9 novembre), chacune découverte au moment d'un playtest. Instance `running` mais
+status check *instance* `impaired`, tous ports en timeout. Cause confirmée par la
+console série : **`fwupd`** (démon de mise à jour firmware d'Ubuntu, inutile sur
+VM) relancé en boucle et tué par l'OOM killer environ toutes les heures, avec un
+watchdog `snapd` qui expire, jusqu'au gel de l'OS sur 512 Mo de RAM. Effet
+secondaire : le certificat Let's Encrypt n'a pas pu se renouveler pendant le gel
+et avait expiré au redémarrage. Réponse en trois couches, sans changer de taille
+d'instance (le serveur WS lui-même n'est pas en cause) :
+1. **Cause** — [`scripts/server/harden.sh`](../scripts/server/harden.sh), idempotent,
+   lancé à chaque déploiement : `fwupd`/`snapd` masqués, swap 1 Go
+   (`swappiness=10`), `earlyoom`, hook certbot qui recharge nginx, démarrage pm2 au
+   boot. pm2 lancé via [`server/ecosystem.config.cjs`](../server/ecosystem.config.cjs)
+   avec `max_memory_restart: 150M`.
+2. **Auto-guérison** — [`scripts/server/aws-alarms.sh`](../scripts/server/aws-alarms.sh) :
+   alarmes CloudWatch sur `StatusCheckFailed_Instance` → reboot EC2 et
+   `StatusCheckFailed_System` → recover (5 min d'échec consécutif, gratuit).
+3. **Détection** — workflow [`server-health.yml`](../.github/workflows/server-health.yml),
+   quotidien : handshake WebSocket (101 attendu) et certificat valide ≥ 14 jours.
+   Un échec déclenche le mail d'échec GitHub.
+
+Écarté : passer en t4g.micro (×2 sur le coût pour traiter un symptôme) et
+migrer vers un PaaS (relance D11 pour un problème d'exploitation).
+
 **SCI (B3) :** t4g.nano ARM Graviton2 — TDP attribué estimé ~5 W (prorata vCPU),
 PUE AWS ≤ 1,2, grille eu-west-1 (Irlande) ~200 gCO₂e/kWh. Facteurs versionnés
 dans [`sci/factors.yaml`](../sci/factors.yaml) (`server`).

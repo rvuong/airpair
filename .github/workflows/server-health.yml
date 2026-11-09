@@ -1,0 +1,34 @@
+name: Server health
+
+# Daily probe of the production WS server. A failed run triggers GitHub's
+# failure email, so an outage is known before a playtest (docs/decisions.md D11).
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    name: Probe wss://ws.odomate.eu
+    runs-on: ubuntu-latest
+    env:
+      HOST: ws.odomate.eu
+      MIN_CERT_DAYS: 14
+    steps:
+      - name: WebSocket handshake answers 101
+        run: |
+          code=$(curl --http1.1 -sS -o /dev/null -w '%{http_code}' --max-time 10 \
+            -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+            -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+            "https://$HOST/" || true)
+          echo "HTTP status: $code"
+          test "$code" = "101"
+
+      - name: TLS certificate valid for at least MIN_CERT_DAYS
+        if: always()
+        run: |
+          end=$(echo | openssl s_client -connect "$HOST:443" -servername "$HOST" 2>/dev/null \
+            | openssl x509 -noout -enddate | cut -d= -f2)
+          days=$(( ($(date -d "$end" +%s) - $(date +%s)) / 86400 ))
+          echo "Certificate expires $end ($days days)"
+          test "$days" -ge "$MIN_CERT_DAYS"
